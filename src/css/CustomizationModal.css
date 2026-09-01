@@ -1,0 +1,222 @@
+/* Superposición del modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Contenedor del Modal */
+.custom-modal-content {
+    background-color: #ffffff;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Header */
+.custom-modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(61, 35, 20, 0.08);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    background-color: #fdfbf7;
+}
+
+.header-info h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #3d2314;
+    margin: 0 0 0.3rem 0;
+}
+
+.product-base-desc {
+    font-size: 0.88rem;
+    color: #6b5244;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #3d2314;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.btn-close-modal:hover {
+    background-color: rgba(61, 35, 20, 0.08);
+}
+
+/* Cuerpo desplegable */
+.custom-modal-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-height: 60vh;
+}
+
+.custom-section h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #3d2314;
+    margin: 0 0 0.75rem 0;
+}
+
+/* Rejilla de Opciones y Toppings */
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.6rem;
+}
+
+.option-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid rgba(61, 35, 20, 0.12);
+    border-radius: 12px;
+    cursor: pointer;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.option-card:hover {
+    border-color: rgba(61, 35, 20, 0.3);
+    background-color: #fdfbf7;
+}
+
+.option-card.active {
+    border-color: #d92b38;
+    background-color: rgba(217, 43, 56, 0.04);
+}
+
+.option-card input[type="radio"],
+.option-card input[type="checkbox"] {
+    display: none;
+}
+
+.option-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.option-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #3d2314;
+}
+
+.option-price {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #d92b38;
+    margin-top: 0.15rem;
+}
+
+.check-icon {
+    color: #d92b38;
+}
+
+/* Campo de Observaciones */
+.custom-section textarea {
+    width: 100%;
+    border: 1.5px solid rgba(61, 35, 20, 0.15);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+    color: #3d2314;
+    background-color: #faf7f2;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.custom-section textarea:focus {
+    border-color: #3d2314;
+    background-color: #ffffff;
+}
+
+/* Footer con Botones */
+.custom-modal-footer {
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(61, 35, 20, 0.08);
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.btn-cancel {
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid rgba(61, 35, 20, 0.15);
+    background-color: transparent;
+    color: #6b5244;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: rgba(61, 35, 20, 0.05);
+    color: #3d2314;
+}
+
+.btn-confirm-add {
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    border: none;
+    background-color: #d92b38;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(217, 43, 56, 0.25);
+    transition: all 0.2s;
+}
+
+.btn-confirm-add:hover {
+    background-color: #b51f2a;
+    transform: translateY(-1px);
+}

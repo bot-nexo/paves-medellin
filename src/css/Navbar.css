@@ -1,0 +1,303 @@
+/* Variables del tema basándonos en tu marca */
+:root {
+    --color-primary: #D92B38;
+    /* Rojo Fresa */
+    --color-primary-dark: #b51f2a;
+    --color-chocolate: #3D2314;
+    /* Marrón Chocolate */
+    --color-bg-light: #FDFBF7;
+    /* Blanco Crema */
+    --color-text-dark: #1F2937;
+    --color-text-muted: #6B7280;
+    --shadow-navbar: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 1.25rem 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: transparent;
+}
+
+/* Efecto Glassmorphism al hacer scroll */
+.navbar--scrolled {
+    padding: 0.85rem 0;
+    background-color: rgba(253, 251, 247, 0.92);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-navbar);
+}
+
+.navbar__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Logo */
+.navbar__logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+}
+
+.navbar__logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background-color: rgba(217, 43, 56, 0.1);
+    color: var(--color-primary);
+    transition: transform 0.3s ease;
+}
+
+.navbar__logo-link:hover .navbar__logo-icon {
+    transform: rotate(-8deg) scale(1.05);
+}
+
+.icon-flame {
+    width: 24px;
+    height: 24px;
+}
+
+.navbar__brand-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--color-chocolate);
+    letter-spacing: -0.02em;
+}
+
+.navbar__brand-name .highlight {
+    color: var(--color-primary);
+}
+
+/* Acciones y Enlaces */
+.navbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.navbar__links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar__link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-text-dark);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.navbar__link-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--color-text-muted);
+    transition: color 0.2s ease;
+}
+
+.navbar__link:hover {
+    color: var(--color-primary);
+}
+
+.navbar__link:hover .navbar__link-icon {
+    color: var(--color-primary);
+}
+
+/* Botón de Carrito */
+.navbar__cart-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1.2rem;
+    border-radius: 99px;
+    border: none;
+    background-color: var(--color-chocolate);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(61, 35, 20, 0.15);
+}
+
+.navbar__cart-btn:hover {
+    background-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(217, 43, 56, 0.25);
+}
+
+.navbar__cart-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.navbar__cart-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Badge con animación cuando hay productos */
+.navbar__cart-badge {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-chocolate);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.navbar__cart-btn:hover .navbar__cart-badge {
+    border-color: var(--color-primary);
+    background-color: #ffffff;
+    color: var(--color-primary);
+}
+
+
+/* 1. Fondo Global de la Aplicación */
+body,
+#root {
+    background-color: #FDFBF7;
+    /* Blanco Crema */
+    color: #3D2314;
+    /* Texto Marrón Chocolate */
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* 2. Navbar Corrección de Contraste y Colores */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    padding: 1rem 0;
+    background-color: rgba(253, 251, 247, 0.85);
+    /* Fondo claro traslúcido */
+    backdrop-filter: blur(12px);
+    /* Blur sutil */
+    border-bottom: 1px solid rgba(61, 35, 20, 0.08);
+    transition: all 0.3s ease;
+}
+
+.navbar--scrolled {
+    padding: 0.75rem 0;
+    background-color: rgba(253, 251, 247, 0.98);
+    box-shadow: 0 4px 20px rgba(61, 35, 20, 0.08);
+}
+
+/* Marca / Logo */
+.navbar__brand-name {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: #3D2314;
+    /* Legible y oscuro */
+}
+
+.navbar__brand-name .highlight {
+    color: #D92B38;
+    /* Rojo Fresa */
+}
+
+/* Enlaces de Navegación (Solución al texto invisible) */
+.navbar__link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #3D2314 !important;
+    /* Fuerza contraste oscuro visible */
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.navbar__link-icon {
+    color: #D92B38;
+    /* Íconos destacados en rojo */
+}
+
+.navbar__link:hover {
+    color: #D92B38 !important;
+}
+
+/* Botón "Mi Pedido" */
+.navbar__cart-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 99px;
+    border: none;
+    background-color: #3D2314;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(61, 35, 20, 0.15);
+    transition: all 0.2s ease;
+}
+
+.navbar__cart-btn:hover {
+    background-color: #D92B38;
+    transform: translateY(-1px);
+}
+
+.navbar__cart-badge {
+    background-color: #D92B38;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.15rem 0.45rem;
+    border-radius: 50%;
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 640px) {
+    .navbar__cart-text {
+        display: none;
+    }
+
+    .navbar__cart-btn {
+        padding: 0.65rem;
+        border-radius: 50%;
+    }
+}

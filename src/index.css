@@ -1,0 +1,47 @@
+:root {
+  --primary: #FDFBF7; /* Vibrant Orange-Red (Matches the "Rojo Anaranjado" of the logo) */
+  --secondary: #4A6B32; /* Bright Warm Gold */
+  --accent: #3D2314; /* Deep Red for contrast and hover states */
+  --dark: #0f0f0f; /* Ultimate Dark mode black */
+  --light: #ffdda7; /* Warm off-white background */
+  --white: #ffffff;
+  --gray: #888888;
+  --cream: #D92B38; /* Lighter cream for better readability */
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  --shadow-primary: rgba(255, 77, 0, 0.4);
+  --alert-see: rgb(238, 238, 238);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  line-height: 1.6;
+  color: var(--dark);
+  background-color: var(--light);
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+.logo {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+}

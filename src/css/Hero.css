@@ -1,0 +1,191 @@
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 5rem; /* Margen para el Navbar fijo */
+  overflow: hidden;
+  background-color: #FDFBF7; /* Blanco Crema */
+}
+
+/* Carrusel y Overlays */
+.hero__carousel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.hero__slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.hero__slide--active {
+  opacity: 1;
+}
+
+.hero__slide--placeholder {
+  background-image: linear-gradient(135deg, #fceae6 0%, #fdfbf7 100%);
+}
+
+/* Overlay claro para asegurar la legibilidad del texto sin oscurecer demasiado */
+.hero__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    180deg, 
+    rgba(253, 251, 247, 0.7) 0%, 
+    rgba(253, 251, 247, 0.9) 80%,
+    #FDFBF7 100%
+  );
+}
+
+/* Contenido */
+.hero__container {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Badge Top */
+.hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  background-color: rgba(217, 43, 56, 0.1);
+  color: #D92B38;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hero__badge-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Título */
+.hero__title {
+  font-size: 2.75rem;
+  font-weight: 900;
+  color: #3D2314; /* Marrón Chocolate */
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.hero__title .highlight {
+  color: #D92B38; /* Rojo Fresa */
+}
+
+/* Subtítulo */
+.hero__slogan {
+  font-size: 1.1rem;
+  color: #5C4335;
+  max-width: 600px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Botones */
+.hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.hero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero__btn--primary {
+  background-color: #D92B38;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(217, 43, 56, 0.3);
+}
+
+.hero__btn--primary:hover {
+  background-color: #b51f2a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(217, 43, 56, 0.4);
+}
+
+.hero__btn--secondary {
+  background-color: #ffffff;
+  color: #3D2314;
+  border: 2px solid rgba(61, 35, 20, 0.15);
+}
+
+.hero__btn--secondary:hover {
+  border-color: #3D2314;
+  background-color: #3D2314;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsivo Móvil */
+@media (max-width: 640px) {
+  .hero {
+    min-height: 75vh;
+  }
+
+  .hero__title {
+    font-size: 2rem;
+  }
+
+  .hero__slogan {
+    font-size: 0.95rem;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero__btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
