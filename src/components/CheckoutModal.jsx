@@ -1,8 +1,29 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import {
+  X,
+  User,
+  Phone,
+  CreditCard,
+  MapPin,
+  Building,
+  Home,
+  MessageSquare,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle,
+  Truck,
+  Send,
+} from "lucide-react";
+import "../css/CheckoutModal.css";
+import {
+  formatCOP,
+  calculateItemUnitPrice,
+  calculateOrderSummary,
+} from "../utils/price";
 
-const CheckoutModal = ({ isOpen, onClose, onConfirm, cart }) => {
-  const [step, setStep] = useState(1); // 1: Form, 2: Confirmation
+const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [] }) => {
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
@@ -21,54 +42,11 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart }) => {
 
   if (!isOpen) return null;
 
-  // Helper seguro para limpiar "$19 K" o "1.5 K" -> valor numérico real
-  const parsePrice = (priceStr) => {
-    if (!priceStr || priceStr === "0" || priceStr === 0) return 0;
-    if (typeof priceStr === "number") return priceStr * 1000;
-
-    const cleanNumber = priceStr.replace(/[^\d.]/g, "");
-    const number = parseFloat(cleanNumber);
-
-    return isNaN(number) ? 0 : number * 1000;
-  };
-
-  // CORRECCIÓN 1: Cálculo dinámico del total general para el Checkout
-  const total = cart.reduce((acc, item) => {
-    let itemPrice = parsePrice(item.price);
-
-    if (item.customizations) {
-      // Sumar precios de las opciones (huevos, carnes, términos, etc.)
-      Object.keys(item.customizations.options || {}).forEach((groupName) => {
-        const selection = item.customizations.options[groupName];
-        if (selection) itemPrice += parsePrice(selection.price);
-      });
-
-      // Sumar precio de la bebida
-      if (item.customizations.bebida) {
-        itemPrice += parsePrice(item.customizations.bebida.price);
-      }
-    }
-
-    return acc + itemPrice * item.quantity;
-  }, 0);
-
-  // CORRECCIÓN 2: Calcular el precio total de una tarjeta de producto individual
-  const calculateItemSubtotal = (item) => {
-    let itemPrice = parsePrice(item.price);
-
-    if (item.customizations) {
-      Object.keys(item.customizations.options || {}).forEach((groupName) => {
-        const selection = item.customizations.options[groupName];
-        if (selection) itemPrice += parsePrice(selection.price);
-      });
-
-      if (item.customizations.bebida) {
-        itemPrice += parsePrice(item.customizations.bebida.price);
-      }
-    }
-
-    return (itemPrice * item.quantity) / 1000;
-  };
+  const {
+    subtotal: totalProductos,
+    esGratis,
+    totalNeto: totalNetoAPagar,
+  } = calculateOrderSummary(cart);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,17 +56,17 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart }) => {
   const handleNext = (e) => {
     e.preventDefault();
     if (
-      !formData.nombre ||
-      !formData.telefono ||
-      !formData.direccion ||
-      !formData.apto ||
+      !formData.nombre.trim() ||
+      !formData.telefono.trim() ||
+      !formData.direccion.trim() ||
+      !formData.apto.trim() ||
       !formData.pago
     ) {
       Swal.fire({
         title: "Campos incompletos",
-        text: "Por favor completa todos los campos obligatorios para la entrega.",
-        icon: "error",
-        confirmButtonColor: "var(--primary)",
+        text: "Por favor completa los campos obligatorios para continuar.",
+        icon: "warning",
+        confirmButtonColor: "#3D2314",
       });
       return;
     }
@@ -109,217 +87,118 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart }) => {
     });
   };
 
-  const handleBack = () => {
-    setStep(1);
-  };
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="checkout-modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="custom-modal-header">
-          <h3>{step === 1 ? "Datos de Entrega" : "Confirmar Pedido"}</h3>
-          <p className="step-indicator">Paso {step} de 2</p>
+    <div className="checkout-overlay" onClick={onClose}>
+      <div className="checkout-container" onClick={(e) => e.stopPropagation()}>
+        <div className="checkout-header">
+          <div>
+            <h3>{step === 1 ? "Datos de Entrega" : "Confirmar Pedido"}</h3>
+            <p className="checkout-subtitle">Paso {step} de 2</p>
+          </div>
+          <button className="btn-close-checkout" onClick={onClose} type="button">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="checkout-progress-bar">
+          <div className={`progress-step ${step >= 1 ? "active" : ""}`} />
+          <div className={`progress-step ${step >= 2 ? "active" : ""}`} />
         </div>
 
         {step === 1 ? (
-          <form onSubmit={handleNext} className="checkout-form">
-            <div className="form-group">
-              <label>Nombre Completo *</label>
-              <input
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="¿A quién entregamos?"
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Teléfono *</label>
-                <input
-                  type="tel"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  placeholder="Tu contacto"
-                  required
-                />
+          <form onSubmit={handleNext} className="checkout-body">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label><User size={15} /> Nombre Completo *</label>
+                <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="¿A quién entregamos?" required />
               </div>
               <div className="form-group">
-                <label>Medio de Pago *</label>
-                <select
-                  name="pago"
-                  value={formData.pago}
-                  onChange={handleChange}
-                >
+                <label><Phone size={15} /> Teléfono *</label>
+                <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="300 000 0000" required />
+              </div>
+              <div className="form-group">
+                <label><CreditCard size={15} /> Medio de Pago *</label>
+                <select name="pago" value={formData.pago} onChange={handleChange}>
                   <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia (Bancolombia/Nequi)">
-                    Transferencia
-                  </option>
-                  <option value="Datáfono">Datáfono</option>
+                  <option value="Transferencia (Bancolombia/Nequi)">Transferencia (Bancolombia/Nequi)</option>
+                  <option value="Datáfono">Datáfono a domicilio</option>
                 </select>
               </div>
-            </div>
-
-            <div className="form-group">
-              <label>Dirección Exacta *</label>
-              <input
-                type="text"
-                name="direccion"
-                value={formData.direccion}
-                onChange={handleChange}
-                placeholder="Calle, Carrera, Barrio..."
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Unidad / Edificio</label>
-                <input
-                  type="text"
-                  name="unidad"
-                  value={formData.unidad}
-                  onChange={handleChange}
-                  placeholder="Nombre (si aplica)"
-                />
+              <div className="form-group full-width">
+                <label><MapPin size={15} /> Dirección Exacta *</label>
+                <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Carrera, Barrio..." required />
               </div>
               <div className="form-group">
-                <label>Apto / Casa / Piso *</label>
-                <input
-                  type="text"
-                  name="apto"
-                  value={formData.apto}
-                  onChange={handleChange}
-                  placeholder="Ej: Apto 502"
-                  required
-                />
+                <label><Building size={15} /> Unidad / Edificio</label>
+                <input type="text" name="unidad" value={formData.unidad} onChange={handleChange} placeholder="Nombre (si aplica)" />
               </div>
-            </div>
-
-            <div className="form-row-txt ">
               <div className="form-group">
-                <label>Observaciones</label>
-                <textarea
-                  name="observaciones"
-                  rows={3}
-                  value={formData.observaciones}
-                  onChange={handleChange}
-                  placeholder="Ej: Entrega en la portería"
-                />
+                <label><Home size={15} /> Apto / Casa / Piso *</label>
+                <input type="text" name="apto" value={formData.apto} onChange={handleChange} placeholder="Ej: Apto 502" required />
+              </div>
+              <div className="form-group full-width">
+                <label><MessageSquare size={15} /> Observaciones</label>
+                <textarea name="observaciones" rows={2} value={formData.observaciones} onChange={handleChange} placeholder="Ej: Dejar en portería, timbrar dos veces..." />
               </div>
             </div>
-
             <div className="checkout-footer">
-              <button type="button" className="btn-cancel" onClick={onClose}>
-                Cancelar
-              </button>
-              <button type="submit" className="btn-confirm-order">
-                Revisar Pedido <i className="fas fa-arrow-right"></i>
-              </button>
+              <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="btn-primary">Revisar Pedido <ArrowRight size={16} /></button>
             </div>
           </form>
         ) : (
-          <div className="order-summary-step">
-            <div className="summary-section">
-              <h4>¿La información es correcta?</h4>
-              <div className="summary-card delivery-info">
-                <p>
-                  <strong>Entregar a:</strong> {formData.nombre}
-                </p>
-                <p>
-                  <strong>Teléfono:</strong> {formData.telefono}
-                </p>
-                <p>
-                  <strong>Dirección:</strong> {formData.direccion}
-                  {formData.unidad && `, ${formData.unidad}`}
-                  {`, ${formData.apto}`}
-                </p>
-                <p>
-                  <strong>Pago:</strong> {formData.pago}
-                </p>
-                {formData.observaciones && (
-                  <p>
-                    <strong>Nota:</strong> {formData.observaciones}
-                  </p>
-                )}
+          <div className="checkout-body summary-body">
+            <div className="summary-card">
+              <div className="card-header">
+                <CheckCircle size={18} className="icon-success" />
+                <h4>Datos de Entrega</h4>
+              </div>
+              <div className="card-content">
+                <p><strong>Destinatario:</strong> {formData.nombre}</p>
+                <p><strong>Teléfono:</strong> {formData.telefono}</p>
+                <p><strong>Dirección:</strong> {formData.direccion}{formData.unidad && `, ${formData.unidad}`}{`, ${formData.apto}`}</p>
+                <p><strong>Método de pago:</strong> {formData.pago}</p>
+                {formData.observaciones && <p className="note"><strong>Nota:</strong> &quot;{formData.observaciones}&quot;</p>}
               </div>
             </div>
 
-            <div className="summary-section">
-              <h4>Tu Pedido</h4>
-              <div className="summary-card order-items-summary">
-                {cart.map((item, idx) => (
-                  <div key={idx} className="summary-item">
-                    <span className="qty">{item.quantity}x</span>
-                    <div className="name-container" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                      <span className="name">{item.name}</span>
-                      {item.customizations && (
-                        <small style={{ color: "#777", fontSize: "0.8rem", lineHeight: "1.2" }}>
-                          {Object.keys(item.customizations.options || {}).map(k => item.customizations.options[k]?.name).filter(Boolean).join(", ")}
-                          {item.customizations.bebida && ` + Bebida: ${item.customizations.bebida.name}${item.customizations.bebida.sabor ? ` (${item.customizations.bebida.sabor})` : ""}`}
-                        </small>
-                      )}
-                    </div>
-                    {/* CORRECCIÓN 3: Desglose de precio unitario usando el helper */}
-                    <span className="price">
-                      ${calculateItemSubtotal(item).toLocaleString()} K
-                    </span>
-                  </div>
-                ))}
-                {(() => {
-                  // Configuración de tu negocio en Andes
-                  const VALOR_DOMICILIO = 2500; // $2.5 K
-                  const MINIMO_ENVIO_GRATIS = 40000; // $40 K
-
-                  // total viene del reduce que ya corregimos (es el valor total de los platos)
-                  const esGratis = total >= MINIMO_ENVIO_GRATIS;
-                  const totalNetoAPagar = esGratis ? total : total + VALOR_DOMICILIO;
-
+            <div className="summary-card">
+              <div className="card-header">
+                <Truck size={18} className="icon-primary" />
+                <h4>Resumen de Productos</h4>
+              </div>
+              <div className="card-content items-list">
+                {cart.map((item, idx) => {
+                  const itemUnitPrice = calculateItemUnitPrice(item);
+                  const itemSubtotal = itemUnitPrice * item.quantity;
+                  const itemName = item.nombre || "Postre";
                   return (
-                    <div className="summary-total-container" style={{ display: "flex", flexDirection: "column", gap: "8px", width: "100%" }}>
-
-                      {/* Desglose de cuentas claras */}
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.95rem", color: "#555" }}>
-                        <span>Subtotal platos:</span>
-                        <span>${(total / 1000).toLocaleString()} K</span>
+                    <div key={idx} className="summary-item">
+                      <div className="item-qty-badge">{item.quantity}x</div>
+                      <div className="item-details">
+                        <span className="item-name">{itemName}</span>
+                        {item.customizations && (
+                          <span className="item-options">
+                            {Object.values(item.customizations.options || {}).map((o) => o?.nombre).filter(Boolean).join(", ")}
+                          </span>
+                        )}
                       </div>
-
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.95rem", color: "#555" }}>
-                        <span>Domicilio:</span>
-                        <span style={{ color: esGratis ? "#137333" : "var(--primary)", fontWeight: "600" }}>
-                          {esGratis ? "GRATIS" : `$${(VALOR_DOMICILIO / 1000).toLocaleString()} K`}
-                        </span>
-                      </div>
-
-                      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "4px 0" }} />
-
-                      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "1.1rem", color: "var(--dark)" }}>
-                        <span>Total a Pagar:</span>
-                        <span>${(totalNetoAPagar / 1000).toLocaleString()} K</span>
-                      </div>
+                      <span className="item-subtotal">{formatCOP(itemSubtotal)}</span>
                     </div>
                   );
-                })()}
+                })}
+              </div>
+              <div className="summary-totals">
+                <div className="total-row"><span>Subtotal productos:</span><span>{formatCOP(totalProductos)}</span></div>
+                <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(3500)}</span></div>
+                <div className="divider" />
+                <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>
               </div>
             </div>
 
             <div className="checkout-footer">
-              <button type="button" className="btn-cancel" onClick={handleBack}>
-                <i className="fas fa-arrow-left"></i> Editar Datos
-              </button>
-              <button
-                type="button"
-                className="btn-confirm-order final-confirm"
-                onClick={handleSubmit}
-              >
-                <i className="fab fa-whatsapp"></i> Enviar Pedido
-              </button>
+              <button type="button" className="btn-secondary" onClick={() => setStep(1)}><ArrowLeft size={16} /> Modificar Datos</button>
+              <button type="button" className="btn-whatsapp" onClick={handleSubmit}><Send size={16} /> Enviar Pedido</button>
             </div>
           </div>
         )}

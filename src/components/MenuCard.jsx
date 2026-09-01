@@ -1,30 +1,23 @@
 import React from "react";
 import { Plus, Eye, Sparkles, ArrowLeft } from "lucide-react";
 import "../css/MenuCard.css";
+import { formatCOP } from "../utils/price";
 
 const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
-  const rawPrice = product.precio ?? product.price ?? 0;
+  const rawPrice = product.precio ?? 0;
+  const formattedPrice = formatCOP(rawPrice);
 
-  const formattedPrice = new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(rawPrice);
-
-  const imageSrc = product.imagen || product.image || "/images/placeholder.png";
-  const titleText = product.nombre || product.name || product.title || "Postre";
+  const imageSrc = product.imagen || "/images/placeholder.png";
+  const titleText = product.nombre || "Postre";
   const descriptionText =
     product.descripcion ||
-    product.description ||
     "Delicioso postre artesanal preparado con crema de Leche Klim.";
 
   return (
     <div className={`menu-card ${isFlipped ? "menu-card--flipped" : ""}`}>
       <div className="menu-card__inner">
-        
-        {/* --- CARA FRONTAL --- */}
+        {/* --- FRONT FACE --- */}
         <div className="menu-card__front">
-          {/* Imagen y Badge de Precio */}
           <div className="menu-card__image-container">
             <img
               src={imageSrc}
@@ -41,7 +34,6 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
             )}
           </div>
 
-          {/* Información Frontal: Solo Título y Botones */}
           <div className="menu-card__content">
             <h3 className="menu-card__title">{titleText}</h3>
 
@@ -68,9 +60,8 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
           </div>
         </div>
 
-        {/* --- CARA TRASERA --- */}
+        {/* --- BACK FACE --- */}
         <div className="menu-card__back">
-          {/* Imagen en la cara trasera */}
           <div className="menu-card__image-container menu-card__image-container--back">
             <img
               src={imageSrc}
@@ -88,7 +79,6 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
             </button>
           </div>
 
-          {/* Información Trasera: Descripción, Toppings y Botones */}
           <div className="menu-card__back-content">
             <div className="menu-card__back-info">
               <h4 className="menu-card__back-title">{titleText}</h4>
@@ -96,7 +86,9 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
 
               {product.toppings && product.toppings.length > 0 && (
                 <div className="menu-card__toppings">
-                  <span className="menu-card__toppings-title">Toppings incluidos:</span>
+                  <span className="menu-card__toppings-title">
+                    Toppings incluidos:
+                  </span>
                   <ul>
                     {product.toppings.map((top, idx) => (
                       <li key={idx}>• {top}</li>
@@ -129,7 +121,6 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

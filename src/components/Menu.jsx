@@ -1,18 +1,14 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import MenuCard from "./MenuCard";
 import { Sparkles } from "lucide-react";
-import '../css/Menu.css'
+import "../css/Menu.css";
+import { categories as menuCategories } from "../data/menu";
 
-// Categorías sincronizadas exactamente con la estructura de datos
-const categories = [
-  { id: "Todo", label: "✨ Todo" },
-  { id: "Pavés 8oz", label: "🍨 Pavés 8oz" },
-  { id: "Con Queso", label: "🧀 Con Queso" },
-  { id: "Tendencia", label: "🔥 Tendencia" },
-  { id: "Cuchareables", label: "🍫 Cuchareables" },
-  { id: "Quesillos", label: "🍮 Quesillos" },
-  { id: "Cumpleaños", label: "🎂 Cumpleaños" },
-];
+// Use categories from centralized data source
+const categories = menuCategories.map((c) => ({
+  id: c.id,
+  label: c.label,
+}));
 
 const Menu = ({ data = [], selectedProduct, setSelectedProduct, addToCart }) => {
   const [activeCategory, setActiveCategory] = useState("Todo");
@@ -30,7 +26,6 @@ const Menu = ({ data = [], selectedProduct, setSelectedProduct, addToCart }) => 
       const filtered = data.filter((item) => {
         const itemCategory = (item.category || item.categoria || "").trim().toLowerCase();
         const targetCategory = activeCategory.trim().toLowerCase();
-
         return itemCategory === targetCategory || itemCategory.includes(targetCategory);
       });
       setFilteredData(filtered);
@@ -40,7 +35,7 @@ const Menu = ({ data = [], selectedProduct, setSelectedProduct, addToCart }) => 
   return (
     <section id="menu" className="menu-section">
       <div className="container">
-        {/* Encabezado */}
+        {/* Header */}
         <div className="menu-header">
           <div className="menu-badge">
             <Sparkles className="badge-icon" size={16} />
@@ -52,7 +47,7 @@ const Menu = ({ data = [], selectedProduct, setSelectedProduct, addToCart }) => 
           </p>
         </div>
 
-        {/* Filtro de Categorías */}
+        {/* Category Filter */}
         <div className="category-filter-wrapper">
           <div className="category-filter">
             {categories.map((cat) => (
@@ -68,7 +63,7 @@ const Menu = ({ data = [], selectedProduct, setSelectedProduct, addToCart }) => 
           </div>
         </div>
 
-        {/* Grid de Productos */}
+        {/* Product Grid */}
         {filteredData.length > 0 ? (
           <div className="menu-grid">
             {filteredData.map((product) => (

@@ -1,0 +1,386 @@
+/* Overlay modal */
+.checkout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 1rem;
+}
+
+/* Contenedor Principal */
+.checkout-container {
+    background-color: #ffffff !important;
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: checkoutFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes checkoutFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Header */
+.checkout-header {
+    padding: 1.25rem 1.5rem 0.75rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    background-color: #fdfbf7;
+}
+
+.checkout-header h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #3d2314 !important;
+    margin: 0;
+}
+
+.checkout-subtitle {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #8c7365 !important;
+    margin: 0.2rem 0 0 0;
+}
+
+.btn-close-checkout {
+    background: transparent;
+    border: none;
+    color: #3d2314;
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.btn-close-checkout:hover {
+    background-color: rgba(61, 35, 20, 0.08);
+}
+
+/* Barra de Progreso Paso 1 / Paso 2 */
+.checkout-progress-bar {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0 1.5rem 1rem 1.5rem;
+    background-color: #fdfbf7;
+    border-bottom: 1px solid rgba(61, 35, 20, 0.08);
+}
+
+.progress-step {
+    height: 4px;
+    flex: 1;
+    background-color: rgba(61, 35, 20, 0.12);
+    border-radius: 2px;
+    transition: background-color 0.3s ease;
+}
+
+.progress-step.active {
+    background-color: #d92b38;
+}
+
+/* Cuerpo del Formulario */
+.checkout-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-height: 70vh;
+    background-color: #ffffff !important;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #3d2314 !important;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1.5px solid rgba(61, 35, 20, 0.15);
+    border-radius: 10px;
+    font-size: 0.88rem;
+    color: #3d2314 !important;
+    background-color: #faf7f2 !important;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s, background-color 0.2s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #3d2314;
+    background-color: #ffffff !important;
+}
+
+/* Tarjetas de Resumen Paso 2 */
+.summary-body {
+    gap: 1rem;
+}
+
+.summary-card {
+    border: 1px solid rgba(61, 35, 20, 0.12);
+    border-radius: 14px;
+    padding: 1.25rem;
+    background-color: #faf7f2 !important;
+    /* Fondo claro forzado */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+
+.card-header h4 {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #3d2314 !important;
+    margin: 0;
+}
+
+.icon-success {
+    color: #137333;
+}
+
+.icon-primary {
+    color: #d92b38;
+}
+
+.card-content p {
+    font-size: 0.9rem;
+    color: #3d2314 !important;
+    margin: 0 0 0.4rem 0;
+    line-height: 1.4;
+}
+
+.card-content p strong {
+    color: #1a0f08 !important;
+    font-weight: 700;
+}
+
+.card-content p.note {
+    font-style: italic;
+    color: #6b5244 !important;
+}
+
+/* Lista de Items en Resumen */
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    padding: 0.3rem 0;
+}
+
+.item-qty-badge {
+    background-color: rgba(61, 35, 20, 0.1);
+    color: #3d2314 !important;
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+}
+
+.item-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-name {
+    font-weight: 700;
+    color: #3d2314 !important;
+}
+
+.item-options {
+    font-size: 0.78rem;
+    color: #6b5244 !important;
+}
+
+.item-subtotal {
+    font-weight: 700;
+    color: #d92b38 !important;
+}
+
+/* Totales en Resumen */
+.summary-totals {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed rgba(61, 35, 20, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #555555 !important;
+}
+
+.total-row.grand-total {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #3d2314 !important;
+}
+
+.text-free {
+    color: #137333 !important;
+    font-weight: 700;
+}
+
+.divider {
+    border-top: 1px solid rgba(61, 35, 20, 0.12);
+    margin: 0.2rem 0;
+}
+
+/* Footer y Botones */
+.checkout-footer {
+    padding-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.btn-secondary {
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    border: 1.5px solid rgba(61, 35, 20, 0.18);
+    background-color: transparent;
+    color: #3d2314 !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(61, 35, 20, 0.05);
+}
+
+.btn-primary {
+    padding: 0.75rem 1.4rem;
+    border-radius: 10px;
+    border: none;
+    background-color: #3d2314;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #27160c;
+    transform: translateY(-1px);
+}
+
+.btn-whatsapp {
+    padding: 0.75rem 1.4rem;
+    border-radius: 10px;
+    border: none;
+    background-color: #25d366;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+    transition: all 0.2s;
+}
+
+.btn-whatsapp:hover {
+    background-color: #1da851;
+    transform: translateY(-1px);
+}
+
+/* Adaptabilidad Móvil */
+@media (max-width: 580px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+
+    .checkout-footer {
+        flex-direction: column-reverse;
+    }
+
+    .btn-secondary,
+    .btn-primary,
+    .btn-whatsapp {
+        width: 100%;
+        justify-content: center;
+    }
+}

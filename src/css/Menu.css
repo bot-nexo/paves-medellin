@@ -1,127 +1,122 @@
 .menu-section {
-    padding: 5rem 0;
-    background-color: #FDFBF7;
-    /* Blanco Crema */
+  padding: 6rem 0;
+  background: linear-gradient(180deg, #fdfbf7 0%, #f9f5f0 50%, #fdfbf7 100%);
 }
 
-/* Encabezado */
 .menu-header {
-    text-align: center;
-    margin-bottom: 2.5rem;
+  text-align: center;
+  margin-bottom: 3rem;
 }
 
 .menu-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.9rem;
-    border-radius: 99px;
-    background-color: rgba(217, 43, 56, 0.08);
-    color: #D92B38;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  background: linear-gradient(135deg, rgba(217,43,56,0.08), rgba(217,43,56,0.04));
+  border: 1px solid rgba(217,43,56,0.12);
+  color: #d92b38;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
 }
 
 .badge-icon {
-    width: 15px;
-    height: 15px;
+  width: 15px;
+  height: 15px;
 }
 
 .menu-title {
-    font-size: 2.25rem;
-    font-weight: 900;
-    color: #3D2314;
-    /* Marrón Chocolate */
-    letter-spacing: -0.02em;
-    margin: 0 0 0.5rem 0;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #3d2314;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.6rem 0;
 }
 
 .menu-slogan {
-    font-size: 1.05rem;
-    color: #6B5244;
-    margin: 0;
+  font-size: 1.05rem;
+  color: #6b5244;
+  margin: 0;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Filtros con Scroll Horizontal Móvil */
 .category-filter-wrapper {
-    margin-bottom: 2.5rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    /* Firefox */
-    -ms-overflow-style: none;
-    /* IE/Edge */
+  margin-bottom: 3rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .category-filter-wrapper::-webkit-scrollbar {
-    display: none;
-    /* Chrome/Safari */
+  display: none;
 }
 
 .category-filter {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    min-width: max-content;
-    padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-width: max-content;
+  padding: 0.5rem 1rem;
 }
 
 .filter-btn {
-    padding: 0.65rem 1.35rem;
-    border-radius: 99px;
-    border: 2px solid rgba(61, 35, 20, 0.1);
-    background-color: #ffffff;
-    color: #3D2314;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  padding: 0.6rem 1.3rem;
+  border-radius: 99px;
+  border: 1.5px solid rgba(61, 35, 20, 0.1);
+  background-color: #ffffff;
+  color: #3d2314;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .filter-btn:hover {
-    border-color: #D92B38;
-    color: #D92B38;
-    transform: translateY(-1px);
+  border-color: rgba(217, 43, 56, 0.3);
+  color: #d92b38;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 43, 56, 0.08);
 }
 
 .filter-btn.active {
-    background-color: #3D2314;
-    border-color: #3D2314;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(61, 35, 20, 0.2);
+  background: linear-gradient(135deg, #3d2314, #5c4335);
+  border-color: #3d2314;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(61, 35, 20, 0.25);
+  transform: translateY(-1px);
 }
 
-/* Grid de Productos Responsivo */
 .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
-    padding: 0 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 0 1rem;
 }
 
 .menu-empty {
-    text-align: center;
-    padding: 3rem;
-    color: #6B5244;
-    font-weight: 600;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6b5244;
+  font-weight: 600;
+  font-size: 1.05rem;
 }
 
-/* Adaptación Celulares */
 @media (max-width: 640px) {
-    .category-filter {
-        justify-content: flex-start;
-        /* Permite deslizar suavemente con el dedo */
-    }
-
-    .menu-title {
-        font-size: 1.75rem;
-    }
-
-    .menu-grid {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
+  .category-filter {
+    justify-content: flex-start;
+  }
+  .menu-title {
+    font-size: 1.8rem;
+  }
+  .menu-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
 }

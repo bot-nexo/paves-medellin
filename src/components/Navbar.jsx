@@ -1,31 +1,28 @@
 import React from "react";
-import { FlameIcon, ShoppingBag, UtensilsCrossed, PhoneCall } from "lucide-react";
+import { ShoppingBag, UtensilsCrossed, PhoneCall } from "lucide-react";
 import "../css/Navbar.css";
+import logoImg from "../assets/images/logo.jpg";
 
 const Navbar = ({ scrolled, cartCount, onOpenCart }) => {
   return (
-    <header className={`navbar ${scrolled ? "navbar--scrolled" : ""}`}>
+    <header className={"navbar" + (scrolled ? " navbar--scrolled" : "")}>
       <div className="navbar__container">
-        {/* Marca / Logo */}
         <div className="navbar__brand">
           <a href="#" className="navbar__logo-link">
-            <div className="navbar__logo-icon">
-              <FlameIcon className="icon-flame" />
-            </div>
+            <img src={logoImg} alt="Paves Medellin" className="navbar__logo-img" />
             <span className="navbar__brand-name">
               Paves <span className="highlight">Medellin</span>
             </span>
           </a>
         </div>
 
-        {/* Menú de Navegación y Acciones */}
         <div className="navbar__actions">
-          <nav className="navbar__nav" aria-label="Navegación principal">
+          <nav aria-label="Navegacion principal">
             <ul className="navbar__links">
               <li>
                 <a href="#menu" className="navbar__link">
                   <UtensilsCrossed className="navbar__link-icon" />
-                  <span>Menú</span>
+                  <span>Menu</span>
                 </a>
               </li>
               <li>
@@ -37,11 +34,10 @@ const Navbar = ({ scrolled, cartCount, onOpenCart }) => {
             </ul>
           </nav>
 
-          {/* Botón de Carrito */}
           <button
-            className={`navbar__cart-btn ${cartCount > 0 ? "navbar__cart-btn--has-items" : ""}`}
+            className={"navbar__cart-btn" + (cartCount > 0 ? " navbar__cart-btn--has-items" : "")}
             onClick={onOpenCart}
-            aria-label={`Ver carrito con ${cartCount} productos`}
+            aria-label={"Ver carrito con " + cartCount + " productos"}
           >
             <div className="navbar__cart-icon-wrapper">
               <ShoppingBag className="navbar__cart-icon" />
