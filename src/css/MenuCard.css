@@ -228,6 +228,14 @@
   color: #3d2314;
 }
 
+.menu-card__nota__text {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #d92b38;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .menu-card__toppings ul {
   list-style: none;
   padding: 0;

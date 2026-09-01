@@ -9,6 +9,7 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
 
   const imageSrc = product.imagen || "/images/placeholder.png";
   const titleText = product.nombre || "Postre";
+  const nota = product.nota || "";
   const descriptionText =
     product.descripcion ||
     "Delicioso postre artesanal preparado con crema de Leche Klim.";
@@ -32,12 +33,16 @@ const MenuCard = ({ product, isFlipped, onFlip, onAddToCart }) => {
                 <Sparkles size={12} /> Popular
               </span>
             )}
+
           </div>
 
           <div className="menu-card__content">
             <h3 className="menu-card__title">{titleText}</h3>
-
+            {product.nota && (
+              <span className="menu-card__nota__text">{product.nota}</span>
+            )}
             <div className="menu-card__actions">
+
               <button
                 className="menu-card__btn-details"
                 onClick={() => onFlip(isFlipped ? null : product)}

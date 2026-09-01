@@ -105,36 +105,7 @@ button { font-family: inherit; cursor: pointer; }
 ::-webkit-scrollbar-thumb { background: rgba(61, 35, 20, 0.2); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(61, 35, 20, 0.35); }
 
-.footer {
-  background-color: #3d2314;
-  color: #fdfbf7;
-  padding: 2.5rem 0;
-  text-align: center;
-  margin-top: auto;
-}
-
-.footer-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.footer-content p {
-  font-size: 0.88rem;
-  opacity: 0.8;
-  margin: 0;
-}
-
-.developer-tag a {
-  color: #d92b38;
-  font-weight: 700;
-  transition: color 0.2s;
-}
-
-.developer-tag a:hover {
-  color: #ffffff;
-}
+/* Footer styles now in src/css/Footer.css */
 
 @media (max-width: 640px) {
   .scroll-top {

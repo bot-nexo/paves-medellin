@@ -1,96 +1,71 @@
-import { useState, useEffect } from "react";
-import { Sparkles, ShoppingBag, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
+import logoImg from "../assets/images/logo.jpg";
 import "../css/Hero.css";
-import { products } from "../data/menu";
-import { formatCOP } from "../utils/price";
 
-const featured = products.filter((p) => p.destacado);
-
-const Hero = ({ onAddToCart }) => {
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % featured.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, []);
-
-  const goPrev = () => setCurrent((c) => (c - 1 + featured.length) % featured.length);
-  const goNext = () => setCurrent((c) => (c + 1) % featured.length);
-
+const Hero = ({ cartCount, onOpenCart }) => {
   return (
     <section className="hero">
+      {/* Top Bar — Logo + Cart */}
+      <div className="hero__topbar container">
+        <a href="#" className="hero__brand">
+          <img src={logoImg} alt="Pavés Medellín" className="hero__logo" />
+          <span className="hero__brand-name">
+            Pavés <span className="hero__brand-accent">Medellín</span>
+          </span>
+        </a>
+
+        <button
+          className={"hero__cart-btn" + (cartCount > 0 ? " hero__cart-btn--active" : "")}
+          onClick={onOpenCart}
+          title={"Ver carrito con " + cartCount + " productos"}
+        >
+          <ShoppingBag size={20} />
+          {cartCount > 0 && (
+            <span className="hero__cart-badge">{cartCount}</span>
+          )}
+          <span className="hero__cart-text">Mi Pedido</span>
+        </button>
+      </div>
+
+      {/* Hero Content */}
       <div className="hero__container container">
-        <div className="hero__content" data-aos="fade-up">
+        <div className="hero__content">
           <div className="hero__badge">
-            <Sparkles className="hero__badge-icon" />
-            <span>Postres Artesanales en Medellin</span>
+            <span>✨ Postres Artesanales en Medellín</span>
           </div>
 
           <h1 className="hero__title">
-            Paves Cremosos <br />
-            <span className="highlight">llenos de sabor</span>
+            Pavés Cremosos{" "}
+            <span className="hero__highlight">llenos de sabor</span>
           </h1>
 
           <p className="hero__slogan">
             El verdadero sabor brasileño en formato personal. Descubre nuestras
-            combinaciones con Leche Klim, queso, frutas frescas y toppings unicos.
+            combinaciones con Leche Klim, queso, frutas frescas y toppings únicos.
           </p>
 
           <div className="hero__actions">
-            <a href="#menu" className="hero__btn hero__btn--primary">
-              <ShoppingBag className="btn-icon" />
-              <span>Ver Menu</span>
+            <a href="#menu" className="hero__btn">
+              <ShoppingBag size={20} />
+              <span>Ver Menú</span>
             </a>
           </div>
-        </div>
 
-        <div className="hero__products-carousel" data-aos="fade-up" data-aos-delay="200">
-          <button className="carousel-arrow carousel-arrow--left" onClick={goPrev} type="button">
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="carousel-viewport">
-            <div className="carousel-track" style={{ transform: "translateX(-" + (current * 100) + "%)" }}>
-              {featured.map((product) => (
-                <div className="carousel-slide" key={product.id}>
-                  <div className="featured-card">
-                    <div className="featured-card__image">
-                      <img src={product.imagen} alt={product.nombre} loading="lazy" />
-                      <span className="featured-card__badge">
-                        <Sparkles size={12} /> Popular
-                      </span>
-                    </div>
-                    <div className="featured-card__info">
-                      <h3 className="featured-card__name">{product.nombre}</h3>
-                      <p className="featured-card__desc">{product.descripcion}</p>
-                      <div className="featured-card__bottom">
-                        <span className="featured-card__price">{formatCOP(product.precio)}</span>
-                        <button className="featured-card__btn" onClick={() => onAddToCart(product)} type="button">
-                          <ShoppingBag size={16} /> Agregar
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          <div className="hero__stats">
+            <div className="hero__stat">
+              <span className="hero__stat-number">17+</span>
+              <span className="hero__stat-label">Sabores Únicos</span>
             </div>
-          </div>
-
-          <button className="carousel-arrow carousel-arrow--right" onClick={goNext} type="button">
-            <ChevronRight size={20} />
-          </button>
-
-          <div className="carousel-dots">
-            {featured.map((_, idx) => (
-              <button
-                key={idx}
-                className={"carousel-dot" + (idx === current ? " active" : "")}
-                onClick={() => setCurrent(idx)}
-                type="button"
-              />
-            ))}
+            <div className="hero__stat-divider" />
+            <div className="hero__stat">
+              <span className="hero__stat-number">100%</span>
+              <span className="hero__stat-label">Artesanal</span>
+            </div>
+            <div className="hero__stat-divider" />
+            <div className="hero__stat">
+              <span className="hero__stat-number">★ 5.0</span>
+              <span className="hero__stat-label">Opiniones</span>
+            </div>
           </div>
         </div>
       </div>

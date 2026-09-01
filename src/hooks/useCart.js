@@ -37,6 +37,11 @@ const useCart = () => {
     setIsCartOpen(false);
   };
 
+  const closeCustomizationModal = () => {
+    setIsCustomizing(false);
+    setProductToCustomize(null);
+    setEditingItemKey(null);
+  };
   // ── Confirm customization (add or update) ────────────────────────────
   const confirmCustomization = useCallback(
     (product, customizations) => {
@@ -121,6 +126,7 @@ const useCart = () => {
     productToCustomize,
 
     // actions
+    closeCustomizationModal,
     openCart,
     closeCart,
     openCheckout,

@@ -4,10 +4,8 @@ import Swal from "sweetalert2";
 import "aos/dist/aos.css";
 import "./App.css";
 
-import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Menu from "./components/Menu";
-import Info from "./components/Info";
 import Footer from "./components/Footer";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
@@ -29,6 +27,7 @@ const App = () => {
     isCustomizing,
     isCheckoutOpen,
     productToCustomize,
+    closeCustomizationModal,
     openCart,
     closeCart,
     openCheckout,
@@ -42,16 +41,12 @@ const App = () => {
     setIsCheckoutOpen,
   } = useCart();
 
-  const [scrolled, setScrolled] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const whatsappNumber = info.phone;
 
   useEffect(() => {
     AOS.init({ duration: 1600, once: true, offset: 100 });
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -127,11 +122,10 @@ const App = () => {
     closeCart();
   };
 
+  //******************************** */
   return (
     <div className="app-wrapper">
-      <Navbar scrolled={scrolled} cartCount={cartCount} onOpenCart={openCart} />
-
-      <Hero onAddToCart={addToCart} />
+      <Hero cartCount={cartCount} onOpenCart={openCart} />
 
       <Menu
         data={menuData}
@@ -139,8 +133,6 @@ const App = () => {
         setSelectedProduct={setSelectedProduct}
         addToCart={addToCart}
       />
-
-      <Info info={info} />
 
       <Footer />
 
@@ -157,7 +149,7 @@ const App = () => {
       <CustomizationModal
         product={productToCustomize}
         isOpen={isCustomizing}
-        onClose={() => setIsCustomizing(false)}
+        onClose={closeCustomizationModal}
         onConfirm={confirmCustomization}
       />
 
@@ -168,14 +160,7 @@ const App = () => {
         cart={cart}
       />
 
-      {scrolled && (
-        <button
-          className="scroll-top"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          <i className="fas fa-chevron-up"></i>
-        </button>
-      )}
+
     </div>
   );
 };

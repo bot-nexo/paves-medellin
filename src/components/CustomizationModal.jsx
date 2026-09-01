@@ -87,6 +87,7 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
   const productOptions = product.options || {};
   const productToppings = product.toppings || productOptions.adiciones || productOptions.toppings || [];
 
+  //********************************* */
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="custom-modal-content" onClick={(e) => e.stopPropagation()}>
