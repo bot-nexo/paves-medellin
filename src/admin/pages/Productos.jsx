@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, Trash2, Star, RefreshCw } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, RefreshCw } from "lucide-react";
 import Swal from "sweetalert2";
 import {
   getProducts,
@@ -10,6 +10,7 @@ import {
 import { formatCOP } from "../../utils/price";
 import ProductFormModal from "../ProductFormModal";
 import Switch from "../Switch";
+import Pagination from "../Pagination";
 import "../admin.css";
 
 const Productos = () => {
@@ -19,6 +20,8 @@ const Productos = () => {
   const [filtroCategoria, setFiltroCategoria] = useState("");
   const [modal, setModal] = useState({ abierto: false, producto: null });
   const [procesandoId, setProcesandoId] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [itemsPorPagina, setItemsPorPagina] = useState(5);
 
   const cargar = useCallback(async () => {
     try {
@@ -40,6 +43,11 @@ const Productos = () => {
     cargar();
   }, [cargar]);
 
+  // Resetear a página 1 al filtrar o buscar
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda, filtroCategoria]);
+
   const filtrados = useMemo(() => {
     if (!productos) return [];
     const q = busqueda.trim().toLowerCase();
@@ -49,6 +57,11 @@ const Productos = () => {
       return okCat && okBus;
     });
   }, [productos, busqueda, filtroCategoria]);
+
+  const paginados = useMemo(() => {
+    const inicio = (paginaActual - 1) * itemsPorPagina;
+    return filtrados.slice(inicio, inicio + itemsPorPagina);
+  }, [filtrados, paginaActual, itemsPorPagina]);
 
   /** Alterna disponible/destacado con actualización optimista al confirmar. */
   const toggleCampo = async (p, campo) => {
@@ -197,7 +210,7 @@ const Productos = () => {
               </tr>
             </thead>
             <tbody>
-              {filtrados.map((p) => (
+              {paginados.map((p) => (
                 <tr
                   key={p.id}
                   className={p.disponible === false ? "adm-prod__fila--agotada" : ""}
@@ -256,6 +269,19 @@ const Productos = () => {
           </table>
         )}
       </div>
+
+      {productos !== null && filtrados.length > 0 && (
+        <Pagination
+          paginaActual={paginaActual}
+          totalItems={filtrados.length}
+          itemsPorPagina={itemsPorPagina}
+          onCambiarPagina={(p) => setPaginaActual(p)}
+          onCambiarItemsPorPagina={(n) => {
+            setItemsPorPagina(n);
+            setPaginaActual(1);
+          }}
+        />
+      )}
 
       {modal.abierto && (
         <ProductFormModal

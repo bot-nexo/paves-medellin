@@ -28,9 +28,9 @@ const Cargando = () => (
 /** Rutas del panel. Se monta desde App.jsx solo si Supabase está configurado. */
 export const AdminRoutes = () => (
   <Routes>
-    <Route path="/admin/login" element={<AdminLogin />} />
+    <Route path="login" element={<AdminLogin />} />
     <Route
-      path="/admin"
+      path=""
       element={
         <RequiereSesion>
           <AdminLayout />
@@ -44,7 +44,7 @@ export const AdminRoutes = () => (
       <Route path="negocio" element={<Suspense fallback={<Cargando />}><AdminNegocio /></Suspense>} />
       <Route path="configuracion" element={<Suspense fallback={<Cargando />}><AdminConfiguracion /></Suspense>} />
       {/* Ruta desconocida dentro del panel → al dashboard */}
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to="" replace />} />
     </Route>
   </Routes>
 );

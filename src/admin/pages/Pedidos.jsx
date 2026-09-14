@@ -8,6 +8,7 @@ import {
 } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
 import PedidoDetalleModal from "../PedidoDetalleModal";
+import Pagination from "../Pagination";
 import "../admin.css";
 
 const ESTADOS = [
@@ -46,6 +47,8 @@ const Pedidos = () => {
   const [detalle, setDetalle] = useState(null);
   const [cargandoId, setCargandoId] = useState(null);
   const [nuevos, setNuevos] = useState(0);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [itemsPorPagina, setItemsPorPagina] = useState(5);
 
   const cargar = useCallback(async () => {
     try {
@@ -89,6 +92,11 @@ const Pedidos = () => {
     return unsubscribe;
   }, [cargar]);
 
+  // Resetear a página 1 al cambiar filtro
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtro]);
+
   const conteos = useMemo(() => {
     const base = { todos: pedidos?.length ?? 0 };
     pedidos?.forEach((p) => {
@@ -101,6 +109,11 @@ const Pedidos = () => {
     () => (pedidos || []).filter((p) => filtro === "todos" || p.estado === filtro),
     [pedidos, filtro],
   );
+
+  const paginados = useMemo(() => {
+    const inicio = (paginaActual - 1) * itemsPorPagina;
+    return filtrados.slice(inicio, inicio + itemsPorPagina);
+  }, [filtrados, paginaActual, itemsPorPagina]);
 
   const cambiarEstado = async (pedido, nuevoEstado) => {
     setCargandoId(pedido.id);
@@ -194,7 +207,7 @@ const Pedidos = () => {
               </tr>
             </thead>
             <tbody>
-              {filtrados.map((p) => {
+              {paginados.map((p) => {
                 const paso = SIGUIENTE[p.estado];
                 return (
                   <tr
@@ -273,6 +286,19 @@ const Pedidos = () => {
           </table>
         )}
       </div>
+
+      {pedidos !== null && filtrados.length > 0 && (
+        <Pagination
+          paginaActual={paginaActual}
+          totalItems={filtrados.length}
+          itemsPorPagina={itemsPorPagina}
+          onCambiarPagina={(p) => setPaginaActual(p)}
+          onCambiarItemsPorPagina={(n) => {
+            setItemsPorPagina(n);
+            setPaginaActual(1);
+          }}
+        />
+      )}
 
       {detalle && (
         <PedidoDetalleModal

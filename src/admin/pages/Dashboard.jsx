@@ -113,7 +113,7 @@ const Dashboard = () => {
       <div className="adm-page">
         <p className="adm-dashboard__cargando">Cargando métricas…</p>
       </div>
-      );
+    );
   }
 
   //**************************** */
@@ -121,7 +121,7 @@ const Dashboard = () => {
     <div className="adm-page">
       <header className="adm-dashboard__header">
         <div>
-          <h1 className="adm-page-title">Dashboard</h1>
+          <h1 className="admin-page__titulo">Dashboard</h1>
           <p className="adm-dashboard__sub">
             {new Date().toLocaleDateString("es-CO", {
               weekday: "long",

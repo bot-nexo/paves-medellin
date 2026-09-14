@@ -9,6 +9,7 @@ import {
 } from "../../data/dataSource";
 import Switch from "../Switch";
 import CategoryFormModal from "../CategoryFormModal";
+import Pagination from "../Pagination";
 import "../admin.css";
 
 const Categorias = () => {
@@ -16,6 +17,8 @@ const Categorias = () => {
   const [productos, setProductos] = useState([]);
   const [modal, setModal] = useState({ abierto: false, categoria: null });
   const [procesandoId, setProcesandoId] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [itemsPorPagina, setItemsPorPagina] = useState(5);
 
   const cargar = useCallback(async () => {
     try {
@@ -36,6 +39,12 @@ const Categorias = () => {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  const paginadas = useMemo(() => {
+    if (!categorias) return [];
+    const inicio = (paginaActual - 1) * itemsPorPagina;
+    return categorias.slice(inicio, inicio + itemsPorPagina);
+  }, [categorias, paginaActual, itemsPorPagina]);
 
   const conteoPorCategoria = useMemo(() => {
     const mapa = {};
@@ -159,7 +168,7 @@ const Categorias = () => {
               </tr>
             </thead>
             <tbody>
-              {categorias.map((cat) => (
+              {paginadas.map((cat) => (
                 <tr key={cat.id} className={cat.visible ? "" : "adm-prod__fila--agotada"}>
                   <td>
                     <div className="adm-prod__celda-nombre">
@@ -207,6 +216,19 @@ const Categorias = () => {
           </table>
         )}
       </div>
+
+      {categorias !== null && categorias.length > 0 && (
+        <Pagination
+          paginaActual={paginaActual}
+          totalItems={categorias.length}
+          itemsPorPagina={itemsPorPagina}
+          onCambiarPagina={(p) => setPaginaActual(p)}
+          onCambiarItemsPorPagina={(n) => {
+            setItemsPorPagina(n);
+            setPaginaActual(1);
+          }}
+        />
+      )}
 
       {modal.abierto && (
         <CategoryFormModal

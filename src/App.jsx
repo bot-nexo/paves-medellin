@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import AOS from "aos";
 import Swal from "sweetalert2";
 import "aos/dist/aos.css";
@@ -166,51 +167,59 @@ const App = () => {
 
   //***************************** */
   return (
-    <div className="app-wrapper">
-      {/* Panel admin: solo existe si Supabase está configurado (lazy — no pesa en el bundle de la tienda) */}
-      {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && <AdminRoutes />}
+    <Routes>
+      {/* Panel de administración (privado) */}
+      {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
+        <Route path="/admin/*" element={<AdminRoutes />} />
+      )}
 
-      <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} />
+      {/* Tienda y catálogo público */}
+      <Route
+        path="/*"
+        element={
+          <div className="app-wrapper">
+            <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} />
 
-      <Menu
-        data={products}
-        categories={categories}
-        selectedProduct={selectedProduct}
-        setSelectedProduct={setSelectedProduct}
-        addToCart={addToCart}
+            <Menu
+              data={products}
+              categories={categories}
+              selectedProduct={selectedProduct}
+              setSelectedProduct={setSelectedProduct}
+              addToCart={addToCart}
+            />
+
+            <Footer settings={settings} />
+
+            <CartModal
+              cart={cart}
+              isOpen={isCartOpen}
+              onClose={closeCart}
+              onUpdateQuantity={updateQuantity}
+              onRemove={removeItemByStoreKey}
+              onEdit={editCartItem}
+              onCheckout={openCheckout}
+              settings={settings}
+            />
+
+            <CustomizationModal
+              product={productToCustomize}
+              isOpen={isCustomizing}
+              onClose={closeCustomizationModal}
+              onConfirm={confirmCustomization}
+            />
+
+            <CheckoutModal
+              isOpen={isCheckoutOpen}
+              onClose={closeCheckout}
+              onConfirm={sendOrderToWhatsApp}
+              cart={cart}
+              settings={settings}
+              estadoNegocio={estadoNegocio}
+            />
+          </div>
+        }
       />
-
-      <Footer settings={settings} />
-
-      <CartModal
-        cart={cart}
-        isOpen={isCartOpen}
-        onClose={closeCart}
-        onUpdateQuantity={updateQuantity}
-        onRemove={removeItemByStoreKey}
-        onEdit={editCartItem}
-        onCheckout={openCheckout}
-        settings={settings}
-      />
-
-      <CustomizationModal
-        product={productToCustomize}
-        isOpen={isCustomizing}
-        onClose={closeCustomizationModal}
-        onConfirm={confirmCustomization}
-      />
-
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={closeCheckout}
-        onConfirm={sendOrderToWhatsApp}
-        cart={cart}
-        settings={settings}
-        estadoNegocio={estadoNegocio}
-      />
-
-
-    </div>
+    </Routes>
   );
 };
 

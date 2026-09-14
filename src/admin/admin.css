@@ -1,27 +1,28 @@
 /* ══════════════════════════════════════════════════════════════════════════
    PANEL ADMIN — Tema Oscuro Elegante (Optimizado para Mobile y Desktop)
    ══════════════════════════════════════════════════════════════════════════ */
+@import "tailwindcss";
 
 :root {
-  --abg: #121113;
-  --abg-panel: #1a191c;
-  --abg-elev: #242226;
-  --abg-hover: rgba(255, 255, 255, 0.05);
-  --aborde: rgba(243, 229, 213, 0.08);
-  --acento: #e0a45e;
-  --acento-hover: #eab36e;
-  --acento-suave: rgba(224, 164, 94, 0.12);
-  --crema: #fdf8f2;
-  --texto: #d0c7be;
-  --texto-dim: #8c827a;
-  --fresa: #e8879c;
-  --menta: #7fc8a9;
-  --peligro: #e07a5f;
+  --abg: #0d0d0e;
+  --abg-panel: #161618;
+  --abg-elev: #202023;
+  --abg-hover: rgba(255, 255, 255, 0.04);
+  --aborde: rgba(255, 255, 255, 0.06);
+  --acento: #d69e4a;
+  --acento-hover: #e6b872;
+  --acento-suave: rgba(214, 158, 74, 0.1);
+  --crema: #f5efe6;
+  --texto: #bcb8b1;
+  --texto-dim: #7e7a75;
+  --fresa: #e68d9f;
+  --menta: #82cfae;
+  --peligro: #e68d8d;
 
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 72px;
-  --topbar-height: 60px;
-  --transition-speed: 0.25s;
+  --topbar-height: 64px;
+  --transition-speed: 0.3s;
 }
 
 * {
@@ -296,8 +297,9 @@
 .admin-card {
   background: var(--abg-panel);
   border: 1px solid var(--aborde);
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
   width: 100%;
 }
 
@@ -1806,5 +1808,118 @@ select.adm-prod__select:focus {
 
   .adm-page .estado-horario {
     display: none;
+  }
+}
+
+/* ── Paginación Admin ──────────────────────────────────────────────────── */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--abg-panel);
+  border: 1px solid var(--aborde);
+  border-radius: 14px;
+  margin-top: 20px;
+  color: var(--texto-dim);
+  font-size: 13px;
+}
+
+.admin-pagination__info {
+  font-weight: 500;
+}
+
+.admin-pagination__highlight {
+  color: var(--crema);
+  font-weight: 600;
+}
+
+.admin-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-pagination__btn,
+.admin-pagination__page-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  border-radius: 8px;
+  color: var(--texto);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.admin-pagination__btn:hover:not(:disabled),
+.admin-pagination__page-btn:hover:not(.admin-pagination__page-btn--active) {
+  background: var(--abg-hover);
+  color: var(--crema);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.admin-pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-pagination__pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-pagination__page-btn {
+  min-width: 34px;
+  height: 34px;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.admin-pagination__page-btn--active {
+  background: var(--acento-suave);
+  color: var(--acento);
+  border-color: var(--acento);
+  font-weight: 600;
+}
+
+.admin-pagination__dots {
+  padding: 0 4px;
+  color: var(--texto-dim);
+}
+
+.admin-pagination__per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-pagination__select {
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  color: var(--crema);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-pagination__select:focus {
+  border-color: var(--acento);
+}
+
+@media (max-width: 768px) {
+  .admin-pagination {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 }
