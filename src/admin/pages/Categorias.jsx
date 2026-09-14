@@ -1,0 +1,228 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import Swal from "sweetalert2";
+import {
+  getProducts,
+  getCategoriesRaw,
+  updateCategory,
+  deleteCategory,
+} from "../../data/dataSource";
+import Switch from "../Switch";
+import CategoryFormModal from "../CategoryFormModal";
+import "../admin.css";
+
+const Categorias = () => {
+  const [categorias, setCategorias] = useState(null); // null = cargando
+  const [productos, setProductos] = useState([]);
+  const [modal, setModal] = useState({ abierto: false, categoria: null });
+  const [procesandoId, setProcesandoId] = useState(null);
+
+  const cargar = useCallback(async () => {
+    try {
+      const [cats, prods] = await Promise.all([getCategoriesRaw(), getProducts()]);
+      setCategorias(cats);
+      setProductos(prods);
+    } catch (e) {
+      Swal.fire({
+        title: "Error al cargar",
+        text: e.message,
+        icon: "error",
+        confirmButtonColor: "#3D2314",
+      });
+      setCategorias([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  const conteoPorCategoria = useMemo(() => {
+    const mapa = {};
+    productos.forEach((p) => {
+      if (!p.category) return;
+      mapa[p.category] = (mapa[p.category] || 0) + 1;
+    });
+    return mapa;
+  }, [productos]);
+
+  const contar = (nombreCat) => conteoPorCategoria[nombreCat] || 0;
+
+  const toggleVisible = async (cat) => {
+    const nuevo = !cat.visible;
+    setProcesandoId(cat.id);
+    try {
+      await updateCategory(cat.id, { visible: nuevo });
+      setCategorias((prev) =>
+        prev.map((c) => (c.id === cat.id ? { ...c, visible: nuevo } : c)),
+      );
+    } catch (e) {
+      Swal.fire({
+        title: "No se pudo actualizar",
+        text: e.message,
+        icon: "error",
+        confirmButtonColor: "#3D2314",
+      });
+    }
+    setProcesandoId(null);
+  };
+
+  const eliminar = async (cat) => {
+    const n = contar(cat.nombre);
+    if (n > 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No se puede eliminar",
+        text: `Tiene ${n} producto(s) asociado(s). Reasígnalos primero u oculta la categoría.`,
+        confirmButtonColor: "#3D2314",
+      });
+      return;
+    }
+
+    const res = await Swal.fire({
+      title: `¿Eliminar la categoría "${cat.nombre}"?`,
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#E07A5F",
+      cancelButtonColor: "#3D2314",
+      reverseButtons: true,
+    });
+    if (!res.isConfirmed) return;
+
+    setProcesandoId(cat.id);
+    try {
+      await deleteCategory(cat.id);
+      setCategorias((prev) => prev.filter((c) => c.id !== cat.id));
+      Swal.fire({
+        icon: "success",
+        title: "Categoría eliminada",
+        toast: true,
+        position: "top-end",
+        timer: 2200,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      Swal.fire({
+        title: "No se pudo eliminar",
+        text: e.message,
+        icon: "error",
+        confirmButtonColor: "#3D2314",
+      });
+    }
+    setProcesandoId(null);
+  };
+
+  const totalVisibles = categorias?.filter((c) => c.visible).length ?? 0;
+
+  return (
+    <div className="admin-page">
+      <header className="admin-page__header admin-page__header--row">
+        <div>
+          <h1 className="admin-page__titulo">🗂️ Categorías</h1>
+          <p className="admin-page__sub">
+            {categorias
+              ? `${categorias.length} categorías · ${totalVisibles} visibles en la tienda`
+              : "Cargando…"}
+          </p>
+        </div>
+        <div className="admin-page__acciones">
+          <button type="button" className="admin-btn-ghost" onClick={cargar}>
+            <RefreshCw size={15} /> Recargar
+          </button>
+          <button
+            type="button"
+            className="admin-btn-primary admin-btn-primary--compacto"
+            onClick={() => setModal({ abierto: true, categoria: null })}
+          >
+            <Plus size={16} /> Nueva categoría
+          </button>
+        </div>
+      </header>
+
+      <div className="admin-card admin-card--tabla">
+        {categorias === null ? (
+          <p className="adm-prod__vacio">Cargando categorías…</p>
+        ) : categorias.length === 0 ? (
+          <p className="adm-prod__vacio">No hay categorías. Crea la primera.</p>
+        ) : (
+          <table className="adm-prod__tabla">
+            <thead>
+              <tr>
+                <th>Categoría</th>
+                <th>Productos</th>
+                <th>Orden</th>
+                <th>Visible</th>
+                <th className="adm-prod__col-acciones">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categorias.map((cat) => (
+                <tr key={cat.id} className={cat.visible ? "" : "adm-prod__fila--agotada"}>
+                  <td>
+                    <div className="adm-prod__celda-nombre">
+                      <span className="adm-cats__emoji">{cat.emoji || "🏷️"}</span>
+                      <div>
+                        <strong>{cat.nombre}</strong>
+                        <small>{cat.label}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="adm-chip">{contar(cat.nombre)} productos</span>
+                  </td>
+                  <td>{cat.orden}</td>
+                  <td>
+                    <Switch
+                      activo={cat.visible}
+                      disabled={procesandoId === cat.id}
+                      onChange={() => toggleVisible(cat)}
+                      etiqueta={cat.visible ? "Ocultar de la tienda" : "Mostrar en la tienda"}
+                    />
+                  </td>
+                  <td className="adm-prod__col-acciones">
+                    <button
+                      type="button"
+                      className="adm-icono-btn"
+                      title="Editar"
+                      onClick={() => setModal({ abierto: true, categoria: cat })}
+                    >
+                      <Pencil size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      className="adm-icono-btn adm-icono-btn--peligro"
+                      title="Eliminar"
+                      disabled={procesandoId === cat.id}
+                      onClick={() => eliminar(cat)}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {modal.abierto && (
+        <CategoryFormModal
+          categoria={modal.categoria}
+          ordenSugerido={
+            (categorias?.reduce((max, c) => Math.max(max, c.orden || 0), 0) || 0) + 1
+          }
+          onClose={() => setModal({ abierto: false, categoria: null })}
+          onSaved={async () => {
+            setModal({ abierto: false, categoria: null });
+            await cargar();
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Categorias;

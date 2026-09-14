@@ -1,5 +1,5 @@
 // ── Imágenes reales del proyecto ────────────────────────────────────────
-import logoImg from "../assets/images/logo.jpg";
+import logoImg from "../assets/images/logo.png";
 
 import paveFrutosRojos from "../assets/images/Pave de klim con frutos rojos y queso.png";
 import paveQueso from "../assets/images/Pavel de klim con queso.png";

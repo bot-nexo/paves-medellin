@@ -1,7 +1,7 @@
 import React from "react";
 import { ShoppingBag, UtensilsCrossed, PhoneCall } from "lucide-react";
 import "../css/Navbar.css";
-import logoImg from "../assets/images/logo.jpg";
+import logoImg from "../assets/images/logo.png";
 
 const Navbar = ({ scrolled, cartCount, onOpenCart }) => {
   return (

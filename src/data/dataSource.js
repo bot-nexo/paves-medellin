@@ -9,6 +9,7 @@
 // El shape de los datos es idéntico al que ya consume la tienda
 // (ver src/data/menu.js), así no hay que tocar MenuCard/Menu/etc.
 import { supabase, isSupabaseConfigured } from "../services/supabaseClient";
+import { deleteProductImage } from "../services/storage";
 import {
   products as localProducts,
   categories as localCategories,
@@ -32,6 +33,11 @@ export const subscribeToCatalog = (fn) => {
 /** ¿La app está leyendo de Supabase? (útil para badges de estado en el panel) */
 export const isUsingSupabase = () => isSupabaseConfigured;
 
+// Placeholder SVG (data URI) para productos sin foto (creados desde el panel
+// antes de subir imagen) — evita <img> rotos en tienda y panel.
+const PLACEHOLDER_IMG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23241a15'/%3E%3Ctext x='50%25' y='50%25' font-size='120' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%8D%A8%3C/text%3E%3C/svg%3E";
+
 // ── Normalizadores: fila BD → shape de la tienda ────────────────────────────
 const normalizeCategory = (row) => ({
   id: row.nombre,
@@ -43,7 +49,7 @@ const normalizeCategory = (row) => ({
 });
 
 const resolveImage = (row) =>
-  (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || "";
+  (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || PLACEHOLDER_IMG;
 
 const normalizeProduct = (row) => {
   const { categories: _cat, ...rest } = row;
@@ -67,6 +73,9 @@ const normalizeSettings = (row) => ({
   hours1: row.hours1 || localInfo.hours1,
   deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO,
   freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS,
+  offersDelivery: row.offers_delivery !== false,
+  offersPickup: row.offers_pickup !== false,
+  forceClosed: row.force_closed === true,
 });
 
 // ── Fallbacks locales (datos actuales del catálogo) ──────────────────────────
@@ -96,6 +105,9 @@ const buildLocalSettings = () => ({
   ...localInfo,
   deliveryFee: VALOR_DOMICILIO,
   freeDeliveryThreshold: MINIMO_ENVIO_GRATIS,
+  offersDelivery: true,
+  offersPickup: true,
+  forceClosed: false,
 });
 
 // ── Realtime: refresca el cache cuando el admin cambia algo ──────────────────
@@ -146,11 +158,11 @@ export async function getCategories() {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
+      .eq("visible", true) // la tienda solo ve las categorías visibles (el admin usa getCategoriesRaw)
       .order("orden", { ascending: true });
     if (error) throw error;
-    cache.categories = data.length
-      ? data.map(normalizeCategory)
-      : buildLocalCategories();
+    // Resultado vacío VÁLIDO (todo oculto) se respeta; solo errores caen a local
+    cache.categories = data.map(normalizeCategory);
   } catch (e) {
     console.warn("[dataSource] categorías → fallback local:", e.message);
     cache.categories = buildLocalCategories();
@@ -175,9 +187,8 @@ export async function getProducts() {
       .order("orden", { ascending: true })
       .order("nombre", { ascending: true });
     if (error) throw error;
-    cache.products = data.length
-      ? data.map(normalizeProduct)
-      : buildLocalProducts();
+    // Resultado vacío VÁLIDO (catálogo vaciado por el admin) se respeta
+    cache.products = data.map(normalizeProduct);
   } catch (e) {
     console.warn("[dataSource] productos → fallback local:", e.message);
     cache.products = buildLocalProducts();
@@ -235,28 +246,193 @@ export async function createOrder(deliveryData, cart, totals) {
   if (!isSupabaseConfigured) {
     return { ok: false, persisted: false, numero: null, reason: "supabase-no-configurado" };
   }
+
+  const items = buildOrderItems(cart);
+
   try {
-    // Nota: NO usamos .select() tras el insert — devolver datos requeriría
-    // SELECT para anon en orders (fuga de privacidad: teléfonos/direcciones).
-    // El nº de pedido se genera igual en la BD (identity) y el admin lo ve en
-    // el panel. En F6 se agrega una función RPC segura para devolver el nº.
-    const { error } = await supabase.from("orders").insert({
-      nombre: deliveryData.nombre,
-      telefono: deliveryData.telefono,
-      direccion: deliveryData.direccion || "",
-      unidad: deliveryData.unidad || "",
-      apto: deliveryData.apto || "",
-      observaciones: deliveryData.observaciones || "",
-      pago: deliveryData.pago || "",
-      subtotal: totals.subtotal,
-      delivery_fee: totals.deliveryFee,
-      total: totals.total,
-      items: buildOrderItems(cart),
+    // 1º intento: RPC segura (devuelve el nº para el mensaje de WhatsApp
+    // sin conceder SELECT de orders a anon — protege datos de otros clientes)
+    const { data: numero, error } = await supabase.rpc("crear_pedido", {
+      p_nombre: deliveryData.nombre,
+      p_telefono: deliveryData.telefono,
+      p_direccion: deliveryData.direccion || "",
+      p_unidad: deliveryData.unidad || "",
+      p_apto: deliveryData.apto || "",
+      p_observaciones: deliveryData.observaciones || "",
+      p_pago: deliveryData.pago || "",
+      p_subtotal: totals.subtotal,
+      p_delivery_fee: totals.deliveryFee,
+      p_total: totals.total,
+      p_items: items,
+      p_tipo_entrega: deliveryData.tipoEntrega || "domicilio",
     });
     if (error) throw error;
-    return { ok: true, persisted: true, numero: null };
-  } catch (e) {
-    console.error("[dataSource] pedido no guardado en BD:", e.message);
-    return { ok: false, persisted: false, numero: null, reason: e.message };
+    return { ok: true, persisted: true, numero: numero ?? null };
+  } catch (eRpc) {
+    // 2º intento: insert directo (por si la RPC aún no fue aplicada en la BD).
+    // El nº no se conoce aquí, pero el pedido queda registrado igual.
+    try {
+      const { error } = await supabase.from("orders").insert({
+        nombre: deliveryData.nombre,
+        telefono: deliveryData.telefono,
+        direccion: deliveryData.direccion || "",
+        unidad: deliveryData.unidad || "",
+        apto: deliveryData.apto || "",
+        observaciones: deliveryData.observaciones || "",
+        pago: deliveryData.pago || "",
+        tipo_entrega: deliveryData.tipoEntrega || "domicilio",
+        subtotal: totals.subtotal,
+        delivery_fee: totals.deliveryFee,
+        total: totals.total,
+        items,
+      });
+      if (error) throw error;
+      return { ok: true, persisted: true, numero: null };
+    } catch (e2) {
+      console.error("[dataSource] pedido no guardado en BD:", e2.message);
+      return { ok: false, persisted: false, numero: null, reason: e2.message };
+    }
   }
+}
+
+// ── Escrituras del panel admin (requieren sesión iniciada — RLS) ────────────
+
+/** Categorías crudas (con UUID) para el formulario de productos del panel. */
+export async function getCategoriesRaw() {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, nombre, orden, visible")
+    .order("orden", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createProduct(data) {
+  const { data: row, error } = await supabase
+    .from("products")
+    .insert(data)
+    .select()
+    .single();
+  if (error) throw error;
+  invalidateCatalog(); // la tienda se refresca sola (realtime + cache invalidada)
+  return row;
+}
+
+export async function updateProduct(id, cambios) {
+  const { error } = await supabase
+    .from("products")
+    .update(cambios)
+    .eq("id", id);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+export async function deleteProduct(id) {
+  // La foto del bucket también se limpia (ahorro en la capa gratuita)
+  const { data: row } = await supabase
+    .from("products")
+    .select("imagen_url")
+    .eq("id", id)
+    .single();
+  if (row?.imagen_url) await deleteProductImage(row.imagen_url);
+
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+// ── Categorías (panel admin) ────────────────────────────────────────────────
+
+export async function createCategory(data) {
+  const { data: row, error } = await supabase
+    .from("categories")
+    .insert(data)
+    .select()
+    .single();
+  if (error) throw error;
+  invalidateCatalog();
+  return row;
+}
+
+export async function updateCategory(id, cambios) {
+  const { error } = await supabase
+    .from("categories")
+    .update(cambios)
+    .eq("id", id);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+export async function deleteCategory(id) {
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+// ── Pedidos (panel admin) ───────────────────────────────────────────────────
+
+// ── Configuración (panel admin) ─────────────────────────────────────────────
+// Mapea las claves normalizadas → columnas reales de la tabla settings
+const COLUMNAS_SETTINGS = {
+  mapsGoogle: "maps_url",
+  deliveryFee: "delivery_fee",
+  freeDeliveryThreshold: "free_delivery_threshold",
+  offersDelivery: "offers_delivery",
+  offersPickup: "offers_pickup",
+  forceClosed: "force_closed",
+};
+
+/** Actualiza la fila única de settings (upsert: crea la fila si no existe). */
+export async function updateSettings(cambios) {
+  const fila = {};
+  Object.entries(cambios).forEach(([clave, valor]) => {
+    fila[COLUMNAS_SETTINGS[clave] || clave] = valor;
+  });
+  const { error } = await supabase.from("settings").upsert({ id: 1, ...fila });
+  if (error) throw error;
+  invalidateCatalog(); // la tienda refresca WhatsApp/domicilios en segundos
+}
+
+const normalizeOrder = (row) => ({
+  ...row,
+  items: Array.isArray(row.items) ? row.items : [],
+});
+
+/** Lista de pedidos, más recientes primero (solo admin — RLS). */
+export async function getOrders(limite = 200) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limite);
+  if (error) throw error;
+  return data.map(normalizeOrder);
+}
+
+/** Cambia el estado de un pedido (flujo del negocio). */
+export async function updateOrderStatus(id, estado) {
+  const { error } = await supabase.from("orders").update({ estado }).eq("id", id);
+  if (error) throw error;
+}
+
+/**
+ * Realtime de pedidos para el panel: notifica INSERT (pedido nuevo 🛎️) y
+ * UPDATE (cambio de estado desde otro dispositivo). Devuelve unsubscribe.
+ */
+export function subscribeToOrders(fn) {
+  if (!isSupabaseConfigured) return () => {};
+  const channel = supabase
+    .channel("pedidos-changes")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "orders" },
+      (payload) => fn("insert", normalizeOrder(payload.new)),
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "orders" },
+      (payload) => fn("update", normalizeOrder(payload.new)),
+    )
+    .subscribe();
+  return () => supabase.removeChannel(channel);
 }

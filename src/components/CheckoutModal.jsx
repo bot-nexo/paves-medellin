@@ -14,6 +14,8 @@ import {
   CheckCircle,
   Truck,
   Send,
+  Store,
+  Clock,
 } from "lucide-react";
 import "../css/CheckoutModal.css";
 import {
@@ -25,17 +27,27 @@ import {
 import { info as infoLocal } from "../data/menu";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
-const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoLocal }) => {
+const CheckoutModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  cart = [],
+  settings = infoLocal,
+  estadoNegocio = null,
+}) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
+    tipoEntrega: settings.offersDelivery !== false ? "domicilio" : "recogida",
     direccion: "",
     unidad: "",
     apto: "",
     pago: "Efectivo",
     observaciones: "",
   });
+
+  const esDomicilio = formData.tipoEntrega === "domicilio";
 
   useEffect(() => {
     if (isOpen) {
@@ -58,16 +70,17 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoL
 
   const handleNext = (e) => {
     e.preventDefault();
-    if (
+    const faltantes =
       !formData.nombre.trim() ||
       !formData.telefono.trim() ||
-      !formData.direccion.trim() ||
-      !formData.apto.trim() ||
-      !formData.pago
-    ) {
+      !formData.pago ||
+      (esDomicilio && (!formData.direccion.trim() || !formData.apto.trim()));
+    if (faltantes) {
       Swal.fire({
         title: "Campos incompletos",
-        text: "Por favor completa los campos obligatorios para continuar.",
+        text: esDomicilio
+          ? "Por favor completa los campos obligatorios para continuar."
+          : "Nombre, teléfono y medio de pago son obligatorios para recoger en tienda.",
         icon: "warning",
         confirmButtonColor: "#3D2314",
       });
@@ -77,18 +90,19 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoL
   };
 
   const handleSubmit = () => {
-    // observaciones viaja junto a los datos de entrega (queda en la BD del pedido)
+    // tipoEntrega y observaciones viajan con los datos (quedan en la BD del pedido)
     onConfirm({ ...formData, observaciones: formData.observaciones || "" });
     setStep(1);
-    setFormData({
+    setFormData((prev) => ({
       nombre: "",
       telefono: "",
+      tipoEntrega: prev.tipoEntrega,
       direccion: "",
       unidad: "",
       apto: "",
       pago: "Efectivo",
       observaciones: "",
-    });
+    }));
   };
 
   return (
@@ -109,9 +123,54 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoL
           <div className={`progress-step ${step >= 2 ? "active" : ""}`} />
         </div>
 
+        {/* Aviso: negocio cerrado → el pedido se agenda para la apertura */}
+        {estadoNegocio && !estadoNegocio.abierto && (
+          <div className="checkout-aviso-cerrado">
+            <Clock size={16} />
+            <span>
+              <strong>Estamos cerrados ahora</strong>
+              {estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se
+              agenda y se prepará al abrir, en orden de llegada.
+            </span>
+          </div>
+        )}
+
         {step === 1 ? (
           <form onSubmit={handleNext} className="checkout-body">
             <div className="form-grid">
+              {/* Modo de entrega (según lo configurado en el panel) */}
+              {(settings.offersDelivery !== false || settings.offersPickup !== false) && (
+                <div className="form-group full-width">
+                  <label>¿Cómo lo recibes? *</label>
+                  <div className="entrega-options">
+                    {settings.offersDelivery !== false && (
+                      <button
+                        type="button"
+                        className={`entrega-option ${esDomicilio ? "entrega-option--activa" : ""}`}
+                        onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "domicilio" }))}
+                      >
+                        <Truck size={18} />
+                        <span>Domicilio</span>
+                        <small>{formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)} · gratis desde {formatCOP(settings.freeDeliveryThreshold ?? 45000)}</small>
+                      </button>
+                    )}
+                    {settings.offersPickup !== false && (
+                      <button
+                        type="button"
+                        className={`entrega-option ${!esDomicilio ? "entrega-option--activa" : ""}`}
+                        onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "recogida" }))}
+                      >
+                        <Store size={18} />
+                        <span>Recoger en tienda</span>
+                        <small>Sin costo de domicilio</small>
+                      </button>
+                    )}
+                  </div>
+                  {settings.offersDelivery === false && (
+                    <p className="entrega-aviso">Este negocio actualmente solo atiende por recogida en tienda.</p>
+                  )}
+                </div>
+              )}
               <div className="form-group full-width">
                 <label><User size={15} /> Nombre Completo *</label>
                 <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="¿A quién entregamos?" required />
@@ -128,18 +187,22 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoL
                   <option value="Datáfono">Datáfono a domicilio</option>
                 </select>
               </div>
-              <div className="form-group full-width">
-                <label><MapPin size={15} /> Dirección Exacta *</label>
-                <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Carrera, Barrio..." required />
-              </div>
-              <div className="form-group">
-                <label><Building size={15} /> Unidad / Edificio</label>
-                <input type="text" name="unidad" value={formData.unidad} onChange={handleChange} placeholder="Nombre (si aplica)" />
-              </div>
-              <div className="form-group">
-                <label><Home size={15} /> Apto / Casa / Piso *</label>
-                <input type="text" name="apto" value={formData.apto} onChange={handleChange} placeholder="Ej: Apto 502" required />
-              </div>
+              {esDomicilio && (
+                <>
+                  <div className="form-group full-width">
+                    <label><MapPin size={15} /> Dirección Exacta *</label>
+                    <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Carrera, Barrio..." required />
+                  </div>
+                  <div className="form-group">
+                    <label><Building size={15} /> Unidad / Edificio</label>
+                    <input type="text" name="unidad" value={formData.unidad} onChange={handleChange} placeholder="Nombre (si aplica)" />
+                  </div>
+                  <div className="form-group">
+                    <label><Home size={15} /> Apto / Casa / Piso *</label>
+                    <input type="text" name="apto" value={formData.apto} onChange={handleChange} placeholder="Ej: Apto 502" required />
+                  </div>
+                </>
+              )}
               <div className="form-group full-width">
                 <label><MessageSquare size={15} /> Observaciones</label>
                 <textarea name="observaciones" rows={2} value={formData.observaciones} onChange={handleChange} placeholder="Ej: Dejar en portería, timbrar dos veces..." />
@@ -160,7 +223,13 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoL
               <div className="card-content">
                 <p><strong>Destinatario:</strong> {formData.nombre}</p>
                 <p><strong>Teléfono:</strong> {formData.telefono}</p>
-                <p><strong>Dirección:</strong> {formData.direccion}{formData.unidad && `, ${formData.unidad}`}{`, ${formData.apto}`}</p>
+                <p>
+                  <strong>Modalidad:</strong>{" "}
+                  {esDomicilio ? "🛵 Domicilio" : "🏪 Recoger en tienda"}
+                </p>
+                {esDomicilio && (
+                  <p><strong>Dirección:</strong> {formData.direccion}{formData.unidad && `, ${formData.unidad}`}{`, ${formData.apto}`}</p>
+                )}
                 <p><strong>Método de pago:</strong> {formData.pago}</p>
                 {formData.observaciones && <p className="note"><strong>Nota:</strong> &quot;{formData.observaciones}&quot;</p>}
               </div>
@@ -194,7 +263,11 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoL
               </div>
               <div className="summary-totals">
                 <div className="total-row"><span>Subtotal productos:</span><span>{formatCOP(totalProductos)}</span></div>
-                <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}</span></div>
+                {!esDomicilio ? (
+                  <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica (recogida)</span></div>
+                ) : (
+                  <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}</span></div>
+                )}
                 <div className="divider" />
                 <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>
               </div>

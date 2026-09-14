@@ -1,0 +1,238 @@
+import { useEffect, useState } from "react";
+import { Loader2, Save, Truck, Store, Power } from "lucide-react";
+import Swal from "sweetalert2";
+import { getSettings, updateSettings } from "../../data/dataSource";
+import { formatCOP } from "../../utils/price";
+import "../admin.css";
+
+const Configuracion = () => {
+  const [form, setForm] = useState(null);
+  const [cargando, setCargando] = useState(false);
+
+  useEffect(() => {
+    getSettings()
+      .then((s) =>
+        setForm({
+          deliveryFee: s.deliveryFee ?? 3500,
+          freeDeliveryThreshold: s.freeDeliveryThreshold ?? 45000,
+          offersDelivery: s.offersDelivery !== false,
+          offersPickup: s.offersPickup !== false,
+          forceClosed: s.forceClosed === true,
+        }),
+      )
+      .catch((e) =>
+        Swal.fire({ title: "Error al cargar", text: e.message, icon: "error", confirmButtonColor: "#3D2314" }),
+      );
+  }, []);
+
+  const guardar = async (e) => {
+    e.preventDefault();
+    const fee = Number(form.deliveryFee);
+    const umbral = Number(form.freeDeliveryThreshold);
+    if (!(fee >= 0) || !(umbral >= 0)) {
+      Swal.fire({
+        icon: "warning",
+        text: "Los valores deben ser números positivos (0 permitido).",
+        confirmButtonColor: "#3D2314",
+      });
+      return;
+    }
+    if (!form.offersDelivery && !form.offersPickup) {
+      Swal.fire({
+        icon: "warning",
+        text: "Debes mantener al menos una modalidad de entrega activa.",
+        confirmButtonColor: "#3D2314",
+      });
+      return;
+    }
+    setCargando(true);
+    try {
+      await updateSettings({
+        deliveryFee: fee,
+        freeDeliveryThreshold: umbral,
+        offersDelivery: form.offersDelivery,
+        offersPickup: form.offersPickup,
+      });
+      Swal.fire({
+        icon: "success",
+        title: "Configuración actualizada",
+        text: "Carrito y checkout usan los nuevos valores en segundos.",
+        toast: true,
+        position: "top-end",
+        timer: 2400,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({ title: "No se pudo guardar", text: err.message, icon: "error", confirmButtonColor: "#3D2314" });
+    }
+    setCargando(false);
+  };
+
+  if (!form) {
+    return (
+      <div className="admin-page">
+        <h1 className="admin-page__titulo">⚙️ Configuración</h1>
+        <p className="admin-page__sub">Cargando…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-page">
+      <header className="admin-page__header">
+        <h1 className="admin-page__titulo">⚙️ Configuración de pedidos</h1>
+        <p className="admin-page__sub">Costos de domicilio y envío gratis — afectan carrito y checkout.</p>
+      </header>
+
+      <form className="admin-card adm-cfg" onSubmit={guardar}>
+        <div className="adm-cfg__grid">
+          <label className="admin-field">
+            <span className="admin-field__label">Valor del domicilio (COP)</span>
+            <div className="admin-field__input">
+              <input
+                type="number"
+                min="0"
+                step="500"
+                value={form.deliveryFee}
+                onChange={(e) => setForm((f) => ({ ...f, deliveryFee: e.target.value }))}
+              />
+            </div>
+            <span className="adm-modal__precio-hint">{formatCOP(Number(form.deliveryFee) || 0)}</span>
+          </label>
+
+          <label className="admin-field">
+            <span className="admin-field__label">Envío gratis a partir de (COP)</span>
+            <div className="admin-field__input">
+              <input
+                type="number"
+                min="0"
+                step="1000"
+                value={form.freeDeliveryThreshold}
+                onChange={(e) => setForm((f) => ({ ...f, freeDeliveryThreshold: e.target.value }))}
+              />
+            </div>
+            <span className="adm-modal__precio-hint">
+              {formatCOP(Number(form.freeDeliveryThreshold) || 0)}
+            </span>
+          </label>
+        </div>
+
+        {/* Modalidades de entrega */}
+        <div className="adm-cfg__seccion">
+          <div className="adm-cfg__seccion-titulo">
+            <Truck size={15} /> Modalidades de entrega
+          </div>
+          <div className="adm-cfg__checks">
+            <label className="adm-toggle-fila">
+              <input
+                type="checkbox"
+                checked={form.offersDelivery}
+                onChange={(e) => setForm((f) => ({ ...f, offersDelivery: e.target.checked }))}
+              />
+              <span>🛵 Domicilio</span>
+            </label>
+            <label className="adm-toggle-fila">
+              <input
+                type="checkbox"
+                checked={form.offersPickup}
+                onChange={(e) => setForm((f) => ({ ...f, offersPickup: e.target.checked }))}
+              />
+              <span>🏪 Recoger en tienda</span>
+            </label>
+</div>
+          <span className="adm-modal__precio-hint">
+            El checkout solo ofrece las modalidades activas. Debe quedar al menos una.
+          </span>
+        </div>
+
+        {/* Cierre de emergencia */}
+        <div className={"adm-cfg__seccion " + (form.forceClosed ? "adm-cfg__seccion--alerta" : "")}>
+          <div className="adm-cfg__seccion-titulo">
+            <Power size={15} /> Estado del negocio
+          </div>
+          {form.forceClosed ? (
+            <p className="adm-cfg__alerta-texto">
+              ⚠️ El negocio está <strong>CERRADO por emergencia</strong>: la tienda muestra el aviso,
+              se pueden seguir agendando pedidos y se preparan al abrir, en orden de llegada.
+            </p>
+          ) : (
+            <p className="adm-cfg__alerta-texto">
+              El horario configurado en <strong>Mi Negocio</strong> controla si estás abierto. Usa el
+              cierre solo para emergencias (se puede activar desde aquí o desde Mi Negocio).
+            </p>
+          )}
+          <button
+            type="button"
+            className={form.forceClosed ? "admin-btn-primary admin-btn-primary--compacto" : "admin-btn-ghost"}
+            onClick={async () => {
+              const nuevo = !form.forceClosed;
+              const res = await Swal.fire({
+                title: nuevo ? "¿Cerrar el negocio ahora?" : "¿Reabrir el negocio?",
+                text: nuevo
+                  ? "La tienda mostrará 'Cerrado — agenda tu pedido'. Los pedidos se siguen recibiendo."
+                  : "La tienda volverá a mostrar el estado según tu horario.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: nuevo ? "Sí, cerrar" : "Sí, reabrir",
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: "#E07A5F",
+                cancelButtonColor: "#3D2314",
+                reverseButtons: true,
+              });
+              if (!res.isConfirmed) return;
+              try {
+                await updateSettings({ forceClosed: nuevo });
+                setForm((f) => ({ ...f, forceClosed: nuevo }));
+                Swal.fire({
+                  icon: "success",
+                  title: nuevo ? "Negocio cerrado" : "Negocio reabierto",
+                  toast: true,
+                  position: "top-end",
+                  timer: 2200,
+                  showConfirmButton: false,
+                });
+              } catch (err) {
+                Swal.fire({ title: "No se pudo guardar", text: err.message, icon: "error", confirmButtonColor: "#3D2314" });
+              }
+            }}
+          >
+            {form.forceClosed ? "✅ Reabrir negocio" : "🔒 Cierre de emergencia"}
+          </button>
+        </div>
+
+        {/* Vista previa del comportamiento */}
+        <div className="adm-cfg__preview">
+          <div className="adm-cfg__preview-titulo">
+            <Truck size={15} /> Vista previa del comportamiento
+          </div>
+          <ul>
+            <li>
+              Pedido de <strong>{formatCOP(30000)}</strong> →{" "}
+              {Number(form.freeDeliveryThreshold) <= 30000 ? (
+                <span className="adm-cfg__gratis">domicilio GRATIS 🎉</span>
+              ) : (
+                <>
+                  paga domicilio de <strong>{formatCOP(Number(form.deliveryFee) || 0)}</strong> (le faltan{" "}
+                  {formatCOP(Math.max(0, Number(form.freeDeliveryThreshold) - 30000))} para envío gratis)
+                </>
+              )}
+            </li>
+            <li>
+              Pedido de <strong>{formatCOP(Number(form.freeDeliveryThreshold) || 0)}</strong> →{" "}
+              <span className="adm-cfg__gratis">domicilio GRATIS 🎉</span>
+            </li>
+          </ul>
+        </div>
+
+        <div className="adm-cfg__pie">
+          <button type="submit" className="admin-btn-primary admin-btn-primary--compacto" disabled={cargando}>
+            {cargando ? <Loader2 size={15} className="adm-spin" /> : <Save size={15} />}
+            {cargando ? "Guardando…" : "Guardar cambios"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default Configuracion;

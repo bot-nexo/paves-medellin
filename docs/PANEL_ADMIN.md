@@ -105,11 +105,42 @@ Tipografía e iconografía: se mantiene `lucide-react` (ya en el proyecto). Sin 
       - Footer/Menu leen de settings/categorías dinámicas
       - ⚠️ Re-ejecutar `schema.sql` en Supabase (añade columna `orders.observaciones`, idempotente)
 - [ ] **F3 — Admin base:** react-router, login, layout con sidebar (tema oscuro postre)
-- [ ] **F4 — Módulo Productos** (el núcleo)
-- [ ] **F5 — Módulo Categorías**
-- [ ] **F6 — Módulo Pedidos** (lista, detalle, cambio de estado)
-- [ ] **F7 — Info del negocio + Configuración**
-- [ ] **F8 — Dashboard + pulido final + pruebas de regresión de la tienda**
+- [x] **F4 — Módulo Productos** (el núcleo) — ✅ HECHA (2026-09-14)
+      - Tabla con búsqueda, filtro por categoría, miniaturas, switches de disponible/destacado
+      - Modal crear/editar con subida de imagen comprimida (Storage) y borrado de la anterior
+      - CRUD en `dataSource` (createProduct/updateProduct/deleteProduct) con invalidación de cache → la tienda se actualiza sola
+      - Productos sin foto usan placeholder 🍨; admin ve también los agotados
+- [x] **F5 — Módulo Categorías** — ✅ HECHA (2026-09-14)
+      - CRUD completo + visibilidad (ocultar de la tienda) + orden + emoji/etiqueta
+      - Protección: no se puede eliminar una categoría con productos asociados
+      - `getCategories()` (tienda) ahora filtra `visible=true`; el resultado vacío real se respeta (sin fallback incorrecto)
+      - Componente `Switch` extraído y compartido entre módulos
+- [x] **F6 — Módulo Pedidos** — ✅ HECHA (2026-09-14)
+      - Tabla con chips de estado y conteos; flujo Aceptar → Despachar → Entregar
+      - **Realtime**: pedido nuevo aparece solo con toast 🛎️; cambios multi-dispositivo sincronizados
+      - Modal de detalle: datos de entrega, items con opciones/toppings, totales, botón WhatsApp al cliente
+      - RPC segura `crear_pedido`: el checkout ya recibe el nº de pedido para WhatsApp (sin exponer datos)
+      - ⚠️ Re-ejecutar `schema.sql` (añade RPC + publicación realtime de las 4 tablas)
+- [x] **F7 — Info del negocio + Configuración** — ✅ HECHA (2026-09-14)
+      - Mi Negocio: WhatsApp de pedidos (obligatorio), dirección, Maps, horarios, redes — todo editable
+      - Configuración: valor de domicilio y umbral de envío gratis con vista previa del comportamiento
+      - `updateSettings` con upsert (crea la fila si no existe) + invalidación de cache → tienda al día en segundos
+- [x] **F7.1 — Modalidades de entrega + estado abierto/cerrado** — ✅ HECHA (2026-09-14)
+      - **Configuración → Tipos de entrega:** activar/desactivar 🛵 Domicilio y 🏪 Recogida en tienda (siempre debe quedar al menos una)
+      - **Checkout adaptativo:** selector solo con las modalidades activas; recogida oculta dirección/unidad/apto y el cargo de domicilio
+      - **Mi Negocio → Cierre de emergencia:** botón 🚨 que cierra el negocio al instante (independiente del horario) + reabrir
+      - **Tienda:** badge "Abierto ahora / Cerrado" en el Hero (según horario o cierre de emergencia)
+      - **Pedidos diferidos:** si está cerrado, el cliente SÍ puede pedir → aviso claro en checkout y en WhatsApp: "pedido agendado, se prepara al abrir en orden de llegada"
+      - Util `src/utils/horario.js`: parsea horarios tipo "12:00 M - 08:00 PM" (incluye cruces de medianoche y "24 horas")
+      - Columnas nuevas: `settings.offers_delivery`, `settings.offers_pickup`, `settings.force_closed`, `orders.tipo_entrega` (+ RPC `crear_pedido` acepta la modalidad) — re-ejecutar `schema.sql` (idempotente)
+      - Panel Pedidos: columna "Entrega" con badge 🛵/🏪; el detalle oculta la línea de domicilio en recogidas
+- [x] **F8 — Dashboard + regresión final** — ✅ HECHA (2026-09-14)
+      - **Métricas del día:** ventas, nº de pedidos y ticket promedio (excluye cancelados)
+      - **Banner de estado del negocio** (mismo criterio que la tienda: horario + cierre de emergencia) con acceso directo a gestión
+      - **Flujo de pedidos** clicable: Nuevos → Preparación → En camino, con alerta de llegadas en realtime 🛎️
+      - **Requieren atención:** agotados y destacados; **últimos pedidos** con nº, cliente, estado, total y hora
+      - **Accesos rápidos** a los 4 módulos + badge de conexión (Supabase/local) + botón actualizar
+      - Regresión final: build limpio, balance/anti-corrupción verificado, rutas y tienda intactas
 - [ ] **F9 — Supabase real:** cuando el cliente valide su cuenta → proyecto, schema SQL, RLS, seed, bucket, y solo se activa el adapter
 
 ## 7. Criterios de aceptación

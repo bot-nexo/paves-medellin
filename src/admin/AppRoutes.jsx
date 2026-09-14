@@ -1,0 +1,50 @@
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import AdminLogin from "./AdminLogin";
+import AdminLayout from "./AdminLayout";
+import { useAdminSession } from "./useAdminSession";
+
+// Lazy: el código del panel NO se carga cuando un cliente visita la tienda
+const AdminDashboard = lazy(() => import("./pages/Dashboard"));
+const AdminProductos = lazy(() => import("./pages/Productos"));
+const AdminCategorias = lazy(() => import("./pages/Categorias"));
+const AdminPedidos = lazy(() => import("./pages/Pedidos"));
+const AdminNegocio = lazy(() => import("./pages/Negocio"));
+const AdminConfiguracion = lazy(() => import("./pages/Configuracion"));
+
+/** Guard: solo con sesión activa se ve el panel. Mientras carga la sesión, no decide. */
+const RequiereSesion = ({ children }) => {
+  const { session, ready } = useAdminSession();
+  if (!ready) return null; // evita redirigir por error antes de leer la sesión real
+  return session ? children : <Navigate to="/admin/login" replace />;
+};
+
+const Cargando = () => (
+  <div className="admin-main">
+    <p style={{ color: "var(--texto-dim, #8f7c6b)" }}>Cargando módulo…</p>
+  </div>
+);
+
+/** Rutas del panel. Se monta desde App.jsx solo si Supabase está configurado. */
+export const AdminRoutes = () => (
+  <Routes>
+    <Route path="/admin/login" element={<AdminLogin />} />
+    <Route
+      path="/admin"
+      element={
+        <RequiereSesion>
+          <AdminLayout />
+        </RequiereSesion>
+      }
+    >
+      <Route index element={<Suspense fallback={<Cargando />}><AdminDashboard /></Suspense>} />
+      <Route path="productos" element={<Suspense fallback={<Cargando />}><AdminProductos /></Suspense>} />
+      <Route path="categorias" element={<Suspense fallback={<Cargando />}><AdminCategorias /></Suspense>} />
+      <Route path="pedidos" element={<Suspense fallback={<Cargando />}><AdminPedidos /></Suspense>} />
+      <Route path="negocio" element={<Suspense fallback={<Cargando />}><AdminNegocio /></Suspense>} />
+      <Route path="configuracion" element={<Suspense fallback={<Cargando />}><AdminConfiguracion /></Suspense>} />
+      {/* Ruta desconocida dentro del panel → al dashboard */}
+      <Route path="*" element={<Navigate to="/admin" replace />} />
+    </Route>
+  </Routes>
+);

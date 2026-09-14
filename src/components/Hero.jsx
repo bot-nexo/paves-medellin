@@ -1,8 +1,10 @@
 import { ShoppingBag } from "lucide-react";
-import logoImg from "../assets/images/logo.jpg";
+import logoImg from "../assets/images/logo.png";
+import { estaAbiertoSegunHorario } from "../utils/horario";
 import "../css/Hero.css";
 
-const Hero = ({ cartCount, onOpenCart }) => {
+const Hero = ({ cartCount, onOpenCart, settings }) => {
+  const estado = estaAbiertoSegunHorario(settings);
   return (
     <section className="hero">
       {/* Top Bar — Logo + Cart */}
@@ -32,6 +34,19 @@ const Hero = ({ cartCount, onOpenCart }) => {
         <div className="hero__content">
           <div className="hero__badge">
             <span>✨ Postres Artesanales en Medellín</span>
+          </div>
+
+          {/* Estado del negocio: abierto según horario o cerrado (agenda pedidos) */}
+          <div
+            className={
+              "hero__estado " + (estado.abierto ? "hero__estado--abierto" : "hero__estado--cerrado")
+            }
+          >
+            <span className="hero__estado-dot" />
+            <span>
+              {estado.abierto ? "Abierto ahora" : "Cerrado — agéndanos tu pedido"}
+              {estado.horarioTexto ? ` · ${estado.horarioTexto}` : ""}
+            </span>
           </div>
 
           <h1 className="hero__title">

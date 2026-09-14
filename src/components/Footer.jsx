@@ -1,4 +1,4 @@
-import logoImg from "../assets/images/logo.jpg";
+import logoImg from "../assets/images/logo.png";
 import { info } from "../data/menu";
 import { MapPin, Clock, Phone, Instagram, Facebook, ExternalLink } from "lucide-react";
 import "../css/Footer.css";

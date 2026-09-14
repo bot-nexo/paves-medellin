@@ -46,6 +46,9 @@ create table if not exists public.settings (
   hours1                  text not null default '',
   delivery_fee            int  not null default 3500,
   free_delivery_threshold int  not null default 45000,
+  offers_delivery         boolean not null default true,   -- 🛵 domicilio
+  offers_pickup           boolean not null default true,   -- 🏪 recogida en tienda
+  force_closed            boolean not null default false,  -- cierre de emergencia
   updated_at              timestamptz not null default now()
 );
 
@@ -60,6 +63,7 @@ create table if not exists public.orders (
   apto         text not null default '',
   observaciones text not null default '',
   pago         text not null default '',
+  tipo_entrega text not null default 'domicilio', -- 'domicilio' | 'recogida'
   subtotal     int  not null default 0,
   delivery_fee int  not null default 0,
   total        int  not null default 0,
@@ -165,3 +169,48 @@ create policy "imagenes_admin_delete" on storage.objects
 
 -- ── Migraciones ligeras (por si ya ejecutaste una versión anterior) ─────────
 alter table public.orders add column if not exists observaciones text not null default '';
+alter table public.orders add column if not exists tipo_entrega text not null default 'domicilio';
+alter table public.settings add column if not exists offers_delivery boolean not null default true;
+alter table public.settings add column if not exists offers_pickup boolean not null default true;
+alter table public.settings add column if not exists force_closed boolean not null default false;
+
+-- ── RPC segura: crear pedido y devolver su nº ───────────────────────────────
+-- Evita dar SELECT de orders a anon (protege teléfonos/direcciones de otros
+-- clientes): la función corre con privilegios del dueño y SOLO devuelve el nº.
+create or replace function public.crear_pedido(
+  p_nombre text, p_telefono text, p_direccion text, p_unidad text,
+  p_apto text, p_observaciones text, p_pago text,
+  p_subtotal int, p_delivery_fee int, p_total int, p_items jsonb,
+  p_tipo_entrega text default 'domicilio'
+) returns int
+language plpgsql security definer set search_path = public as $$
+declare
+  v_numero int;
+begin
+  insert into public.orders
+    (nombre, telefono, direccion, unidad, apto, observaciones, pago, tipo_entrega,
+     subtotal, delivery_fee, total, items)
+  values
+    (p_nombre, p_telefono, p_direccion, p_unidad, p_apto, p_observaciones, p_pago, p_tipo_entrega,
+     p_subtotal, p_delivery_fee, p_total, p_items)
+  returning numero into v_numero;
+  return v_numero;
+end $$;
+
+grant execute on function public.crear_pedido(text, text, text, text, text, text, text, int, int, int, jsonb, text)
+  to anon, authenticated;
+
+-- ── Realtime: publicar tablas para postgres_changes ────────────────────────
+-- Sin esto, las suscripciones en tiempo real no reciben eventos.
+do $$ begin
+  alter publication supabase_realtime add table public.products;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.categories;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.settings;
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table public.orders;
+exception when duplicate_object then null; end $$;

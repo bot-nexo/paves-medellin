@@ -3,6 +3,7 @@ import AOS from "aos";
 import Swal from "sweetalert2";
 import "aos/dist/aos.css";
 import "./App.css";
+import "./css/estadoNegocio.css";
 
 import Hero from "./components/Hero";
 import Menu from "./components/Menu";
@@ -10,11 +11,13 @@ import Footer from "./components/Footer";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
+import { AdminRoutes } from "./admin/AppRoutes";
 import { info } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
 import { createOrder } from "./data/dataSource";
+import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
   calculateOrderSummary,
@@ -50,6 +53,9 @@ const App = () => {
   // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
   const whatsappNumber = settings.phone || info.phone;
 
+  // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
+  const estadoNegocio = estaAbiertoSegunHorario(settings);
+
   useEffect(() => {
     AOS.init({ duration: 1600, once: true, offset: 100 });
   }, []);
@@ -76,6 +82,19 @@ const App = () => {
     let message = "*NUEVO PEDIDO *";
     if (saved.numero) message += "\n*Nº " + saved.numero + "*";
     message += "\n";
+
+    // Fuera de horario o cierre de emergencia: el pedido queda AGENDADO y se
+    // prepara al abrir, en orden de llegada (el cliente lo debe saber)
+    if (!estadoNegocio.abierto) {
+      message += "⚠️ *PEDIDO AGENDADO* (negocio cerrado ahora)\n";
+      if (estadoNegocio.horarioTexto) {
+        message += "Horario: " + estadoNegocio.horarioTexto + "\n";
+      }
+      message += "Se preparará al abrir, en orden de llegada.\n\n";
+    }
+    if (deliveryData.tipoEntrega === "recogida") {
+      message += "🏪 *MODALIDAD: RECOGER EN TIENDA*\n\n";
+    }
     message += "--------------------------------\n\n";
     message += "*DATOS DE ENTREGA*\n";
     message += "• *Nombre:* " + deliveryData.nombre + "\n";
@@ -147,7 +166,10 @@ const App = () => {
   //******************************** */
   return (
     <div className="app-wrapper">
-      <Hero cartCount={cartCount} onOpenCart={openCart} />
+      {/* Panel admin: solo existe si Supabase está configurado (lazy — no pesa en el bundle de la tienda) */}
+      {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && <AdminRoutes />}
+
+      <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} />
 
       <Menu
         data={products}
@@ -183,6 +205,7 @@ const App = () => {
         onConfirm={sendOrderToWhatsApp}
         cart={cart}
         settings={settings}
+        estadoNegocio={estadoNegocio}
       />
 
 

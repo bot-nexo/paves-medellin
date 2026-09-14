@@ -1,0 +1,138 @@
+import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote } from "lucide-react";
+import { formatCOP } from "../utils/price";
+import "./admin.css";
+
+const ESTADOS = [
+  { id: "nuevo", label: "🆕 Nuevo" },
+  { id: "preparacion", label: "👨‍🍳 En preparación" },
+  { id: "camino", label: "🛵 En camino" },
+  { id: "entregado", label: "✅ Entregado" },
+  { id: "cancelado", label: "❌ Cancelado" },
+];
+
+const PedidoDetalleModal = ({ pedido, onClose, onEstado }) => {
+  const items = pedido.items || [];
+  const fecha = new Date(pedido.created_at).toLocaleString("es-CO", {
+    dateStyle: "long",
+    timeStyle: "short",
+  });
+
+  const abrirWhatsApp = () => {
+    const tel = pedido.telefono.replace(/\D/g, "");
+    const conIndicativo = tel.startsWith("57") ? tel : `57${tel}`;
+    const msg = encodeURIComponent(
+      `Hola ${pedido.nombre}! 🍨 Te contactamos de Pavés Medellín sobre tu pedido #${pedido.numero}.`,
+    );
+    window.open(`https://wa.me/${conIndicativo}?text=${msg}`, "_blank");
+  };
+
+  return (
+    <div className="adm-modal__overlay" onClick={onClose}>
+      <div className="adm-modal adm-modal--compacto" onClick={(e) => e.stopPropagation()}>
+        <header className="adm-modal__header">
+          <h2>
+            Pedido #{pedido.numero} · {fecha}
+          </h2>
+          <button type="button" className="adm-icono-btn" onClick={onClose} aria-label="Cerrar">
+            <X size={18} />
+          </button>
+        </header>
+
+        <div className="adm-modal__cuerpo adm-modal__cuerpo--columna">
+          <section className="adm-det__seccion">
+            <h3 className="adm-det__titulo">
+              <MapPin size={15} /> Datos de entrega
+            </h3>
+            <div className="adm-det__datos">
+              <p>
+                <strong>{pedido.nombre}</strong>
+              </p>
+              <p>
+                <Phone size={13} /> {pedido.telefono}
+              </p>
+              <p>
+                <MapPin size={13} /> {pedido.direccion}
+                {pedido.unidad ? `, ${pedido.unidad}` : ""}
+                {pedido.apto ? `, ${pedido.apto}` : ""}
+              </p>
+              <p>
+                <CreditCard size={13} /> {pedido.pago || "—"}
+              </p>
+              <p>
+                {pedido.tipo_entrega === "recogida" ? "🏪 Recoge en tienda (sin domicilio)" : "🛵 Entrega a domicilio"}
+              </p>
+              {pedido.observaciones && (
+                <p className="adm-det__nota">
+                  <StickyNote size={13} /> "{pedido.observaciones}"
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="adm-det__seccion">
+            <h3 className="adm-det__titulo">
+              <Package size={15} /> Productos ({items.length})
+            </h3>
+            {items.map((item, i) => (
+              <div key={i} className="adm-det__item">
+                <span className="adm-det__item-cant">{item.cantidad}×</span>
+                <div className="adm-det__item-info">
+                  <strong>{item.nombre}</strong>
+                  {[...(item.opciones || []), ...(item.toppings || [])].filter(Boolean).length >
+                    0 && (
+                    <small>
+                      {[...(item.opciones || []), ...(item.toppings || [])]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </small>
+                  )}
+                  {item.observaciones && <small>"{item.observaciones}"</small>}
+                </div>
+                <span className="adm-det__item-precio">
+                  {formatCOP((item.precio_unitario || 0) * (item.cantidad || 1))}
+                </span>
+              </div>
+            ))}
+            <div className="adm-det__totales">
+              <div>
+                <span>Subtotal:</span>
+                <span>{formatCOP(pedido.subtotal)}</span>
+              </div>
+              {pedido.tipo_entrega !== "recogida" && (
+                <div>
+                  <span>Domicilio:</span>
+                  <span>
+                    {pedido.delivery_fee === 0 ? "GRATIS" : formatCOP(pedido.delivery_fee)}
+                  </span>
+                </div>
+              )}
+              <div className="adm-det__total-final">
+                <span>Total:</span>
+                <span>{formatCOP(pedido.total)}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <footer className="adm-det__pie">
+          <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
+            <MessageCircle size={15} /> WhatsApp al cliente
+          </button>
+          <select
+            className="adm-ped__select-estado"
+            value={pedido.estado}
+            onChange={(e) => onEstado(pedido, e.target.value)}
+          >
+            {ESTADOS.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.label}
+              </option>
+            ))}
+          </select>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+export default PedidoDetalleModal;
