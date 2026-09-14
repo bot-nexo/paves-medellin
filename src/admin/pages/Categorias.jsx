@@ -121,7 +121,7 @@ const Categorias = () => {
     <div className="admin-page">
       <header className="admin-page__header admin-page__header--row">
         <div>
-          <h1 className="admin-page__titulo">🗂️ Categorías</h1>
+          <h1 className="admin-page__titulo">Categorías</h1>
           <p className="admin-page__sub">
             {categorias
               ? `${categorias.length} categorías · ${totalVisibles} visibles en la tienda`

@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   PANEL ADMIN — Tema Oscuro Elegante (Optimizado para Mobile y Desktop)
+   PANEL ADMIN — Tema Oscuro Elegante
    ══════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -24,10 +24,6 @@
   --transition-speed: 0.25s;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 /* ── Shell Principal ────────────────────────────────────────────────────── */
 .admin-shell {
   display: flex;
@@ -36,7 +32,6 @@
   color: var(--texto);
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
-  position: relative;
 }
 
 .admin-layout__wrapper {
@@ -44,7 +39,6 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  width: 100%;
   transition: margin-left var(--transition-speed) ease;
 }
 
@@ -52,23 +46,12 @@
 .admin-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: 90;
-  animation: fadeIn 0.2s ease-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-/* ── Sidebar (Desktop Base) ────────────────────────────────────────────── */
+/* ── Sidebar Desktop ────────────────────────────────────────────────────── */
 .admin-sidebar {
   width: var(--sidebar-width);
   flex-shrink: 0;
@@ -81,7 +64,7 @@
   top: 0;
   height: 100vh;
   z-index: 100;
-  transition: width var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+  transition: width var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-shell--collapsed .admin-sidebar {
@@ -244,7 +227,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 24px;
   position: sticky;
   top: 0;
   z-index: 80;
@@ -256,13 +239,7 @@
   border: none;
   color: var(--texto);
   cursor: pointer;
-  padding: 6px;
-  border-radius: 8px;
-}
-
-.admin-topbar__hamburger:hover {
-  background: var(--abg-hover);
-  color: var(--crema);
+  padding: 4px;
 }
 
 .admin-topbar__title {
@@ -286,19 +263,49 @@
 /* ── Área de Contenido Principal ──────────────────────────────────────── */
 .admin-main {
   flex: 1;
-  padding: 24px;
+  padding: 28px 32px;
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* ── Tarjetas Generales ────────────────────────────────────────────────── */
+/* ── Responsivo (Móviles y Tablets) ────────────────────────────────────── */
+@media (max-width: 860px) {
+  .admin-sidebar__toggle-btn {
+    display: none;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .admin-sidebar--mobile-open {
+    transform: translateX(0);
+  }
+
+  .admin-topbar__hamburger {
+    display: flex;
+  }
+
+  .admin-main {
+    padding: 20px 16px;
+  }
+}
+
+/* ************************** */
+/* ── Tarjetas ──────────────────────────────────────────────────────────── */
 .admin-card {
   background: var(--abg-panel);
   border: 1px solid var(--aborde);
   border-radius: 14px;
   padding: 20px;
-  width: 100%;
 }
 
 .admin-card--empty {
@@ -336,7 +343,7 @@
   background: var(--abg-panel);
   border: 1px solid var(--aborde);
   border-radius: 18px;
-  padding: 32px 24px;
+  padding: 36px 32px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -389,7 +396,7 @@
   color: var(--texto-dim);
 }
 
-/* ── Campos de Formulario ──────────────────────────────────────────────── */
+/* ── Campos de formulario ──────────────────────────────────────────────── */
 .admin-field {
   display: flex;
   flex-direction: column;
@@ -400,18 +407,6 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--crema);
-}
-
-.admin-field-contenedor {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-@media (max-width: 640px) {
-  .admin-field-contenedor {
-    grid-template-columns: 1fr;
-  }
 }
 
 .admin-field__input {
@@ -450,13 +445,6 @@
   color: var(--texto-dim);
 }
 
-.admin-page__titulo {
-  margin: 0;
-  font-size: 22px;
-  color: var(--acento);
-  font-weight: 700;
-}
-
 .admin-field__toggle {
   background: none;
   border: none;
@@ -481,9 +469,6 @@
   padding: 13px;
   cursor: pointer;
   transition: filter 0.15s ease, transform 0.05s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .admin-btn-primary:hover {
@@ -499,6 +484,8 @@
   cursor: wait;
 }
 
+/* ── Responsive ────────────────────────────────────────────────────────── */
+/* ── Encabezado de página con acciones ───────────────────────────── */
 .admin-page__header--row {
   display: flex;
   align-items: flex-start;
@@ -510,13 +497,11 @@
 .admin-page__acciones {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 .admin-btn-ghost {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 7px;
   background: transparent;
   border: 1px solid var(--aborde);
@@ -547,67 +532,15 @@
   gap: 7px;
 }
 
-/* ── Badges / Chips del Encabezado ──────────────────────────────────────── */
-.admin-page__badges {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.adm-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--abg-elev);
-  border: 1px solid var(--aborde);
-  color: var(--texto);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.adm-chip__num {
-  color: var(--crema);
-  font-weight: 700;
-}
-
-.adm-chip--peligro {
-  border-color: rgba(224, 122, 95, 0.3);
-  color: var(--peligro);
-}
-
-.adm-chip--peligro .adm-chip__num {
-  color: var(--peligro);
-}
-
-.adm-chip--acento {
-  border-color: rgba(224, 164, 94, 0.3);
-  color: var(--acento);
-}
-
-.adm-chip--acento .adm-chip__num {
-  color: var(--acento);
-}
-
-.adm-chip--cargando {
-  color: var(--texto-dim);
-  font-style: italic;
-}
-
-/* ── Filtros Módulo Productos ──────────────────────────────────────────── */
+/* ── Filtros del módulo productos ───────────────────────────── */
 .adm-prod__filtros {
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
 }
 
 .adm-prod__buscador {
   flex: 1;
-  min-width: 200px;
   max-width: 340px;
 }
 
@@ -627,18 +560,17 @@ select.adm-prod__select:focus {
   border-color: var(--acento);
 }
 
-/* ── Tabla de Productos ────────────────────────────────────────────────── */
+/* ── Tabla de productos ───────────────────────────────────── */
 .admin-card--tabla {
   padding: 0;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .adm-prod__tabla {
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
-  min-width: 680px;
+  min-width: 760px;
   background: var(--abg-panel);
 }
 
@@ -727,7 +659,7 @@ select.adm-prod__select:focus {
   white-space: nowrap;
 }
 
-/* ── Switch ────────────────────────────────────────────────────────────── */
+/* ── Switch ───────────────────────────────────────────────── */
 .adm-switch {
   width: 40px;
   height: 22px;
@@ -737,7 +669,6 @@ select.adm-prod__select:focus {
   position: relative;
   cursor: pointer;
   transition: background 0.15s ease;
-  display: inline-block;
 }
 
 .adm-switch__dot {
@@ -766,7 +697,7 @@ select.adm-prod__select:focus {
   cursor: wait;
 }
 
-/* ── Botones de Acción Icono ───────────────────────────────────────────── */
+/* ── Botones de acción (iconos) ───────────────────────────── */
 .adm-icono-btn {
   display: inline-flex;
   align-items: center;
@@ -798,17 +729,17 @@ select.adm-prod__select:focus {
   cursor: wait;
 }
 
-/* ── Modales ───────────────────────────────────────────────────────────── */
+/* ── Modal de producto ───────────────────────────────────── */
 .adm-modal__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 6, 4, 0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(10, 6, 4, 0.72);
+  backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 16px;
+  padding: 20px;
 }
 
 .adm-modal {
@@ -852,8 +783,7 @@ select.adm-prod__select:focus {
 }
 
 .adm-modal__preview {
-  width: 100%;
-  max-width: 190px;
+  width: 190px;
   height: 190px;
   object-fit: cover;
   border-radius: 14px;
@@ -932,33 +862,7 @@ select.adm-prod__select:focus {
   }
 }
 
-/* Modales Compactos */
-.adm-modal--compacto {
-  max-width: 520px;
-}
-
-.adm-modal__cuerpo--columna {
-  flex-direction: column;
-}
-
-.adm-toggle-fila--alta {
-  padding: 12px 0 0;
-}
-
-.adm-cats__emoji {
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
-  background: var(--abg-elev);
-  border: 1px solid var(--aborde);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-
-/* ── Módulo Pedidos ────────────────────────────────────────────────────── */
+/* ── Módulo pedidos ───────────────────────────────────────── */
 .adm-ped__chips {
   display: flex;
   gap: 8px;
@@ -1036,7 +940,7 @@ select.adm-prod__select:focus {
 
 .adm-ped__entrega--domicilio {
   background: rgba(224, 164, 94, 0.15);
-  color: var(--acento);
+  color: var(--caramelo);
 }
 
 .adm-ped__entrega--recogida {
@@ -1125,7 +1029,7 @@ select.adm-prod__select:focus {
   }
 }
 
-/* Detalle de Pedido */
+/* ── Detalle del pedido ───────────────────────────────────── */
 .adm-det__seccion {
   margin-bottom: 18px;
 }
@@ -1227,7 +1131,7 @@ select.adm-prod__select:focus {
   border-top: 1px solid var(--aborde);
 }
 
-/* ── Formularios Configuración (Settings) ──────────────────────────────── */
+/* ── Formularios de settings (Negocio / Configuración) ───── */
 .adm-cfg {
   display: flex;
   flex-direction: column;
@@ -1278,6 +1182,13 @@ select.adm-prod__select:focus {
   font-weight: 700;
 }
 
+@media (max-width: 640px) {
+  .adm-cfg__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Secciones de settings (entrega / estado) ────────────── */
 .adm-cfg__seccion {
   border: 1px solid var(--aborde);
   border-radius: 12px;
@@ -1319,7 +1230,98 @@ select.adm-prod__select:focus {
   color: var(--peligro);
 }
 
-/* ── Dashboard ─────────────────────────────────────────────────────────── */
+/* ── Modal compacto (categorías) ─────────────────────────── */
+.adm-modal--compacto {
+  max-width: 520px;
+}
+
+.adm-modal__cuerpo--columna {
+  flex-direction: column;
+}
+
+.adm-toggle-fila--alta {
+  padding: 12px 0 0;
+}
+
+.adm-cats__emoji {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+/* ── Responsive módulo productos ─────────────────────────── */
+@media (max-width: 860px) {
+  .adm-prod__filtros {
+    flex-direction: column;
+  }
+
+  .adm-modal__cuerpo {
+    flex-direction: column;
+  }
+
+  .adm-modal__imagen {
+    width: 100%;
+  }
+}
+
+/* ── Responsive general (base del panel) ───────────────────────────────── */
+@media (max-width: 860px) {
+  .admin-shell {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .admin-sidebar__brand {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .admin-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .admin-nav__item {
+    padding: 9px 12px;
+  }
+
+  .admin-sidebar__pie {
+    border: none;
+    padding: 0;
+    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .admin-sidebar__email {
+    display: none;
+  }
+
+  .admin-main {
+    padding: 20px 16px;
+  }
+}
+
+/* ── Dashboard (F8) ─────────────────────────────────────────────────────── */
+
 .adm-dashboard__header {
   display: flex;
   align-items: center;
@@ -1372,6 +1374,7 @@ select.adm-prod__select:focus {
   color: var(--peligro);
 }
 
+/* Banner de estado del negocio */
 .adm-page .estado-banner {
   display: flex;
   align-items: center;
@@ -1423,6 +1426,7 @@ select.adm-prod__select:focus {
   white-space: nowrap;
 }
 
+/* Tarjetas de métricas */
 .adm-dash__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1471,9 +1475,10 @@ select.adm-prod__select:focus {
   margin-top: 2px;
 }
 
+/* Filas de paneles */
 .adm-dash__fila {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -1494,6 +1499,7 @@ select.adm-prod__select:focus {
   margin: 0 0 12px;
 }
 
+/* Flujo de pedidos */
 .adm-dash__flujo {
   display: flex;
   align-items: center;
@@ -1506,9 +1512,8 @@ select.adm-prod__select:focus {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  flex: 1;
-  min-width: 80px;
-  padding: 12px 10px;
+  min-width: 96px;
+  padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--aborde);
   background: var(--abg-elev);
@@ -1531,7 +1536,6 @@ select.adm-prod__select:focus {
 .adm-dash__flujo-label {
   color: var(--texto-dim);
   font-size: 12px;
-  text-align: center;
 }
 
 .adm-dash__flujo-item--nuevo .adm-dash__flujo-num {
@@ -1561,16 +1565,16 @@ select.adm-prod__select:focus {
   font-weight: 600;
 }
 
+/* Accesos rápidos */
 .adm-dash__accesos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
 .adm-dash__acceso {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
@@ -1587,6 +1591,7 @@ select.adm-prod__select:focus {
   color: var(--crema);
 }
 
+/* Listas (atención + pedidos recientes) */
 .adm-dash__lista {
   list-style: none;
   margin: 0 0 12px;
@@ -1680,128 +1685,11 @@ select.adm-prod__select:focus {
   gap: 6px;
 }
 
-/* ══════════════════════════════════════════════════════════════════════════
-   MÓVIL Y TABLETS (MEDIA QUERIES)
-   ══════════════════════════════════════════════════════════════════════════ */
+/* ── Dashboard responsive ───────────────────────────────────────────────── */
 
-@media (max-width: 860px) {
-
-  /* Layout global */
-  .admin-shell {
-    flex-direction: column;
-  }
-
-  /* Mostrar botón de hamburguesa en Topbar */
-  .admin-topbar__hamburger {
-    display: inline-flex;
-  }
-
-  /* Ocultar botón interno de collapse del Sidebar */
-  .admin-sidebar__toggle-btn {
-    display: none;
-  }
-
-  /* Sidebar transformado a Menú Lateral (Drawer) */
-  .admin-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 260px !important;
-    height: 100vh;
-    z-index: 100;
-    transform: translateX(-100%);
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-    background: var(--abg-panel);
-    border-right: 1px solid var(--aborde);
-  }
-
-  /* Clase añadida al abrir el menú en mobile */
-  .admin-sidebar--mobile-open {
-    transform: translateX(0);
-  }
-
-  /* Ajustes de contenido y paddings */
-  .admin-main {
-    padding: 16px;
-  }
-
-  /* Formularios y Modales en Móvil */
-  .adm-modal__cuerpo {
-    flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-  }
-
-  .adm-modal__imagen {
-    width: 100%;
-  }
-
-  .adm-modal__preview {
-    max-width: 100%;
-    height: 180px;
-  }
-
-  .adm-modal__fila {
-    grid-template-columns: 1fr;
-  }
-
-  .adm-prod__filtros {
-    flex-direction: column;
-  }
-
-  .adm-prod__buscador {
-    max-width: 100%;
-  }
-
-  .adm-cfg__grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .admin-topbar {
-    padding: 0 14px;
-  }
-
-  .admin-topbar__user-badge {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
-  .admin-page__header--row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .admin-page__acciones {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .admin-page__acciones .admin-btn-primary,
-  .admin-page__acciones .admin-btn-ghost {
-    flex: 1;
-  }
-
-  .adm-dash__flujo-flecha {
-    display: none;
-  }
-
-  .adm-dash__flujo {
-    gap: 6px;
-  }
-
+@media (max-width: 700px) {
   .adm-dash__flujo-item {
-    padding: 8px 4px;
-  }
-
-  .adm-dash__flujo-num {
-    font-size: 18px;
-  }
-
-  .adm-dash__flujo-label {
-    font-size: 10.5px;
+    min-width: 84px;
   }
 
   .adm-page .estado-horario {

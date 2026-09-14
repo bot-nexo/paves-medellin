@@ -80,7 +80,7 @@ const Configuracion = () => {
   return (
     <div className="admin-page">
       <header className="admin-page__header">
-        <h1 className="admin-page__titulo">⚙️ Configuración de pedidos</h1>
+        <h1 className="admin-page__titulo">Configuración de pedidos</h1>
         <p className="admin-page__sub">Costos de domicilio y envío gratis — afectan carrito y checkout.</p>
       </header>
 

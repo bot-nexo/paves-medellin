@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,90 +9,160 @@ import {
   Settings,
   LogOut,
   ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  User,
 } from "lucide-react";
 import { logoutAdmin } from "./sessionStore";
 import { useAdminSession } from "./useAdminSession";
-import "./admin.css";
 import logoImg from "../assets/images/logo.png";
+import "./admin.css";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/productos", label: "Productos", icon: IceCream },
   { to: "/admin/categorias", label: "Categorías", icon: Tags },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
-  { to: "/admin/negocio", label: "Mi Negocio", icon: Store },
+  { to: "/admin/negocio", label: "Empresa", icon: Store },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
 const AdminLayout = () => {
   const { session } = useAdminSession();
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [name, setName] = useState("Dashboard");
 
   const handleLogout = async () => {
     await logoutAdmin();
     navigate("/admin/login", { replace: true });
   };
 
-  // Email legible del dueño (por si tiene varios admins)
+  const toggleSidebar = () => setCollapsed(!collapsed);
+  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+
   const email = session?.user?.email || "";
 
+  //********************* */
   return (
-    <div className="admin-shell">
-      <aside className="admin-sidebar">
+    <div className={`admin-shell ${collapsed ? "admin-shell--collapsed" : ""}`}>
+      {/* Overlay para móviles */}
+      {mobileMenuOpen && (
+        <div className="admin-overlay" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
+      {/* Sidebar Principal */}
+      <aside className={`admin-sidebar ${mobileMenuOpen ? "admin-sidebar--mobile-open" : ""}`}>
+        {/* Header del Sidebar */}
         <div className="admin-sidebar__brand">
-          {/* <span className="admin-sidebar__logo">🍨</span> */}
-          <img src={logoImg} alt="logo" className="admin-sidebar__logo" />
-          {/* <div> */}
-          {/* <span className="admin-sidebar__titulo">Pavés Medellín</span> */}
-          <span className="admin-sidebar__subtitulo">Panel Admin</span>
-          {/* </div> */}
+          <div className="admin-sidebar__logo-wrapper">
+            <img src={logoImg} alt="Logo" className="admin-sidebar__logo" />
+          </div>
+          {!collapsed && (
+            <div className="admin-sidebar__brand-text">
+              <span className="admin-sidebar__titulo">Paves Medellin</span>
+              <span className="admin-sidebar__subtitulo">Panel Admin</span>
+            </div>
+          )}
+          <button
+            type="button"
+            className="admin-sidebar__toggle-btn"
+            onClick={toggleSidebar}
+            title={collapsed ? "Expandir menú" : "Colapsar menú"}
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
         </div>
 
+        {/* Menú de Navegación */}
         <nav className="admin-nav">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setName(label);
+              }}
               className={({ isActive }) =>
                 "admin-nav__item" + (isActive ? " admin-nav__item--active" : "")
               }
+              title={collapsed ? label : undefined}
             >
-              <Icon size={18} />
-              <span>{label}</span>
+              <Icon size={20} className="admin-nav__icon" />
+              {!collapsed && <span className="admin-nav__label">{label}</span>}
             </NavLink>
           ))}
         </nav>
 
+        {/* Footer del Sidebar */}
         <div className="admin-sidebar__pie">
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
             className="admin-nav__item admin-nav__item--link"
+            title={collapsed ? "Ver tienda" : undefined}
           >
-            <ExternalLink size={18} />
-            <span>Ver tienda</span>
+            <ExternalLink size={20} className="admin-nav__icon" />
+            {!collapsed && <span className="admin-nav__label">Ver tienda</span>}
           </a>
-          {email && (
-            <span className="admin-sidebar__email" title={email}>
-              {email}
-            </span>
+
+          {email && !collapsed && (
+            <div className="admin-sidebar__user" title={email}>
+              <User size={16} className="admin-sidebar__user-icon" />
+              <span className="admin-sidebar__email">{email}</span>
+            </div>
           )}
+
           <button
             type="button"
             className="admin-nav__item admin-nav__item--salir"
             onClick={handleLogout}
+            title={collapsed ? "Cerrar sesión" : undefined}
           >
-            <LogOut size={18} />
-            <span>Cerrar sesión</span>
+            <LogOut size={20} className="admin-nav__icon" />
+            {!collapsed && <span className="admin-nav__label">Cerrar sesión</span>}
           </button>
         </div>
       </aside>
 
-      <main className="admin-main">
-        <Outlet />
-      </main>
+      {/* Wrapper del Contenido Principal */}
+      <div className="admin-layout__wrapper">
+        {/* Topbar Superior */}
+        <header className="admin-topbar">
+          <button
+            type="button"
+            className="admin-topbar__hamburger"
+            onClick={toggleMobileMenu}
+            aria-label="Abrir menú"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+
+          <div className="admin-topbar__title">
+            <span>Panel {name}</span>
+          </div>
+
+          <div className="admin-topbar__actions">
+            {email && (
+              <div className="admin-topbar__user-badge">
+                <User size={14} />
+                <span>{email}</span>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Área donde se renderizan las páginas */}
+        <main className="admin-main">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

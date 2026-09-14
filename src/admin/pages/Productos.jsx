@@ -110,16 +110,27 @@ const Productos = () => {
   const totalAgotados = productos?.filter((p) => p.disponible === false).length ?? 0;
   const totalDestacados = productos?.filter((p) => p.destacado).length ?? 0;
 
+  //***************** */
   return (
     <div className="admin-page">
       <header className="admin-page__header admin-page__header--row">
-        <div>
-          <h1 className="admin-page__titulo">🍨 Productos</h1>
-          <p className="admin-page__sub">
-            {productos
-              ? `${productos.length} productos · ${totalAgotados} agotados · ${totalDestacados} destacados`
-              : "Cargando catálogo…"}
-          </p>
+        <div className="admin-page__badges">
+          <h1 className="admin-page__titulo">Productos</h1>
+          {productos ? (
+            <>
+              <span className="adm-chip">
+                <strong className="adm-chip__num">{productos.length}</strong> productos
+              </span>
+              <span className="adm-chip adm-chip--peligro">
+                <strong className="adm-chip__num">{totalAgotados}</strong> inactivos
+              </span>
+              <span className="adm-chip adm-chip--acento">
+                <strong className="adm-chip__num">{totalDestacados}</strong> destacados
+              </span>
+            </>
+          ) : (
+            <span className="adm-chip adm-chip--cargando">Cargando catálogo…</span>
+          )}
         </div>
         <div className="admin-page__acciones">
           <button

@@ -56,6 +56,7 @@ const App = () => {
   // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
   const estadoNegocio = estaAbiertoSegunHorario(settings);
 
+  //***************************** */
   useEffect(() => {
     AOS.init({ duration: 1600, once: true, offset: 100 });
   }, []);
@@ -163,7 +164,7 @@ const App = () => {
     closeCart();
   };
 
-  //******************************** */
+  //***************************** */
   return (
     <div className="app-wrapper">
       {/* Panel admin: solo existe si Supabase está configurado (lazy — no pesa en el bundle de la tienda) */}

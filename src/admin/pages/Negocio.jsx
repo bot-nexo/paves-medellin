@@ -70,30 +70,34 @@ const Negocio = () => {
     );
   }
 
+  //**************** */
   return (
     <div className="admin-page">
       <header className="admin-page__header admin-page__header--row">
         <div>
-          <h1 className="admin-page__titulo">🏪 Mi Negocio</h1>
-          <p className="admin-page__sub">Estos datos se muestran en el pie de página de la tienda.</p>
+          <h1 className="admin-page__titulo">Empresa</h1>
+          <p className="admin-page__sub">Información de la empresa.</p>
         </div>
       </header>
 
       <form className="admin-card adm-cfg" onSubmit={guardar}>
-        {CAMPOS.map(({ clave, label, placeholder, pista }) => (
-          <label key={clave} className="admin-field">
-            <span className="admin-field__label">{label}</span>
-            <div className="admin-field__input">
-              <input
-                type="text"
-                value={form[clave]}
-                onChange={(e) => set(clave, e.target.value)}
-                placeholder={placeholder}
-              />
-            </div>
-            {pista && <span className="adm-modal__precio-hint">{pista}</span>}
-          </label>
-        ))}
+        <div className="admin-field-contenedor">
+          {CAMPOS.map(({ clave, label, placeholder, pista }) => (
+            <label key={clave} className="admin-field">
+              <span className="admin-field__label">{label}</span>
+              <div className="admin-field__input">
+                <input
+                  type="text"
+                  value={form[clave]}
+                  onChange={(e) => set(clave, e.target.value)}
+                  placeholder={placeholder}
+                />
+              </div>
+              {pista && <span className="adm-modal__precio-hint">{pista}</span>}
+            </label>
+          ))}
+
+        </div>
 
         {/* Cierre de emergencia (mismo control que en Configuración) */}
         <div className={"adm-cfg__seccion " + (forceClosed ? "adm-cfg__seccion--alerta" : "")}>

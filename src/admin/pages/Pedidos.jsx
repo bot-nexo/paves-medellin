@@ -26,13 +26,13 @@ const SIGUIENTE = {
 };
 
 const labelEstado = (estado) =>
-  ({
-    nuevo: "🆕 Nuevo",
-    preparacion: "👨‍🍳 Preparación",
-    camino: "🛵 En camino",
-    entregado: "✅ Entregado",
-    cancelado: "❌ Cancelado",
-  }[estado] || estado);
+({
+  nuevo: "🆕 Nuevo",
+  preparacion: "👨‍🍳 Preparación",
+  camino: "🛵 En camino",
+  entregado: "✅ Entregado",
+  cancelado: "❌ Cancelado",
+}[estado] || estado);
 
 const resumen = (p) => {
   if (!p.items?.length) return "—";
@@ -130,7 +130,7 @@ const Pedidos = () => {
     <div className="admin-page">
       <header className="admin-page__header admin-page__header--row">
         <div>
-          <h1 className="admin-page__titulo">🧾 Pedidos</h1>
+          <h1 className="admin-page__titulo">Pedidos</h1>
           <p className="admin-page__sub">
             {pedidos
               ? `${conteos.nuevo || 0} nuevos · ${conteos.preparacion || 0} en preparación · ${conteos.camino || 0} en camino`
@@ -216,9 +216,8 @@ const Pedidos = () => {
                     </td>
                     <td>
                       <span
-                        className={`adm-ped__entrega adm-ped__entrega--${
-                          p.tipo_entrega === "recogida" ? "recogida" : "domicilio"
-                        }`}
+                        className={`adm-ped__entrega adm-ped__entrega--${p.tipo_entrega === "recogida" ? "recogida" : "domicilio"
+                          }`}
                       >
                         {p.tipo_entrega === "recogida" ? "🏪 Recogida" : "🛵 Domicilio"}
                       </span>
