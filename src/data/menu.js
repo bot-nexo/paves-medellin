@@ -184,6 +184,12 @@ export const products = [
 // Alias para compatibilidad
 export const menuData = products;
 
+// Mapa nombre → imagen local (asset empaquetado). Lo usa el dataSource para
+// resolver productos que vienen de Supabase sin imagen_url definitiva aún.
+export const localImagesByNombre = Object.fromEntries(
+  products.map((p) => [p.nombre, p.imagen]),
+);
+
 // Categorías (fuente única de verdad, usada por Menu.jsx)
 export const categories = [
   { id: "Todo", label: "✨ Todo" },

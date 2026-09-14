@@ -36,3 +36,4 @@
 - **Definir antes de programar:** para módulos nuevos, primero acordar el alcance
   y la arquitectura con el usuario (con opciones a elegir), y recién entonces codificar.
 - Verificar con `npm run build` / typecheck antes de dar un cambio por terminado.
+- Debes validar que lo que se hizo funciona y no rompe nada mas antes de darlo por terminado. 

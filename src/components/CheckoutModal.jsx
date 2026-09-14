@@ -20,9 +20,12 @@ import {
   formatCOP,
   calculateItemUnitPrice,
   calculateOrderSummary,
+  VALOR_DOMICILIO,
 } from "../utils/price";
+import { info as infoLocal } from "../data/menu";
 
-const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [] }) => {
+// settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
+const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [], settings = infoLocal }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     nombre: "",
@@ -46,7 +49,7 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [] }) => {
     subtotal: totalProductos,
     esGratis,
     totalNeto: totalNetoAPagar,
-  } = calculateOrderSummary(cart);
+  } = calculateOrderSummary(cart, settings.freeDeliveryThreshold);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +77,8 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [] }) => {
   };
 
   const handleSubmit = () => {
-    onConfirm(formData);
+    // observaciones viaja junto a los datos de entrega (queda en la BD del pedido)
+    onConfirm({ ...formData, observaciones: formData.observaciones || "" });
     setStep(1);
     setFormData({
       nombre: "",
@@ -190,7 +194,7 @@ const CheckoutModal = ({ isOpen, onClose, onConfirm, cart = [] }) => {
               </div>
               <div className="summary-totals">
                 <div className="total-row"><span>Subtotal productos:</span><span>{formatCOP(totalProductos)}</span></div>
-                <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(3500)}</span></div>
+                <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}</span></div>
                 <div className="divider" />
                 <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>
               </div>

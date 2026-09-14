@@ -2,15 +2,21 @@ import { useState, useEffect } from "react";
 import MenuCard from "./MenuCard";
 import { Sparkles } from "lucide-react";
 import "../css/Menu.css";
-import { categories as menuCategories } from "../data/menu";
 
-// Use categories from centralized data source
-const categories = menuCategories.map((c) => ({
-  id: c.id,
-  label: c.label,
-}));
+// Categoría fija "Todo" + categorías dinámicas (vienen del dataSource vía props)
+const TODO_CATEGORY = { id: "Todo", label: "✨ Todo" };
 
-const Menu = ({ data = [], selectedProduct, setSelectedProduct, addToCart }) => {
+const Menu = ({
+  data = [],
+  categories = [],
+  selectedProduct,
+  setSelectedProduct,
+  addToCart,
+}) => {
+  const menuCategories = [
+    TODO_CATEGORY,
+    ...categories.map((c) => ({ id: c.id, label: c.label || c.nombre })),
+  ];
   const [activeCategory, setActiveCategory] = useState("Todo");
   const [filteredData, setFilteredData] = useState([]);
 

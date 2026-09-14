@@ -15,8 +15,11 @@ import {
   formatCOP,
   calculateItemUnitPrice,
   calculateOrderSummary,
+  VALOR_DOMICILIO,
 } from "../utils/price";
+import { info as infoLocal } from "../data/menu";
 
+// settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CartModal = ({
   cart,
   isOpen,
@@ -25,11 +28,12 @@ const CartModal = ({
   onRemove,
   onEdit,
   onCheckout,
+  settings = infoLocal,
 }) => {
   if (!isOpen) return null;
 
   const { subtotal: totalPlatos, esGratis, totalNeto, faltanteGratis } =
-    calculateOrderSummary(cart);
+    calculateOrderSummary(cart, settings.freeDeliveryThreshold);
 
   return (
     <div className="cart-modal-overlay" onClick={onClose}>
@@ -200,7 +204,7 @@ const CartModal = ({
                 <div className="breakdown-row">
                   <span>Domicilio estimado:</span>
                   <span className={esGratis ? "free-text" : ""}>
-                    {esGratis ? "GRATIS" : formatCOP(3500)}
+                    {esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}
                   </span>
                 </div>
                 <div className="divider" />
