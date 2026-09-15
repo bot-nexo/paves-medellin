@@ -1,7 +1,7 @@
 import logoImg from "../assets/images/logo.png";
 import { info } from "../data/menu";
 import { MapPin, Clock, ExternalLink } from "lucide-react";
-import { FaInstagram, FaFacebook } from "react-icons/fa";
+import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
 import "../css/Footer.css";
 
 // settings viene del dataSource vía useCatalog (editable desde el panel admin).
@@ -33,17 +33,15 @@ const Footer = ({ settings = info }) => {
               con Leche Klim y los mejores ingredientes artesanales.
             </p>
             <div className="footer-social">
-              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Instagram">
+              <a href={settings.instagram} title="Siguenos en Instagram" target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Instagram">
                 <FaInstagram size={18} />
               </a>
-              <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Facebook">
+              <a href={settings.facebook} title="Siguenos en Facebook" target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Facebook">
                 <FaFacebook size={18} />
               </a>
               {settings.tiktok && (
-                <a href={settings.tiktok} target="_blank" rel="noopener noreferrer" className="footer-social-link footer-social-tiktok" aria-label="TikTok">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.16 8.16 0 005.58 2.18v-3.45a4.85 4.85 0 01-5.58-2.7V6.69h5.58z" />
-                  </svg>
+                <a href={settings.tiktok} title="Siguenos en TikTok" target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="TikTok">
+                  <FaTiktok size={18} />
                 </a>
               )}
             </div>
