@@ -13,13 +13,10 @@ const Menu = ({
   setSelectedProduct,
   addToCart,
 }) => {
-  const menuCategories = [
-    TODO_CATEGORY,
-    ...categories.map((c) => ({ id: c.id, label: c.label || c.nombre })),
-  ];
   const [activeCategory, setActiveCategory] = useState("Todo");
   const [filteredData, setFilteredData] = useState([]);
 
+  //************************************ */
   useEffect(() => {
     if (!data || data.length === 0) {
       setFilteredData([]);
@@ -38,6 +35,7 @@ const Menu = ({
     }
   }, [activeCategory, data]);
 
+  //*************************************** */
   return (
     <section id="menu" className="menu-section">
       <div className="container">

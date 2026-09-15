@@ -178,7 +178,7 @@ const App = () => {
         path="/*"
         element={
           <div className="app-wrapper">
-            <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} />
+            <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} productosDestacados={products} />
 
             <Menu
               data={products}
