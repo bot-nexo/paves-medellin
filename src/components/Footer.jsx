@@ -1,6 +1,7 @@
 import logoImg from "../assets/images/logo.png";
 import { info } from "../data/menu";
-import { MapPin, Clock, Phone, Instagram, Facebook, ExternalLink } from "lucide-react";
+import { MapPin, Clock, ExternalLink } from "lucide-react";
+import { FaInstagram, FaFacebook } from "react-icons/fa";
 import "../css/Footer.css";
 
 // settings viene del dataSource vía useCatalog (editable desde el panel admin).
@@ -33,10 +34,10 @@ const Footer = ({ settings = info }) => {
             </p>
             <div className="footer-social">
               <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Instagram">
-                <Instagram size={18} />
+                <FaInstagram size={18} />
               </a>
               <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Facebook">
-                <Facebook size={18} />
+                <FaFacebook size={18} />
               </a>
               {settings.tiktok && (
                 <a href={settings.tiktok} target="_blank" rel="noopener noreferrer" className="footer-social-link footer-social-tiktok" aria-label="TikTok">

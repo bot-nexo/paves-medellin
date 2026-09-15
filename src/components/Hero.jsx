@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Star, Sparkles, ChevronDown } from "lucide-react";
+import { Star, Sparkles, ChevronDown } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import "../css/Hero.css";
+import { FaShoppingCart } from "react-icons/fa";
 
 const Hero = ({
   cartCount = 0,
@@ -156,7 +157,7 @@ const Hero = ({
         <a href="#menu" className="hero-full__cta">
           Ver Menú
           <ChevronDown size={15} />
-</a>
+        </a>
       </header>
 
       {/* Stage */}
@@ -237,7 +238,7 @@ const Hero = ({
         onClick={onOpenCart}
         aria-label="Ver mi pedido"
       >
-        <ShoppingBag size={20} />
+        <FaShoppingCart size={20} />
         <span>Mi Pedido</span>
         {cartCount > 0 && (
           <span className="hero-full__float-badge">{cartCount}</span>

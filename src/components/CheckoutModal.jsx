@@ -12,12 +12,10 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle,
-  MotorBike,
-  Truck,
   Send,
-  Store,
   Clock,
 } from "lucide-react";
+import { FaMotorcycle } from "react-icons/fa";
 import "../css/CheckoutModal.css";
 import {
   formatCOP,
@@ -25,6 +23,7 @@ import {
   calculateOrderSummary,
 } from "../utils/price";
 import { info as infoLocal } from "../data/menu";
+import { LuClipboardList, LuHandPlatter } from "react-icons/lu";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CheckoutModal = ({
@@ -46,9 +45,11 @@ const CheckoutModal = ({
     pago: "Efectivo",
     observaciones: "",
   });
-  const [totalReal, setTotalReal] = useState(0);
-  const esDomicilio = formData.tipoEntrega === "domicilio";
 
+  const esDomicilio = formData.tipoEntrega === "domicilio";
+  const textoModalidad = esDomicilio ? 'Domicilio' : 'Recoger en tienda';
+
+  //**************************************** */
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -62,8 +63,6 @@ const CheckoutModal = ({
     esGratis,
     totalNeto: totalNetoAPagar,
   } = calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, esDomicilio);
-
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,7 +151,7 @@ const CheckoutModal = ({
                         className={`entrega-option ${esDomicilio ? "entrega-option--activa" : ""}`}
                         onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "domicilio" }))}
                       >
-                        <Truck size={18} />
+                        <FaMotorcycle size={18} />
                         <span>Domicilio</span>
                         <small>{formatCOP(settings.deliveryFee ?? 0)} · gratis desde {formatCOP(settings.freeDeliveryThreshold ?? 0)}</small>
                       </button>
@@ -163,7 +162,7 @@ const CheckoutModal = ({
                         className={`entrega-option ${!esDomicilio ? "entrega-option--activa" : ""}`}
                         onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "recogida" }))}
                       >
-                        <Store size={18} />
+                        <LuHandPlatter size={18} />
                         <span>Recoger en tienda</span>
                         <small>Sin costo de domicilio</small>
                       </button>
@@ -227,8 +226,7 @@ const CheckoutModal = ({
                 <p><strong>Destinatario:</strong> {formData.nombre}</p>
                 <p><strong>Teléfono:</strong> {formData.telefono}</p>
                 <p>
-                  <strong>Modalidad:</strong>{" "}
-                  {esDomicilio ? "🛵 Domicilio" : "🏪 Recoger en tienda"}
+                  <strong>Modalidad:</strong> {textoModalidad}
                 </p>
                 {esDomicilio && (
                   <p><strong>Dirección:</strong> {formData.direccion}{formData.unidad && `, ${formData.unidad}`}{`, ${formData.apto}`}</p>
@@ -240,7 +238,8 @@ const CheckoutModal = ({
 
             <div className="summary-card">
               <div className="card-header">
-                <Truck size={18} className="icon-primary" />
+                <LuClipboardList
+                  size={18} className="icon-success" />
                 <h4>Resumen de Productos</h4>
               </div>
               <div className="card-content items-list">

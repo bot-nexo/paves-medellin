@@ -1,4 +1,4 @@
-import React from "react";
+
 import {
   X,
   ShoppingBag,
@@ -6,17 +6,16 @@ import {
   Minus,
   Trash2,
   Pencil,
-  Truck,
   ArrowRight,
   ArrowLeft,
 } from "lucide-react";
-import "../css/CartModal.css";
+import { FaMotorcycle, FaShoppingCart } from "react-icons/fa";
 import {
   formatCOP,
   calculateItemUnitPrice,
   calculateOrderSummary,
 } from "../utils/price";
-import { useEffect } from "react";
+import "../css/CartModal.css";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CartModal = ({
@@ -34,10 +33,6 @@ const CartModal = ({
   const { subtotal: totalPlatos, esGratis, totalNeto, faltanteGratis } =
     calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, true);
 
-  // useEffect(() => {
-  //   console.log("esto es lo que tiene settings", settings);
-  // }, [settings]);
-
   //******************************************* */
   return (
     <div className="cart-modal-overlay" onClick={onClose}>
@@ -45,7 +40,7 @@ const CartModal = ({
         {/* Header */}
         <div className="cart-header">
           <div className="cart-header-title">
-            <ShoppingBag size={22} className="cart-icon" />
+            <FaShoppingCart size={22} className="cart-icon" />
             <h2>Tu Pedido</h2>
             <span className="cart-badge-count">
               {cart.reduce((acc, i) => acc + i.quantity, 0)}
@@ -192,7 +187,7 @@ const CartModal = ({
               <div
                 className={`delivery-badge ${esGratis ? "free" : "pending"}`}
               >
-                <Truck size={18} />
+                <FaMotorcycle size={18} />
                 <span>
                   {esGratis
                     ? "Genial! Tu domicilio es GRATIS"
