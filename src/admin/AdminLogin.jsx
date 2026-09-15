@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Lock, Mail, Eye, EyeOff, CakeSlice, AlertCircle } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
-import "./admin.css";
+import LoadingOverlay from "../components/common/LoadingOverlay";
+import { useNavigate } from "react-router-dom";
 
 // Mensajes de error de Supabase → texto claro para el dueño del negocio
 const ERRORES = {
@@ -11,12 +12,17 @@ const ERRORES = {
 };
 
 const AdminLogin = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verPass, setVerPass] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
 
+  const timeOut = 1500;
+  const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  //*********************** */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -27,20 +33,38 @@ const AdminLogin = () => {
     }
 
     setCargando(true);
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-    setCargando(false);
+    try {
+      // ✅ Ejecutamos la autenticación y la espera en paralelo
+      const [{ error: err }] = await Promise.all([
+        supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        }),
+        esperar(timeOut),
+      ]);
 
-    if (err) {
-      setError(ERRORES[err.message] || "No se pudo iniciar sesión. Intenta de nuevo.");
+      if (err) {
+        setError(ERRORES[err.message] || "No se pudo iniciar sesión. Intenta de nuevo.");
+        setCargando(false);
+        return;
+      }
+
+      // Redirigir tras cumplir la promesa y la animación
+      navigate("/admin");
+    } catch (err) {
+      console.error("Error en login:", err.message);
+      setError(err.message || "No se pudo iniciar sesión. Intenta de nuevo.");
+      setCargando(false);
     }
-    // Si es exitoso, onAuthStateChange actualiza el store y el guard deja pasar.
   };
 
+  //****************************** */
   return (
-    <div className="admin-login">
+    <div className="admin-login" style={{ position: "relative" }}>
+      {cargando && (
+        <LoadingOverlay fullScreen text="Ingresando" minTime={timeOut} />
+      )}
+
       <form className="admin-login__card" onSubmit={handleSubmit}>
         <div className="admin-login__logo">
           <CakeSlice size={34} strokeWidth={1.6} />

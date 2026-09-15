@@ -285,12 +285,116 @@
 }
 
 /* ── Área de Contenido Principal ──────────────────────────────────────── */
+.admin-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
 .admin-main {
   flex: 1;
   padding: 24px;
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* Badges de Estado */
+.adm-badge {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.adm-badge--nuevo {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.adm-badge--preparacion {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.adm-badge--camino {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.adm-badge--cancelado {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.adm-badge--warning {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.adm-badge--danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+/* Tabla estilizada de pedidos */
+.adm-dash__table-wrapper {
+  overflow-x: auto;
+}
+
+.adm-dash__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.adm-dash__table th {
+  text-align: left;
+  padding: 8px 12px;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+}
+
+.adm-dash__table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.adm-dash__row-link {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.adm-dash__row-link:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Chips superiores */
+.adm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.adm-chip--success {
+  color: #34d399;
+}
+
+.adm-chip--danger {
+  color: #f87171;
+}
+
+.adm-chip--warning {
+  color: #facc15;
 }
 
 /* ── Tarjetas Generales ────────────────────────────────────────────────── */
@@ -521,14 +625,13 @@
   justify-content: center;
   gap: 7px;
   background: transparent;
-  border: 1px solid var(--aborde);
+  border: 1px solid rgb(255, 181, 44);
   color: var(--texto);
   font-size: 13.5px;
   font-weight: 600;
   border-radius: 10px;
   padding: 9px 14px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .admin-btn-ghost:hover {
@@ -1234,7 +1337,7 @@ select.adm-prod__select:focus {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 640px;
+  max-width: 100%;
 }
 
 .adm-cfg__grid {
@@ -1318,7 +1421,7 @@ select.adm-prod__select:focus {
 }
 
 .adm-cfg__alerta-texto strong {
-  color: var(--peligro);
+  color: rgb(255, 181, 44);
 }
 
 /* ── Dashboard ─────────────────────────────────────────────────────────── */

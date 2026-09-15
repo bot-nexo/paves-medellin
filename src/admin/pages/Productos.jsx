@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Search, Pencil, Trash2, RefreshCw } from "lucide-react";
 import Swal from "sweetalert2";
+import LoadingOverlay from "../../components/common/LoadingOverlay";
 import {
   getProducts,
   getCategoriesRaw,
@@ -22,10 +23,19 @@ const Productos = () => {
   const [procesandoId, setProcesandoId] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
+  const [cargandoGlobal, setCargandoGlobal] = useState(true);
 
+  const timeOut = 1500;
+  const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  //********************************** */
   const cargar = useCallback(async () => {
     try {
-      const [prods, cats] = await Promise.all([getProducts(), getCategoriesRaw()]);
+      setCargandoGlobal(true);
+      const [[prods, cats]] = await Promise.all([
+        Promise.all([getProducts(), getCategoriesRaw()]),
+        esperar(timeOut),
+      ]);
       setProductos(prods);
       setCategorias(cats);
     } catch (e) {
@@ -36,6 +46,8 @@ const Productos = () => {
         confirmButtonColor: "#3D2314",
       });
       setProductos([]);
+    } finally {
+      setCargandoGlobal(false);
     }
   }, []);
 
@@ -63,12 +75,16 @@ const Productos = () => {
     return filtrados.slice(inicio, inicio + itemsPorPagina);
   }, [filtrados, paginaActual, itemsPorPagina]);
 
-  /** Alterna disponible/destacado con actualización optimista al confirmar. */
+  /** Alterna disponible/destacado con actualización optimista tras la espera */
   const toggleCampo = async (p, campo) => {
     const nuevo = !p[campo];
     setProcesandoId(p.id);
     try {
-      await updateProduct(p.id, { [campo]: nuevo });
+      setCargandoGlobal(true);
+      await Promise.all([
+        updateProduct(p.id, { [campo]: nuevo }),
+        esperar(timeOut),
+      ]);
       setProductos((prev) =>
         prev.map((x) => (x.id === p.id ? { ...x, [campo]: nuevo } : x)),
       );
@@ -79,8 +95,10 @@ const Productos = () => {
         icon: "error",
         confirmButtonColor: "#3D2314",
       });
+    } finally {
+      setCargandoGlobal(false);
+      setProcesandoId(null);
     }
-    setProcesandoId(null);
   };
 
   const eliminar = async (p) => {
@@ -99,7 +117,11 @@ const Productos = () => {
 
     setProcesandoId(p.id);
     try {
-      await deleteProduct(p.id);
+      setCargandoGlobal(true);
+      await Promise.all([
+        deleteProduct(p.id),
+        esperar(timeOut),
+      ]);
       setProductos((prev) => prev.filter((x) => x.id !== p.id));
       Swal.fire({
         icon: "success",
@@ -116,16 +138,29 @@ const Productos = () => {
         icon: "error",
         confirmButtonColor: "#3D2314",
       });
+    } finally {
+      setProcesandoId(null);
+      setCargandoGlobal(false);
     }
-    setProcesandoId(null);
   };
 
   const totalAgotados = productos?.filter((p) => p.disponible === false).length ?? 0;
   const totalDestacados = productos?.filter((p) => p.destacado).length ?? 0;
 
-  //***************** */
+  // 1. Carga inicial (Pantalla Completa)
+  if (cargandoGlobal && productos === null) {
+    return (
+      <LoadingOverlay fullScreen text="Cargando productos" minTime={timeOut} />
+    );
+  }
+
+  //****************************** */
   return (
-    <div className="admin-page">
+    <div className="admin-page" style={{ position: "relative" }}>
+      {cargandoGlobal && (
+        <LoadingOverlay text="Sincronizando productos" minTime={timeOut} />
+      )}
+
       <header className="admin-page__header admin-page__header--row">
         <div className="admin-page__badges">
           <h1 className="admin-page__titulo">Productos</h1>
@@ -191,9 +226,7 @@ const Productos = () => {
 
       {/* Tabla */}
       <div className="admin-card admin-card--tabla">
-        {productos === null ? (
-          <p className="adm-prod__vacio">Cargando productos…</p>
-        ) : filtrados.length === 0 ? (
+        {filtrados.length === 0 ? (
           <p className="adm-prod__vacio">
             No hay productos que coincidan con la búsqueda.
           </p>
@@ -270,7 +303,7 @@ const Productos = () => {
         )}
       </div>
 
-      {productos !== null && filtrados.length > 0 && (
+      {filtrados.length > 0 && (
         <Pagination
           paginaActual={paginaActual}
           totalItems={filtrados.length}

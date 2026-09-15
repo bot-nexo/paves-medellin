@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import LoadingOverlay from "../../components/common/LoadingOverlay";
 import {
   Bell,
   CakeSlice,
-  CheckCircle2,
   ChefHat,
   ClipboardList,
   Eye,
@@ -16,6 +16,7 @@ import {
   Wifi,
   WifiOff,
   XCircle,
+  ArrowRight
 } from "lucide-react";
 import {
   getOrders,
@@ -44,31 +45,43 @@ const horaCorta = (iso) =>
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [pedidos, setPedidos] = useState(null); // null = cargando
+  const [pedidos, setPedidos] = useState(null); // null = carga inicial sin completar
   const [productos, setProductos] = useState(null);
   const [settings, setSettings] = useState(null);
   const [nuevosSinVer, setNuevosSinVer] = useState(0);
   const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const timeOut = 1500;
+  const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  //******************************** */
   const cargar = useCallback(async () => {
     setError("");
+    setCargando(true);
     try {
-      // El error de pedidos no debe bloquear el resto: se piden en paralelo
-      // pero cada fallo se maneja solo.
       const [p, prods, cfg] = await Promise.allSettled([
         getOrders(),
         getProducts(),
         getSettings(),
+        esperar(timeOut)
       ]);
-      if (p.status === "fulfilled") setPedidos(p.value);
-      else {
+
+      if (p.status === "fulfilled") {
+        setPedidos(p.value);
+      } else {
         setPedidos([]);
         setError("No se pudieron cargar los pedidos: " + p.reason?.message);
       }
+
       if (prods.status === "fulfilled") setProductos(prods.value);
+      else setProductos([]);
+
       if (cfg.status === "fulfilled") setSettings(cfg.value);
     } catch (e) {
       setError(e.message);
+    } finally {
+      // ✅ Solución: Desactivar la bandera de carga al finalizar
+      setCargando(false);
     }
   }, []);
 
@@ -87,7 +100,6 @@ const Dashboard = () => {
     return off;
   }, [cargar]);
 
-  // ── Métricas ──────────────────────────────────────────────────────────────
   const m = useMemo(() => {
     const hoy = (pedidos || []).filter((p) => esHoy(p.created_at) && p.estado !== "cancelado");
     const ventasHoy = hoy.reduce((s, p) => s + (p.total || 0), 0);
@@ -107,18 +119,22 @@ const Dashboard = () => {
 
   const estadoNegocio = estaAbiertoSegunHorario(settings || {});
 
-  // Estados vacíos (datos aún cargando)
+  // 1. Carga inicial (Pantalla Completa mientras se obtiene el primer paquete de datos)
   if (pedidos === null || productos === null) {
     return (
-      <div className="adm-page">
-        <p className="adm-dashboard__cargando">Cargando métricas…</p>
-      </div>
+      <LoadingOverlay fullScreen text="Cargando Dashboard" minTime={timeOut} />
     );
   }
 
-  //**************************** */
+  // *****************************************/
   return (
-    <div className="adm-page">
+    <div className="adm-page" style={{ position: "relative" }}>
+      {/* 2. Carga en segundo plano al pulsar "Sincronizar" */}
+      {cargando && (
+        <LoadingOverlay text="Sincronizando información" minTime={timeOut} />
+      )}
+
+      {/* Encabezado */}
       <header className="adm-dashboard__header">
         <div>
           <h1 className="admin-page__titulo">Dashboard</h1>
@@ -127,90 +143,103 @@ const Dashboard = () => {
               weekday: "long",
               day: "numeric",
               month: "long",
+              year: "numeric"
             })}
           </p>
         </div>
+
         <div className="adm-dashboard__header-actions">
           <span
             className={`adm-conn ${isUsingSupabase() ? "adm-conn--ok" : "adm-conn--local"}`}
             title={
               isUsingSupabase()
-                ? "Datos en vivo desde Supabase"
-                : "Supabase no configurado: leyendo datos locales"
+                ? "Conectado en tiempo real con Supabase"
+                : "Modo Local Activo"
             }
           >
-            {isUsingSupabase() ? <Wifi size={13} /> : <WifiOff size={13} />}
-            {isUsingSupabase() ? "Supabase" : "Local"}
+            {isUsingSupabase() ? <Wifi size={14} /> : <WifiOff size={14} />}
+            {isUsingSupabase() ? "En Línea" : "Modo Local"}
           </span>
-          <button type="button" className="admin-btn-ghost" onClick={cargar}>
-            <RefreshCw size={14} /> Actualizar
+
+          <button
+            type="button"
+            className="admin-btn-ghost"
+            onClick={cargar}
+            disabled={cargando}
+          >
+            <RefreshCw size={14} className={cargando ? "adm-spin" : ""} />
+            <span>Sincronizar</span>
           </button>
         </div>
       </header>
 
-      {/* Estado del negocio (igual criterio que la tienda) */}
+      {/* Banner de Estado del Negocio */}
       <div className={`estado-banner ${estadoNegocio.abierto ? "abierto" : "cerrado"}`}>
         <span className="estado-dot" />
         <div className="estado-texto">
-          <strong>{estadoNegocio.abierto ? "Negocio abierto" : "Negocio cerrado"}</strong>
+          <strong>{estadoNegocio.abierto ? "Negocio Abierto" : "Negocio Cerrado"}</strong>
           <small>
             {estadoNegocio.fuerzaCierre
-              ? "🚨 Cierre de emergencia activo — la tienda acepta pedidos agendados"
+              ? "🚨 Cierre de emergencia activo: la tienda solo acepta pedidos agendados."
               : estadoNegocio.abierto
-                ? "Aceptando pedidos en horario normal"
-                : "Fuera de horario — se aceptan pedidos agendados para la apertura"}
+                ? "Recibiendo pedidos en horario regular."
+                : "Fuera de horario de atención comercial."}
           </small>
         </div>
         <small className="estado-horario">{estadoNegocio.horarioTexto}</small>
         <button
           type="button"
           className="admin-btn-ghost"
-          onClick={() => navigate("/admin/negocio")}
+          onClick={() => navigate("/admin/configuracion")}
         >
           Gestionar
         </button>
       </div>
 
-      {error && <p className="adm-dashboard__error">⚠️ {error}</p>}
+      {error && <div className="adm-dashboard__error">⚠️ {error}</div>}
 
-      {/* Métricas del día */}
+      {/* Grid de Tarjetas KPI */}
       <section className="adm-dash__grid">
         <div className="adm-dash__card adm-dash__card--ventas">
-          <div className="adm-dash__card-icono"><Wallet size={20} /></div>
-          <div>
-            <span className="adm-dash__card-valor">{formatCOP(m.ventasHoy)}</span>
+          <div className="adm-dash__card-icono"><Wallet size={22} /></div>
+          <div className="adm-dash__card-info">
             <span className="adm-dash__card-label">Ventas de hoy</span>
+            <span className="adm-dash__card-valor">{formatCOP(m.ventasHoy)}</span>
           </div>
         </div>
+
         <div className="adm-dash__card">
-          <div className="adm-dash__card-icono"><ClipboardList size={20} /></div>
-          <div>
+          <div className="adm-dash__card-icono"><ClipboardList size={22} /></div>
+          <div className="adm-dash__card-info">
+            <span className="adm-dash__card-label">Pedidos recibidos</span>
             <span className="adm-dash__card-valor">{m.hoy.length}</span>
-            <span className="adm-dash__card-label">Pedidos de hoy</span>
           </div>
         </div>
+
         <div className="adm-dash__card">
-          <div className="adm-dash__card-icono"><TrendingUp size={20} /></div>
-          <div>
-            <span className="adm-dash__card-valor">{formatCOP(m.ticketPromedio)}</span>
+          <div className="adm-dash__card-icono"><TrendingUp size={22} /></div>
+          <div className="adm-dash__card-info">
             <span className="adm-dash__card-label">Ticket promedio</span>
+            <span className="adm-dash__card-valor">{formatCOP(m.ticketPromedio)}</span>
           </div>
         </div>
+
         <div className="adm-dash__card">
-          <div className="adm-dash__card-icono"><Package size={20} /></div>
-          <div>
+          <div className="adm-dash__card-icono"><Package size={22} /></div>
+          <div className="adm-dash__card-info">
+            <span className="adm-dash__card-label">Catálogo activo</span>
             <span className="adm-dash__card-valor">{m.activos.length}</span>
-            <span className="adm-dash__card-label">Productos activos</span>
           </div>
         </div>
       </section>
 
-      {/* Flujo de pedidos + acceso rápido */}
+      {/* Flujo de pedidos y Accesos rápidos */}
       <div className="adm-dash__fila">
         <section className="adm-dash__panel">
           <h2 className="adm-dash__panel-titulo">
-            <ChefHat size={16} /> Flujo de pedidos
+            <ChefHat size={18} /> Flujo de pedidos en tiempo real
           </h2>
+
           <div className="adm-dash__flujo">
             <button
               type="button"
@@ -220,7 +249,9 @@ const Dashboard = () => {
               <span className="adm-dash__flujo-num">{m.porEstado.nuevo}</span>
               <span className="adm-dash__flujo-label">🆕 Nuevos</span>
             </button>
-            <span className="adm-dash__flujo-flecha">→</span>
+
+            <span className="adm-dash__flujo-flecha"><ArrowRight size={16} /></span>
+
             <button
               type="button"
               className="adm-dash__flujo-item adm-dash__flujo-item--prep"
@@ -229,7 +260,9 @@ const Dashboard = () => {
               <span className="adm-dash__flujo-num">{m.porEstado.preparacion}</span>
               <span className="adm-dash__flujo-label">👨‍🍳 Preparación</span>
             </button>
-            <span className="adm-dash__flujo-flecha">→</span>
+
+            <span className="adm-dash__flujo-flecha"><ArrowRight size={16} /></span>
+
             <button
               type="button"
               className="adm-dash__flujo-item adm-dash__flujo-item--camino"
@@ -239,110 +272,130 @@ const Dashboard = () => {
               <span className="adm-dash__flujo-label">🛵 En camino</span>
             </button>
           </div>
+
           {nuevosSinVer > 0 && (
             <p className="adm-dash__nuevos">
-              <Bell size={13} /> {nuevosSinVer} pedido(s) nuevo(s) llegó(aron) mientras veías el panel
+              <Bell size={14} /> <strong>{nuevosSinVer}</strong> pedido(s) nuevo(s) en espera
             </p>
           )}
         </section>
 
         <section className="adm-dash__panel">
           <h2 className="adm-dash__panel-titulo">
-            <Tag size={16} /> Accesos rápidos
+            <Tag size={18} /> Accesos Rápidos
           </h2>
           <div className="adm-dash__accesos">
             <button type="button" className="adm-dash__acceso" onClick={() => navigate("/admin/productos")}>
-              <CakeSlice size={16} /> Productos
+              <CakeSlice size={18} /> Gestor Productos
             </button>
             <button type="button" className="adm-dash__acceso" onClick={() => navigate("/admin/categorias")}>
-              <Tag size={16} /> Categorías
+              <Tag size={18} /> Categorías
             </button>
             <button type="button" className="adm-dash__acceso" onClick={() => navigate("/admin/pedidos")}>
-              <ClipboardList size={16} /> Pedidos
+              <ClipboardList size={18} /> Gestión Pedidos
             </button>
             <button type="button" className="adm-dash__acceso" onClick={() => navigate("/admin/configuracion")}>
-              <Wallet size={16} /> Domicilio
+              <Wallet size={18} /> Domicilios
             </button>
           </div>
         </section>
       </div>
 
-      {/* Productos críticos + pedidos recientes */}
+      {/* Atención requerida y Últimos pedidos */}
       <div className="adm-dash__fila">
         <section className="adm-dash__panel">
           <h2 className="adm-dash__panel-titulo">
-            <Package size={16} /> Requieren atención
+            <Package size={18} /> Requieren Atención
           </h2>
+
           {m.agotados.length === 0 && m.destacados.length === 0 ? (
-            <p className="adm-dash__vacio">Todo en orden: sin agotados ni destacados que revisar.</p>
+            <p className="adm-dash__vacio">✅ Todo al día. Sin inventario crítico.</p>
           ) : (
-            <>
+            <div className="adm-dash__atencion-container">
               {m.agotados.length > 0 && (
                 <ul className="adm-dash__lista">
                   {m.agotados.map((p) => (
-                    <li key={p.id}>
-                      <XCircle size={13} className="adm-dash__agotado" />
-                      <span>{p.nombre}</span>
-                      <small>agotado</small>
+                    <li key={p.id} className="adm-dash__item--alerta">
+                      <XCircle size={14} className="text-red-400" />
+                      <span className="adm-dash__item-nombre">{p.nombre}</span>
+                      <span className="adm-badge adm-badge--danger">Agotado</span>
                     </li>
                   ))}
                 </ul>
               )}
+
               {m.destacados.length > 0 && (
                 <ul className="adm-dash__lista">
                   {m.destacados.slice(0, 4).map((p) => (
                     <li key={p.id}>
-                      <Star size={13} className="adm-dash__destacado" />
-                      <span>{p.nombre}</span>
-                      <small>destacado</small>
+                      <Star size={14} className="text-amber-400" />
+                      <span className="adm-dash__item-nombre">{p.nombre}</span>
+                      <span className="adm-badge adm-badge--warning">Destacado</span>
                     </li>
                   ))}
                 </ul>
               )}
+
               <button
                 type="button"
-                className="admin-btn-ghost"
+                className="admin-btn-ghost admin-btn--full"
                 onClick={() => navigate("/admin/productos")}
               >
-                Ir a Productos
+                Ir al Inventario
               </button>
-            </>
+            </div>
           )}
         </section>
 
         <section className="adm-dash__panel">
-          <h2 className="adm-dash__panel-titulo">
-            <ClipboardList size={16} /> Últimos pedidos
-          </h2>
-          {(pedidos || []).length === 0 ? (
-            <p className="adm-dash__vacio">Aún no hay pedidos registrados.</p>
-          ) : (
-            <ul className="adm-dash__lista adm-dash__lista--pedidos">
-              {pedidos.slice(0, 6).map((p) => (
-                <li key={p.id}>
-                  <span className="adm-dash__pedido-num">#{p.numero}</span>
-                  <span className="adm-dash__pedido-nombre">{p.nombre}</span>
-                  <span className="adm-dash__pedido-estado">{p.estado}</span>
-                  <span className="adm-dash__pedido-total">{formatCOP(p.total)}</span>
-                  <small>{esHoy(p.created_at) ? horaCorta(p.created_at) : "antes de hoy"}</small>
-                </li>
-              ))}
-            </ul>
-          )}
-          <button
-            type="button"
-            className="admin-btn-ghost"
-            onClick={() => navigate("/admin/pedidos")}
-          >
-            <Eye size={14} /> Ver todos
-          </button>
-        </section>
-      </div>
+          <div className="adm-dash__panel-header">
+            <h2 className="adm-dash__panel-titulo">
+              <ClipboardList size={18} /> Últimos Pedidos
+            </h2>
+            <button
+              type="button"
+              className="admin-btn-ghost admin-btn-ghost--compact"
+              onClick={() => navigate("/admin/pedidos")}
+            >
+              <Eye size={14} /> Ver Todos
+            </button>
+          </div>
 
-      <div className="adm-dash__resumen-final">
-        <span><CheckCircle2 size={14} /> {m.activos.length} activos</span>
-        <span><XCircle size={14} /> {m.agotados.length} agotados</span>
-        <span><Star size={14} /> {m.destacados.length} destacados</span>
+          {(pedidos || []).length === 0 ? (
+            <p className="adm-dash__vacio">Aún no hay pedidos registrados hoy.</p>
+          ) : (
+            <div className="adm-dash__table-wrapper">
+              <table className="adm-dash__table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Total</th>
+                    <th>Hora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedidos.slice(0, 5).map((p) => (
+                    <tr key={p.id} onClick={() => navigate("/admin/pedidos")} className="adm-dash__row-link">
+                      <td className="adm-dash__table-id">#{p.numero || p.id?.slice(0, 4)}</td>
+                      <td className="adm-dash__table-cliente">{p.nombre}</td>
+                      <td>
+                        <span className={`adm-badge adm-badge--${p.estado}`}>
+                          {p.estado}
+                        </span>
+                      </td>
+                      <td className="adm-dash__table-total">{formatCOP(p.total)}</td>
+                      <td className="adm-dash__table-hora">
+                        {esHoy(p.created_at) ? horaCorta(p.created_at) : "Anterior"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import LoadingOverlay from "../../components/common/LoadingOverlay";
 import Swal from "sweetalert2";
 import {
   getProducts,
@@ -13,16 +14,25 @@ import Pagination from "../Pagination";
 import "../admin.css";
 
 const Categorias = () => {
-  const [categorias, setCategorias] = useState(null); // null = cargando
+  const [categorias, setCategorias] = useState(null); // null = carga inicial
   const [productos, setProductos] = useState([]);
   const [modal, setModal] = useState({ abierto: false, categoria: null });
   const [procesandoId, setProcesandoId] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
+  const [cargando, setCargando] = useState(false);
+  const timeOut = 1500;
+  const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  //********************************** */
   const cargar = useCallback(async () => {
+    setCargando(true);
     try {
-      const [cats, prods] = await Promise.all([getCategoriesRaw(), getProducts()]);
+      const [cats, prods] = await Promise.all([
+        getCategoriesRaw(),
+        getProducts(),
+        esperar(timeOut)
+      ]);
       setCategorias(cats);
       setProductos(prods);
     } catch (e) {
@@ -33,6 +43,8 @@ const Categorias = () => {
         confirmButtonColor: "#3D2314",
       });
       setCategorias([]);
+    } finally {
+      setCargando(false);
     }
   }, []);
 
@@ -72,8 +84,9 @@ const Categorias = () => {
         icon: "error",
         confirmButtonColor: "#3D2314",
       });
+    } finally {
+      setProcesandoId(null);
     }
-    setProcesandoId(null);
   };
 
   const eliminar = async (cat) => {
@@ -103,6 +116,7 @@ const Categorias = () => {
 
     setProcesandoId(cat.id);
     try {
+      setCargando(true);
       await deleteCategory(cat.id);
       setCategorias((prev) => prev.filter((c) => c.id !== cat.id));
       Swal.fire({
@@ -120,26 +134,44 @@ const Categorias = () => {
         icon: "error",
         confirmButtonColor: "#3D2314",
       });
+    } finally {
+      setCargando(false);
+      setProcesandoId(null);
     }
-    setProcesandoId(null);
   };
 
   const totalVisibles = categorias?.filter((c) => c.visible).length ?? 0;
 
+  // 1. Carga inicial (Pantalla Completa antes de recibir el primer arreglo de datos)
+  if (categorias === null) {
+    return (
+      <LoadingOverlay fullScreen text="Cargando categorías" minTime={timeOut} />
+    );
+  }
+
+  // ****************************************/
   return (
     <div className="admin-page">
+      {/* 2. Carga secundaria (Al recargar manualmente o eliminar elementos) */}
+      {cargando && (
+        <LoadingOverlay text="Sincronizando categorías" minTime={timeOut} />
+      )}
+
       <header className="admin-page__header admin-page__header--row">
         <div>
           <h1 className="admin-page__titulo">Categorías</h1>
           <p className="admin-page__sub">
-            {categorias
-              ? `${categorias.length} categorías · ${totalVisibles} visibles en la tienda`
-              : "Cargando…"}
+            {`${categorias.length} categorías · ${totalVisibles} visibles en la tienda`}
           </p>
         </div>
         <div className="admin-page__acciones">
-          <button type="button" className="admin-btn-ghost" onClick={cargar}>
-            <RefreshCw size={15} /> Recargar
+          <button
+            type="button"
+            className="admin-btn-ghost"
+            onClick={cargar}
+            disabled={cargando}
+          >
+            <RefreshCw size={15} className={cargando ? "adm-spin" : ""} /> Recargar
           </button>
           <button
             type="button"
@@ -151,10 +183,8 @@ const Categorias = () => {
         </div>
       </header>
 
-      <div className="admin-card admin-card--tabla">
-        {categorias === null ? (
-          <p className="adm-prod__vacio">Cargando categorías…</p>
-        ) : categorias.length === 0 ? (
+      <div className="admin-card admin-card--tabla admin-main-content">
+        {categorias.length === 0 ? (
           <p className="adm-prod__vacio">No hay categorías. Crea la primera.</p>
         ) : (
           <table className="adm-prod__tabla">
@@ -217,7 +247,7 @@ const Categorias = () => {
         )}
       </div>
 
-      {categorias !== null && categorias.length > 0 && (
+      {categorias.length > 0 && (
         <Pagination
           paginaActual={paginaActual}
           totalItems={categorias.length}

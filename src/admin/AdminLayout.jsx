@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { to: "/admin/productos", label: "Productos", icon: IceCream },
   { to: "/admin/categorias", label: "Categorías", icon: Tags },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
-  { to: "/admin/negocio", label: "Empresa", icon: Store },
+  { to: "/admin/empresa", label: "Empresa", icon: Store },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 

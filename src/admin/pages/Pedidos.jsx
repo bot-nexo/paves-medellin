@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, RefreshCw, Bell } from "lucide-react";
 import Swal from "sweetalert2";
+import LoadingOverlay from "../../components/common/LoadingOverlay";
 import {
   getOrders,
   updateOrderStatus,
@@ -50,9 +51,19 @@ const Pedidos = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
 
+  const [cargandoGlobal, setCargandoGlobal] = useState(true);
+
+  const timeOut = 1500;
+  const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  //***************************** */
   const cargar = useCallback(async () => {
     try {
-      const data = await getOrders();
+      setCargandoGlobal(true);
+      const [data] = await Promise.all([
+        getOrders(),
+        esperar(timeOut)
+      ]);
       setPedidos(data);
     } catch (e) {
       Swal.fire({
@@ -62,6 +73,8 @@ const Pedidos = () => {
         confirmButtonColor: "#3D2314",
       });
       setPedidos([]);
+    } finally {
+      setCargandoGlobal(false);
     }
   }, []);
 
@@ -118,7 +131,10 @@ const Pedidos = () => {
   const cambiarEstado = async (pedido, nuevoEstado) => {
     setCargandoId(pedido.id);
     try {
-      await updateOrderStatus(pedido.id, nuevoEstado);
+      await Promise.all([
+        updateOrderStatus(pedido.id, nuevoEstado),
+        esperar(timeOut)
+      ]);
       setPedidos((prev) =>
         prev.map((p) => (p.id === pedido.id ? { ...p, estado: nuevoEstado } : p)),
       );
@@ -130,8 +146,9 @@ const Pedidos = () => {
         icon: "error",
         confirmButtonColor: "#3D2314",
       });
+    } finally {
+      setCargandoId(null);
     }
-    setCargandoId(null);
   };
 
   const avanzarEstado = (pedido) => {
@@ -139,15 +156,22 @@ const Pedidos = () => {
     if (paso) cambiarEstado(pedido, paso.estado);
   };
 
+  if (cargandoGlobal || pedidos === null) {
+    return (
+      <div className="adm-page" style={{ minHeight: "80vh", position: "relative" }}>
+        <LoadingOverlay fullScreen text="Sincronizando pedidos..." minTime={timeOut} />
+      </div>
+    );
+  }
+
+  //******************************** */
   return (
-    <div className="admin-page">
+    <div className="admin-page admin-main-content" style={{ position: "relative" }}>
       <header className="admin-page__header admin-page__header--row">
         <div>
           <h1 className="admin-page__titulo">Pedidos</h1>
           <p className="admin-page__sub">
-            {pedidos
-              ? `${conteos.nuevo || 0} nuevos · ${conteos.preparacion || 0} en preparación · ${conteos.camino || 0} en camino`
-              : "Cargando…"}
+            {`${conteos.nuevo || 0} nuevos · ${conteos.preparacion || 0} en preparación · ${conteos.camino || 0} en camino`}
           </p>
         </div>
         <div className="admin-page__acciones">
@@ -184,9 +208,7 @@ const Pedidos = () => {
 
       {/* Tabla */}
       <div className="admin-card admin-card--tabla">
-        {pedidos === null ? (
-          <p className="adm-prod__vacio">Cargando pedidos…</p>
-        ) : filtrados.length === 0 ? (
+        {filtrados.length === 0 ? (
           <p className="adm-prod__vacio">
             {filtro === "todos"
               ? "Aún no hay pedidos. Cuando un cliente compre, aparecerá aquí en tiempo real."
@@ -287,7 +309,7 @@ const Pedidos = () => {
         )}
       </div>
 
-      {pedidos !== null && filtrados.length > 0 && (
+      {filtrados.length > 0 && (
         <Pagination
           paginaActual={paginaActual}
           totalItems={filtrados.length}

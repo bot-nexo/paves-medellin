@@ -9,7 +9,7 @@ const AdminDashboard = lazy(() => import("./pages/Dashboard"));
 const AdminProductos = lazy(() => import("./pages/Productos"));
 const AdminCategorias = lazy(() => import("./pages/Categorias"));
 const AdminPedidos = lazy(() => import("./pages/Pedidos"));
-const AdminNegocio = lazy(() => import("./pages/Negocio"));
+const AdminNegocio = lazy(() => import("./pages/Empresa"));
 const AdminConfiguracion = lazy(() => import("./pages/Configuracion"));
 
 /** Guard: solo con sesión activa se ve el panel. Mientras carga la sesión, no decide. */
@@ -41,7 +41,7 @@ export const AdminRoutes = () => (
       <Route path="productos" element={<Suspense fallback={<Cargando />}><AdminProductos /></Suspense>} />
       <Route path="categorias" element={<Suspense fallback={<Cargando />}><AdminCategorias /></Suspense>} />
       <Route path="pedidos" element={<Suspense fallback={<Cargando />}><AdminPedidos /></Suspense>} />
-      <Route path="negocio" element={<Suspense fallback={<Cargando />}><AdminNegocio /></Suspense>} />
+      <Route path="empresa" element={<Suspense fallback={<Cargando />}><AdminNegocio /></Suspense>} />
       <Route path="configuracion" element={<Suspense fallback={<Cargando />}><AdminConfiguracion /></Suspense>} />
       {/* Ruta desconocida dentro del panel → al dashboard */}
       <Route path="*" element={<Navigate to="" replace />} />
