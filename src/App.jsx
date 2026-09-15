@@ -3,7 +3,6 @@ import { Routes, Route } from "react-router-dom";
 import AOS from "aos";
 import Swal from "sweetalert2";
 import "aos/dist/aos.css";
-import "./App.css";
 import "./css/estadoNegocio.css";
 
 import Hero from "./components/Hero";
@@ -13,16 +12,15 @@ import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
 import { AdminRoutes } from "./admin/AppRoutes";
-import { info, products as menuData } from "./data/menu";
+import { info } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
-import { createOrder } from "./data/dataSource";
+import { createOrder,  getSettings } from "./data/dataSource";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
-  calculateOrderSummary,
-  VALOR_DOMICILIO,
+  calculateOrderSummary
 } from "./utils/price";
 
 const App = () => {

@@ -3,8 +3,6 @@ import MenuCard from "./MenuCard";
 import { Sparkles } from "lucide-react";
 import "../css/Menu.css";
 
-// Categoría fija "Todo" + categorías dinámicas (vienen del dataSource vía props)
-const TODO_CATEGORY = { id: "Todo", label: "✨ Todo" };
 
 const Menu = ({
   data = [],
@@ -74,8 +72,12 @@ const Menu = ({
               <MenuCard
                 key={product.id || product.nombre || product.name}
                 product={product}
-                isFlipped={selectedProduct?.id === product.id}
-                onFlip={setSelectedProduct}
+                isDetailsOpen={selectedProduct?.id === product.id}
+                onToggleDetails={() =>
+                  setSelectedProduct(
+                    selectedProduct?.id === product.id ? null : product,
+                  )
+                }
                 onAddToCart={addToCart}
               />
             ))}

@@ -37,20 +37,17 @@ export const calculateItemUnitPrice = (item) => {
   return basePrice;
 };
 
-// ── Order-level constants (single source of truth) ───────────────────────
-export const VALOR_DOMICILIO = 3500;
-export const MINIMO_ENVIO_GRATIS = 45000;
 
 // ── Full order summary from a cart array ──────────────────────────────────
 // freeThreshold permite inyectar el umbral configurado en el panel admin
 // (settings.freeDeliveryThreshold). Por defecto usa la constante local.
-export const calculateOrderSummary = (cart, freeThreshold = MINIMO_ENVIO_GRATIS) => {
+export const calculateOrderSummary = (cart, valDelivery, freeThreshold, esDomi) => {
   const subtotal = cart.reduce((total, item) => {
     return total + calculateItemUnitPrice(item) * item.quantity;
   }, 0);
 
-  const esGratis = subtotal >= freeThreshold;
-  const totalNeto = esGratis ? subtotal : subtotal + VALOR_DOMICILIO;
+  const esGratis = esDomi ? subtotal >= freeThreshold : subtotal;
+  const totalNeto = esGratis ? subtotal : subtotal + valDelivery;
   const faltanteGratis = Math.max(0, freeThreshold - subtotal);
 
   return { subtotal, esGratis, totalNeto, faltanteGratis };

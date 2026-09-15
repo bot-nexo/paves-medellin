@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Star, Sparkles } from "lucide-react";
+import { ShoppingBag, Star, Sparkles, ChevronDown } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import "../css/Hero.css";
@@ -34,10 +34,6 @@ const Hero = ({
     setProgress(0);
   }, [featured.length]);
 
-
-  useEffect(() => {
-    console.log('Hero component mounted', featured);
-  }, [featured]);
 
   useEffect(() => {
     if (isPaused || featured.length === 0) {
@@ -156,6 +152,11 @@ const Hero = ({
             </div>
           </div>
         </div>
+
+        <a href="#menu" className="hero-full__cta">
+          Ver Menú
+          <ChevronDown size={15} />
+</a>
       </header>
 
       {/* Stage */}

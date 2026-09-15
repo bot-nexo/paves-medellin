@@ -101,6 +101,11 @@ button { font-family: inherit; cursor: pointer; }
   50% { transform: scale(1.05); }
 }
 
+/* SweetAlert2 siempre por encima de cualquier modal (z-index 9999) */
+.swal2-container {
+  z-index: 9999 !important;
+}
+
 ::selection {
   background-color: rgba(217, 43, 56, 0.15);
   color: #3d2314;

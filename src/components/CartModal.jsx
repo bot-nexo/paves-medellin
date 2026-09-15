@@ -15,9 +15,8 @@ import {
   formatCOP,
   calculateItemUnitPrice,
   calculateOrderSummary,
-  VALOR_DOMICILIO,
 } from "../utils/price";
-import { info as infoLocal } from "../data/menu";
+import { useEffect } from "react";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CartModal = ({
@@ -28,13 +27,18 @@ const CartModal = ({
   onRemove,
   onEdit,
   onCheckout,
-  settings = infoLocal,
+  settings,
 }) => {
   if (!isOpen) return null;
 
   const { subtotal: totalPlatos, esGratis, totalNeto, faltanteGratis } =
-    calculateOrderSummary(cart, settings.freeDeliveryThreshold);
+    calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, true);
 
+  // useEffect(() => {
+  //   console.log("esto es lo que tiene settings", settings);
+  // }, [settings]);
+
+  //******************************************* */
   return (
     <div className="cart-modal-overlay" onClick={onClose}>
       <div className="cart-modal-content" onClick={(e) => e.stopPropagation()}>

@@ -12,6 +12,7 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle,
+  MotorBike,
   Truck,
   Send,
   Store,
@@ -22,7 +23,6 @@ import {
   formatCOP,
   calculateItemUnitPrice,
   calculateOrderSummary,
-  VALOR_DOMICILIO,
 } from "../utils/price";
 import { info as infoLocal } from "../data/menu";
 
@@ -46,7 +46,7 @@ const CheckoutModal = ({
     pago: "Efectivo",
     observaciones: "",
   });
-
+  const [totalReal, setTotalReal] = useState(0);
   const esDomicilio = formData.tipoEntrega === "domicilio";
 
   useEffect(() => {
@@ -61,7 +61,9 @@ const CheckoutModal = ({
     subtotal: totalProductos,
     esGratis,
     totalNeto: totalNetoAPagar,
-  } = calculateOrderSummary(cart, settings.freeDeliveryThreshold);
+  } = calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, esDomicilio);
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,6 +107,7 @@ const CheckoutModal = ({
     }));
   };
 
+  //******************************** */
   return (
     <div className="checkout-overlay" onClick={onClose}>
       <div className="checkout-container" onClick={(e) => e.stopPropagation()}>
@@ -151,7 +154,7 @@ const CheckoutModal = ({
                       >
                         <Truck size={18} />
                         <span>Domicilio</span>
-                        <small>{formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)} · gratis desde {formatCOP(settings.freeDeliveryThreshold ?? 45000)}</small>
+                        <small>{formatCOP(settings.deliveryFee ?? 0)} · gratis desde {formatCOP(settings.freeDeliveryThreshold ?? 0)}</small>
                       </button>
                     )}
                     {settings.offersPickup !== false && (

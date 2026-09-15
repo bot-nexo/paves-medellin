@@ -11,7 +11,7 @@ import {
   products as localProducts,
   info as localInfo,
 } from "../data/menu";
-import { VALOR_DOMICILIO, MINIMO_ENVIO_GRATIS } from "../utils/price";
+
 
 /**
  * Conecta la tienda con la capa de datos (dataSource).
@@ -29,9 +29,9 @@ const useCatalog = () => {
   );
   const [products, setProducts] = useState(localProducts);
   const [settings, setSettings] = useState({
-    ...localInfo,
-    deliveryFee: VALOR_DOMICILIO,
-    freeDeliveryThreshold: MINIMO_ENVIO_GRATIS,
+    offersDelivery: false,
+    offersPickup: false,
+    freeDeliveryThreshold: 0,
   });
 
   const load = useCallback(async () => {
@@ -45,6 +45,7 @@ const useCatalog = () => {
     // no se muestran en la tienda. La lógica de "mostrar agotado tachado"
     // llegará con el pulido del panel (F8).
     setProducts(prods.filter((p) => p.disponible !== false));
+    console.log("useCatalog",sett);
     setSettings(sett);
   }, []);
 

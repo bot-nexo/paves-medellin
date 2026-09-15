@@ -16,7 +16,7 @@ import {
   info as localInfo,
   localImagesByNombre,
 } from "./menu";
-import { VALOR_DOMICILIO, MINIMO_ENVIO_GRATIS, calculateItemUnitPrice } from "../utils/price";
+import { calculateItemUnitPrice } from "../utils/price";
 
 // ── Cache en memoria + suscripción a cambios (realtime) ─────────────────────
 const cache = { categories: null, products: null, settings: null };
@@ -118,7 +118,7 @@ const initRealtime = () => {
 
   const invalidate = (key, refetch) => {
     cache[key] = null;
-    refetch().then(notify).catch(() => {});
+    refetch().then(notify).catch(() => { });
   };
 
   supabase
@@ -420,7 +420,7 @@ export async function updateOrderStatus(id, estado) {
  * UPDATE (cambio de estado desde otro dispositivo). Devuelve unsubscribe.
  */
 export function subscribeToOrders(fn) {
-  if (!isSupabaseConfigured) return () => {};
+  if (!isSupabaseConfigured) return () => { };
   const channel = supabase
     .channel("pedidos-changes")
     .on(
