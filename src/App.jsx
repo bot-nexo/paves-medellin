@@ -13,7 +13,7 @@ import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
 import { AdminRoutes } from "./admin/AppRoutes";
-import { info } from "./data/menu";
+import { info, products as menuData } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
@@ -51,6 +51,7 @@ const App = () => {
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+
   // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
   const whatsappNumber = settings.phone || info.phone;
 
@@ -65,6 +66,7 @@ const App = () => {
   useEffect(() => {
     AOS.refresh();
   }, [selectedProduct]);
+
 
   const sendOrderToWhatsApp = async (deliveryData) => {
     if (cart.length === 0) return;
@@ -178,7 +180,7 @@ const App = () => {
         path="/*"
         element={
           <div className="app-wrapper">
-            <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} productosDestacados={products} />
+            <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} />
 
             <Menu
               data={products}

@@ -1,62 +1,23 @@
-
-
-// import React, { useState } from "react";
-// import { ShoppingBag, Sparkles, Plus, Star, RefreshCw, Check } from "lucide-react";
+// import React, { useState, useEffect, useRef, useCallback } from "react";
+// import { motion, AnimatePresence } from "framer-motion";
+// import { ShoppingBag, Star, Plus, Sparkles } from "lucide-react";
 // import logoImg from "../assets/images/logo.png";
+// import useCatalog from "../hooks/useCatalog";
 // import "../css/Hero.css";
 
 // const Hero = ({
-//   products = [],
 //   cartCount = 0,
 //   onOpenCart,
-//   onAddToCart,
-//   selectedCategory = "Todos",
-//   onSelectCategory
 // }) => {
-//   const [spotlightIdx, setSpotlightIdx] = useState(0);
+//   const { products = [] } = useCatalog();
+//   const [current, setCurrent] = useState(0);
+//   const [isPaused, setIsPaused] = useState(false);
+//   const [progress, setProgress] = useState(0);
+//   const intervalRef = useRef(null);
+//   const progressRef = useRef(null);
 
-//   // Categorías principales estructuradas
-//   const categories = [
-//     "Todos",
-//     "Pavés 8oz",
-//     "Con Queso",
-//     "Tendencia",
-//     "Postres Especiales"
-//   ];
-
-//   // Productos de antojo para la ruleta
-//   const fallbackItems = [
-//     {
-//       id: "p1",
-//       nombre: "Pavé Maracuyá Real",
-//       categoria: "Pavés 8oz",
-//       precio: 14900,
-//       descripcion: "Crema suave de maracuyá concentrada sobre galleta crujiente artesanal.",
-//       imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=600&q=80",
-//       tag: "Más Vendido"
-//     },
-//     {
-//       id: "p2",
-//       nombre: "Pavé Nutella & Avellanas",
-//       categoria: "Tendencia",
-//       precio: 16500,
-//       descripcion: "Cacao intenso, crema suave Gianduja y trozos de avellanas tostadas.",
-//       imagen: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80",
-//       tag: "Popular"
-//     },
-//     {
-//       id: "p3",
-//       nombre: "Pavé Frutos Rojos Gold",
-//       categoria: "Postres Especiales",
-//       precio: 15900,
-//       descripcion: "Reducción de mora y frambuesa con crema suave helada de vainilla.",
-//       imagen: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=600&q=80",
-//       tag: "Especial"
-//     }
-//   ];
-
-//   const itemList = products.length > 0 ? products : fallbackItems;
-//   const currentSpotlight = itemList[spotlightIdx % itemList.length] || itemList[0];
+//   const AUTOPLAY_DURATION = 7000;
+//   const featured = products.length > 0 ? products : [];
 
 //   const formatCOP = (val) => {
 //     if (!val) return "$0";
@@ -67,283 +28,376 @@
 //     }).format(val);
 //   };
 
-//   const handleRandomWheel = () => {
-//     const nextIdx = Math.floor(Math.random() * itemList.length);
-//     setSpotlightIdx(nextIdx);
+//   const next = useCallback(() => {
+//     if (featured.length === 0) return;
+//     setCurrent((prev) => (prev + 1) % featured.length);
+//     setProgress(0);
+//   }, [featured.length]);
+
+//   useEffect(() => {
+//     if (isPaused || featured.length === 0) {
+//       clearTimeout(intervalRef.current);
+//       clearInterval(progressRef.current);
+//       return;
+//     }
+
+//     const start = Date.now();
+//     progressRef.current = setInterval(() => {
+//       const elapsed = Date.now() - start;
+//       setProgress(Math.min((elapsed / AUTOPLAY_DURATION) * 100, 100));
+//     }, 30);
+
+//     intervalRef.current = setTimeout(() => {
+//       next();
+//     }, AUTOPLAY_DURATION);
+
+//     return () => {
+//       clearTimeout(intervalRef.current);
+//       clearInterval(progressRef.current);
+//     };
+//   }, [current, isPaused, next, featured.length]);
+
+//   // ─────────────────────────────────────────────
+//   // Animaciones avanzadas (Opción 1)
+//   // ─────────────────────────────────────────────
+//   const slideVariants = {
+//     initial: {
+//       opacity: 0,
+//       scale: 1.07
+//     },
+//     animate: {
+//       opacity: 1,
+//       scale: 1,
+//       transition: {
+//         duration: 1.05,
+//         ease: [0.22, 1, 0.36, 1]
+//       }
+//     },
+//     exit: {
+//       opacity: 0,
+//       scale: 0.97,
+//       transition: {
+//         duration: 0.65,
+//         ease: [0.4, 0, 0.2, 1]
+//       }
+//     }
 //   };
 
-//   return (
-//     <section className="hero-pwa">
-//       {/* Header Superior Limpio */}
-//       <header className="hero-pwa__header container">
-//         <a href="#" className="hero-pwa__brand">
-//           <img src={logoImg} alt="Pavés Medellín" className="hero-pwa__logo" />
-//           <div className="hero-pwa__brand-info">
-//             <span className="hero-pwa__brand-name">
-//               Pavés <span className="hero-pwa__brand-city">Medellín</span>
-//             </span>
-//             <span className="hero-pwa__brand-status">
-//               <span className="hero-pwa__dot" /> Domicilios activos
-//             </span>
+//   const contentVariants = {
+//     initial: { opacity: 0 },
+//     animate: {
+//       opacity: 1,
+//       transition: {
+//         staggerChildren: 0.1,
+//         delayChildren: 0.28
+//       }
+//     }
+//   };
+
+//   const itemVariants = {
+//     initial: { opacity: 0, y: 20 },
+//     animate: {
+//       opacity: 1,
+//       y: 0,
+//       transition: {
+//         duration: 0.55,
+//         ease: [0.22, 1, 0.36, 1]
+//       }
+//     }
+//   };
+
+//   if (featured.length === 0) {
+//     return (
+//       <section className="hero-full">
+//         <header className="hero-full__header">
+//           <div className="hero-full__brand">
+//             <img src={logoImg} alt="Pavés Medellín" className="hero-full__logo" />
+//             <div>
+//               <h1 className="hero-full__name">
+//                 Pavés <span>Medellín</span>
+//               </h1>
+//             </div>
 //           </div>
-//         </a>
-
-//         <button
-//           className={`hero-pwa__cart-btn ${cartCount > 0 ? "has-items" : ""}`}
-//           onClick={onOpenCart}
-//           aria-label="Ver mi pedido"
-//         >
-//           <ShoppingBag size={18} />
-//           <span className="hero-pwa__cart-text">Mi Pedido</span>
-//           {cartCount > 0 && <span className="hero-pwa__cart-count">{cartCount}</span>}
-//         </button>
-//       </header>
-
-//       {/* Titular con Contraste Garantizado */}
-//       <div className="hero-pwa__headline container">
-//         <h1 className="hero-pwa__title">
-//           Pavés Cremosos <span className="hero-pwa__title-accent">llenos de sabor</span>
-//         </h1>
-//         <p className="hero-pwa__subtitle">
-//           Postres artesanales congelados. Pide en segundos con entrega directa.
-//         </p>
-//       </div>
-
-//       {/* Ruleta de Antojo & Tarjeta Unificada */}
-//       <div className="hero-pwa__spotlight container">
-//         <div className="hero-pwa__spotlight-bar">
-//           <span className="hero-pwa__spotlight-label">
-//             <Sparkles size={14} className="icon-gold" /> Destacado del día
-//           </span>
-//           <button className="hero-pwa__wheel-btn" onClick={handleRandomWheel}>
-//             <RefreshCw size={13} /> Ruleta de Antojo
-//           </button>
+//         </header>
+//         <div className="hero-full__stage hero-full__stage--loading">
+//           <div className="hero-full__loading">Cargando productos...</div>
 //         </div>
+//       </section>
+//     );
+//   }
 
-//         <div className="hero-pwa__card-unlocked">
-//           <div className="hero-pwa__card-media">
-//             <img
-//               src={currentSpotlight.imagen || currentSpotlight.image}
-//               alt={currentSpotlight.nombre || currentSpotlight.name}
-//               className="hero-pwa__card-img"
-//             />
-//             {(currentSpotlight.tag || currentSpotlight.popular) && (
-//               <span className="hero-pwa__tag">
-//                 <Star size={12} fill="#fbbf24" /> {currentSpotlight.tag || "Popular"}
+//   const activeProduct = featured[current];
+//   const activeCount = products.length;
+
+//   return (
+//     <section className="hero-full">
+//       {/* Header */}
+//       <header className="hero-full__header">
+//         <div className="hero-full__brand">
+//           <img src={logoImg} alt="Pavés Medellín" className="hero-full__logo" />
+//           <div>
+//             <h1 className="hero-full__name">
+//               Pavés <span>Medellín</span>
+//             </h1>
+//             <div className="hero-full__meta">
+//               <span className="hero-full__rating">
+//                 <Star size={11} fill="currentColor" /> 4.9
 //               </span>
-//             )}
-//           </div>
-
-//           <div className="hero-pwa__card-content">
-//             <h2 className="hero-pwa__product-title">
-//               {currentSpotlight.nombre || currentSpotlight.name}
-//             </h2>
-//             <p className="hero-pwa__product-desc">
-//               {currentSpotlight.descripcion || currentSpotlight.description}
-//             </p>
-
-//             <div className="hero-pwa__action-row">
-//               <span className="hero-pwa__product-price">
-//                 {formatCOP(currentSpotlight.precio || currentSpotlight.price)}
-//               </span>
-//               <button
-//                 className="hero-pwa__add-btn"
-//                 onClick={() => onAddToCart && onAddToCart(currentSpotlight)}
-//               >
-//                 <Plus size={18} />
-//                 <span>Agregar</span>
-//               </button>
+//               <span className="hero-full__dot">·</span>
+//               <span>{activeCount} productos activos</span>
 //             </div>
 //           </div>
 //         </div>
+//       </header>
 
-//         {/* Carrusel/Selector de Antojos */}
-//         <div className="hero-pwa__selector-strip">
-//           {itemList.slice(0, 5).map((item, idx) => {
-//             const isActive = idx === spotlightIdx;
-//             return (
-//               <button
-//                 key={item.id || idx}
-//                 className={`hero-pwa__strip-item ${isActive ? "is-active" : ""}`}
-//                 onClick={() => setSpotlightIdx(idx)}
-//               >
-//                 <img src={item.imagen || item.image} alt={item.nombre || item.name} />
-//                 <span>{item.nombre || item.name}</span>
-//               </button>
-//             );
-//           })}
+//       {/* Stage */}
+//       <div
+//         className="hero-full__stage"
+//         onMouseEnter={() => setIsPaused(true)}
+//         onMouseLeave={() => setIsPaused(false)}
+//         onTouchStart={() => setIsPaused(true)}
+//         onTouchEnd={() => setIsPaused(false)}
+//       >
+//         <AnimatePresence mode="wait">
+//           <motion.div
+//             key={activeProduct.id}
+//             className="hero-full__slide"
+//             variants={slideVariants}
+//             initial="initial"
+//             animate="animate"
+//             exit="exit"
+//           >
+//             <div className="hero-full__media">
+//               <img
+//                 src={activeProduct.imagen || activeProduct.image}
+//                 alt={activeProduct.nombre || activeProduct.name}
+//                 className="hero-full__img"
+//               />
+//               {/* Overlay mejorado para legibilidad */}
+//               <div className="hero-full__overlay" />
+//             </div>
+
+//             {/* Contenido con stagger */}
+//             <motion.div
+//               className="hero-full__content"
+//               variants={contentVariants}
+//               initial="initial"
+//               animate="animate"
+//             >
+//               <motion.div className="hero-full__badge" variants={itemVariants}>
+//                 <Sparkles size={12} />
+//                 {activeProduct.tag || "Destacado"}
+//               </motion.div>
+
+//               <motion.h2 className="hero-full__title" variants={itemVariants}>
+//                 {activeProduct.nombre || activeProduct.name}
+//               </motion.h2>
+
+//               <motion.p className="hero-full__desc" variants={itemVariants}>
+//                 {activeProduct.descripcion || activeProduct.description}
+//               </motion.p>
+
+//               <motion.div className="hero-full__actions" variants={itemVariants}>
+//                 <div className="hero-full__price-block">
+//                   <span className="hero-full__price">
+//                     {formatCOP(activeProduct.precio || activeProduct.price)}
+//                   </span>
+//                   <div className="hero-full__rating-inline">
+//                     <Star size={15} fill="#c9a227" color="#c9a227" />
+//                     <span>{activeProduct.rating || 4.8}</span>
+//                   </div>
+//                 </div>
+//               </motion.div>
+//             </motion.div>
+//           </motion.div>
+//         </AnimatePresence>
+
+//         {/* Progress */}
+//         <div className="hero-full__progress">
+//           <div
+//             className="hero-full__progress-bar"
+//             style={{ width: `${progress}%` }}
+//           />
 //         </div>
 //       </div>
 
-//       {/* Navegación de Categorías */}
-//       <nav className="hero-pwa__categories container">
-//         <div className="hero-pwa__categories-track">
-//           {categories.map((cat) => {
-//             const active = (selectedCategory || "Todos") === cat;
-//             return (
-//               <button
-//                 key={cat}
-//                 className={`hero-pwa__cat-pill ${active ? "is-active" : ""}`}
-//                 onClick={() => onSelectCategory && onSelectCategory(cat)}
-//               >
-//                 {active && <Check size={14} />}
-//                 <span>{cat}</span>
-//               </button>
-//             );
-//           })}
-//         </div>
-//       </nav>
+//       {/* Floating Cart */}
+//       <button
+//         className="hero-full__float-cart"
+//         onClick={onOpenCart}
+//         aria-label="Ver mi pedido"
+//       >
+//         <ShoppingBag size={20} />
+//         <span>Mi Pedido</span>
+//         {cartCount > 0 && (
+//           <span className="hero-full__float-badge">{cartCount}</span>
+//         )}
+//       </button>
 //     </section>
 //   );
 // };
 
 // export default Hero;
 
-import React from "react";
-import { ShoppingBag, Sparkles, Plus, Star, Check } from "lucide-react";
-import logoImg from "../assets/images/logo.png";
-import "../css/Hero.css";
+import React, { useState, useEffect } from 'react';
+import { Star, ShoppingBag, ChevronRight, Award } from 'lucide-react';
+import './Hero.css';
 
-const Hero = ({
-  featuredProduct,
-  products = [],
+// Datos por defecto si no vienen mediante props
+const DEFAULT_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Arepa de Choclo con Queso',
+    description: 'Tradicional arepa con abundante queso campesino fresco derretido.',
+    price: '$8.500',
+    tag: 'MÁS VENDIDO',
+    image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=80&w=1000'
+  },
+  {
+    id: 2,
+    name: 'Combo Tradicional',
+    description: 'Arepa de choclo con queso + bebida artesanal fría a elección.',
+    price: '$12.000',
+    tag: 'RECOMENDADO',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=1000'
+  },
+  {
+    id: 3,
+    name: 'Arepa Especial con Tocineta',
+    description: 'Sabor irresistible con el toque crocante de tocineta ahumada.',
+    price: '$10.500',
+    tag: 'NUEVO',
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=1000'
+  }
+];
+
+export const Hero = ({ 
+  brandName = "Lemon Fire",
+  brandSubtitle = "Sabor Artesanal",
+  rating = "4.9",
+  reviewsCount = "(120+)",
+  products = DEFAULT_PRODUCTS,
+  logoUrl = "/logo.png",
   cartCount = 0,
-  onOpenCart,
-  onAddToCart,
-  selectedCategory = "Todos",
-  onSelectCategory
+  onOpenCart = () => {},
+  onSelectProduct = () => {}
 }) => {
-  // Categorías principales unificadas
-  const categories = [
-    "Todos",
-    "Pavés 8oz",
-    "Con Queso",
-    "Tendencia",
-    "Postres Especiales"
-  ];
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
 
-  // Producto destacado por defecto en caso de no recibir uno específico
-  const fallbackFeatured = {
-    id: "featured-1",
-    nombre: "Pavé Maracuyá Real",
-    precio: 14900,
-    descripcion: "Cremosa combinación artesanal de maracuyá concentrado con galleta crujiente.",
-    imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=600&q=80",
-    tag: "Más Vendido"
-  };
+  const displayProducts = products && products.length > 0 ? products : DEFAULT_PRODUCTS;
 
-  const currentFeatured = featuredProduct || products[0] || fallbackFeatured;
+  // Rotación automática del carrusel con barra de progreso
+  useEffect(() => {
+    const duration = 5000; // 5 segundos por slide
+    const intervalTime = 50;
+    const step = (intervalTime / duration) * 100;
 
-  const formatCOP = (val) => {
-    if (!val) return "$0";
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      maximumFractionDigits: 0
-    }).format(val);
-  };
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % displayProducts.length);
+          return 0;
+        }
+        return prev + step;
+      });
+    }, intervalTime);
+
+    return () => clearInterval(timer);
+  }, [displayProducts.length, currentIndex]);
+
+  const currentItem = displayProducts[currentIndex] || displayProducts[0];
 
   return (
-    <section className="hero-clean-pwa">
-      {/* Header Superior */}
-      <header className="hero-clean-pwa__header container">
-        <a href="#" className="hero-clean-pwa__brand">
-          <img src={logoImg} alt="Pavés Medellín" className="hero-clean-pwa__logo" />
-          <div className="hero-clean-pwa__brand-info">
-            <span className="hero-clean-pwa__brand-name">
-              Pavés <span className="hero-clean-pwa__brand-city">Medellín</span>
-            </span>
-            <span className="hero-clean-pwa__brand-status">
-              <span className="hero-clean-pwa__dot" /> Domicilios activos
-            </span>
-          </div>
-        </a>
-
-        <button
-          className="hero-clean-pwa__cart-btn"
-          onClick={onOpenCart}
-          aria-label="Ver mi pedido"
-        >
-          <ShoppingBag size={18} />
-          <span>Mi Pedido</span>
-          {cartCount > 0 && <span className="hero-clean-pwa__cart-badge">{cartCount}</span>}
-        </button>
-      </header>
-
-      {/* Titular Principal de Alto Contraste */}
-      <div className="hero-clean-pwa__intro container">
-        <h1 className="hero-clean-pwa__title">
-          Pavés Cremosos <span className="hero-clean-pwa__title-accent">llenos de sabor</span>
-        </h1>
-        <p className="hero-clean-pwa__subtitle">
-          Postres artesanales congelados. Pide en segundos con entrega directa.
-        </p>
-      </div>
-
-      {/* Tarjeta Fija: Destacado del Día (Sin carrusel) */}
-      <div className="hero-clean-pwa__featured container">
-        <div className="hero-clean-pwa__featured-header">
-          <Sparkles size={14} className="icon-gold" />
-          <span>Destacado del Día</span>
-        </div>
-
-        <div className="hero-clean-pwa__card">
-          <div className="hero-clean-pwa__card-media">
-            <img
-              src={currentFeatured.imagen || currentFeatured.image}
-              alt={currentFeatured.nombre || currentFeatured.name}
-              className="hero-clean-pwa__card-img"
-            />
-            {(currentFeatured.tag || currentFeatured.popular) && (
-              <span className="hero-clean-pwa__badge">
-                <Star size={12} fill="#fbbf24" /> {currentFeatured.tag || "Popular"}
+    <div className="hero-full">
+      {/* ── HEADER SUPERIOR FLOTANTE (ESTILO GLASS) ── */}
+      <header className="hero-full__header">
+        <div className="hero-full__brand">
+          <img 
+            src={logoUrl} 
+            alt={brandName} 
+            className="hero-full__logo" 
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+          <div>
+            <h1 className="hero-full__name">
+              {brandName} <span>{brandSubtitle}</span>
+            </h1>
+            <div className="hero-full__meta">
+              <span className="hero-full__rating">
+                <Star size={12} fill="currentColor" /> {rating}
               </span>
-            )}
-          </div>
-
-          <div className="hero-clean-pwa__card-content">
-            <h2 className="hero-clean-pwa__product-title">
-              {currentFeatured.nombre || currentFeatured.name}
-            </h2>
-            <p className="hero-clean-pwa__product-desc">
-              {currentFeatured.descripcion || currentFeatured.description}
-            </p>
-
-            <div className="hero-clean-pwa__card-action">
-              <span className="hero-clean-pwa__product-price">
-                {formatCOP(currentFeatured.precio || currentFeatured.price)}
-              </span>
-              <button
-                className="hero-clean-pwa__add-btn"
-                onClick={() => onAddToCart && onAddToCart(currentFeatured)}
-              >
-                <Plus size={18} />
-                <span>Agregar</span>
-              </button>
+              <span className="hero-full__dot">•</span>
+              <span>{reviewsCount} reseñas</span>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Fila Única de Categorías */}
-      <nav className="hero-clean-pwa__categories container">
-        <div className="hero-clean-pwa__categories-track">
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                className={`hero-clean-pwa__cat-pill ${isActive ? "is-active" : ""}`}
-                onClick={() => onSelectCategory && onSelectCategory(cat)}
-              >
-                {isActive && <Check size={14} />}
-                <span>{cat}</span>
-              </button>
-            );
-          })}
+      {/* ── ESCENARIO / CARRUSEL PRINCIPAL ── */}
+      <main className="hero-full__stage">
+        {displayProducts.map((item, idx) => {
+          const isActive = idx === currentIndex;
+          return (
+            <div 
+              key={item.id || idx} 
+              className={`hero-full__slide ${isActive ? 'hero-full__slide--active' : ''}`}
+            >
+              <div className="hero-full__media">
+                <img 
+                  src={item.image} 
+                  alt={item.name} 
+                  className="hero-full__img"
+                />
+                <div className="hero-full__overlay" />
+              </div>
+
+              {/* Información y detalles del producto */}
+              <div className="hero-full__content">
+                {item.tag && (
+                  <span className="hero-full__badge">
+                    <Award size={12} /> {item.tag}
+                  </span>
+                )}
+                <h2 className="hero-full__title">{item.name}</h2>
+                <p className="hero-full__desc">{item.description}</p>
+
+                <div className="hero-full__actions">
+                  <div className="hero-full__price-block">
+                    <span className="hero-full__price">{item.price}</span>
+                  </div>
+                  <button 
+                    className="hero-full__btn-order"
+                    onClick={() => onSelectProduct(item)}
+                  >
+                    Pedir ahora <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Línea de tiempo / Progreso del carrusel */}
+        <div className="hero-full__progress">
+          <div 
+            className="hero-full__progress-bar" 
+            style={{ width: `${progress}%` }}
+          />
         </div>
-      </nav>
-    </section>
+      </main>
+
+      {/* ── BOTÓN FLOTANTE DEL CARRITO ── */}
+      <button className="hero-full__float-cart" onClick={onOpenCart}>
+        <ShoppingBag size={20} />
+        <span>Ver Pedido</span>
+        {cartCount > 0 && (
+          <span className="hero-full__float-badge">{cartCount}</span>
+        )}
+      </button>
+    </div>
   );
 };
 
