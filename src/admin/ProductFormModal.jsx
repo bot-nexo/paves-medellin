@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { X, ImagePlus, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, ImagePlus, Loader2, Sparkles, Flame } from "lucide-react";
 import Swal from "sweetalert2";
-import { createProduct, updateProduct } from "../data/dataSource";
+import { createProduct, updateProduct, getAdditions, getSauces, setProductAdditions, setProductSauces } from "../data/dataSource";
 import { uploadProductImage } from "../services/storage";
 import { formatCOP } from "../utils/price";
 import "./admin.css";
@@ -47,6 +47,46 @@ const ProductFormModal = ({
   const [vistaPrevia, setVistaPrevia] = useState(producto?.imagen || "");
   const [nuevaImagen, setNuevaImagen] = useState(null);
   const [cargando, setCargando] = useState(false);
+
+  // ── Catálogos de adiciones y salsas ──────────────────────────────────────
+  const [catAdiciones, setCatAdiciones] = useState([]);  // todos los ítems disponibles
+  const [catSalsas, setCatSalsas]       = useState([]);
+  // Selección actual: { [id]: { seleccionado: bool, requerido: bool } }
+  const [selAdiciones, setSelAdiciones] = useState({});
+  const [selSalsas, setSelSalsas]       = useState({});
+
+  // Carga los catálogos y las asociaciones actuales del producto
+  useEffect(() => {
+    let cancelled = false;
+    const cargar = async () => {
+      try {
+        const [adds, sauces] = await Promise.all([getAdditions(), getSauces()]);
+        if (cancelled) return;
+        setCatAdiciones(adds.filter((a) => a.disponible));
+        setCatSalsas(sauces.filter((s) => s.disponible));
+
+        // Pre-marcar las que ya están asociadas (edición)
+        if (esEdicion && producto) {
+          const initAdds = {};
+          (producto.adiciones || []).forEach((a) => {
+            initAdds[a.id] = { seleccionado: true, requerido: !!a.requerido };
+          });
+          setSelAdiciones(initAdds);
+
+          const initSauces = {};
+          (producto.salsas || []).forEach((s) => {
+            initSauces[s.id] = { seleccionado: true, requerido: !!s.requerido };
+          });
+          setSelSalsas(initSauces);
+        }
+      } catch (err) {
+        console.warn("[ProductFormModal] no se pudo cargar catálogo extras:", err.message);
+      }
+    };
+    cargar();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const set = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
 
@@ -97,8 +137,36 @@ const ProductFormModal = ({
 
       if (esEdicion) {
         await updateProduct(producto.id, payload);
+        // Sincronizar adiciones y salsas del producto existente
+        await setProductAdditions(
+          producto.id,
+          Object.entries(selAdiciones)
+            .filter(([, v]) => v.seleccionado)
+            .map(([id, v]) => ({ id, requerido: v.requerido }))
+        );
+        await setProductSauces(
+          producto.id,
+          Object.entries(selSalsas)
+            .filter(([, v]) => v.seleccionado)
+            .map(([id, v]) => ({ id, requerido: v.requerido }))
+        );
       } else {
-        await createProduct(payload);
+        const nuevoProducto = await createProduct(payload);
+        // Sincronizar adiciones y salsas del producto recién creado
+        if (nuevoProducto?.id) {
+          await setProductAdditions(
+            nuevoProducto.id,
+            Object.entries(selAdiciones)
+              .filter(([, v]) => v.seleccionado)
+              .map(([id, v]) => ({ id, requerido: v.requerido }))
+          );
+          await setProductSauces(
+            nuevoProducto.id,
+            Object.entries(selSalsas)
+              .filter(([, v]) => v.seleccionado)
+              .map(([id, v]) => ({ id, requerido: v.requerido }))
+          );
+        }
       }
 
       Swal.fire({
@@ -252,6 +320,115 @@ const ProductFormModal = ({
                 />
                 <span>Producto destacado ⭐</span>
               </label>
+            </div>
+
+            {/* ── Adiciones & Salsas ────────────────────────────────── */}
+            <div className="adm-assoc">
+              {/* Adiciones */}
+              <div className="adm-assoc__grupo">
+                <span className="adm-assoc__titulo"><Sparkles size={14} /> Adiciones</span>
+                {catAdiciones.length === 0 ? (
+                  <p className="adm-assoc__vacio">
+                    No hay adiciones en el catálogo.{" "}
+                    <em>Créalas en la sección Adiciones &amp; Salsas.</em>
+                  </p>
+                ) : (
+                  <div className="adm-assoc__lista">
+                    {catAdiciones.map((a) => {
+                      const sel = selAdiciones[a.id] || { seleccionado: false, requerido: false };
+                      return (
+                        <div key={a.id} className="adm-assoc__item">
+                          <input
+                            type="checkbox"
+                            id={`add-${a.id}`}
+                            checked={sel.seleccionado}
+                            onChange={(e) =>
+                              setSelAdiciones((prev) => ({
+                                ...prev,
+                                [a.id]: { ...sel, seleccionado: e.target.checked },
+                              }))
+                            }
+                          />
+                          <label htmlFor={`add-${a.id}`} className="adm-assoc__nombre">
+                            {a.nombre}
+                          </label>
+                          {a.precio > 0
+                            ? <span className="adm-assoc__precio">+{formatCOP(a.precio)}</span>
+                            : <span className="adm-assoc__gratis">Gratis</span>}
+                          {sel.seleccionado && (
+                            <label className="adm-assoc__req">
+                              <input
+                                type="checkbox"
+                                checked={sel.requerido}
+                                onChange={(e) =>
+                                  setSelAdiciones((prev) => ({
+                                    ...prev,
+                                    [a.id]: { ...sel, requerido: e.target.checked },
+                                  }))
+                                }
+                              />
+                              Obligatorio
+                            </label>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Salsas */}
+              <div className="adm-assoc__grupo">
+                <span className="adm-assoc__titulo"><Flame size={14} /> Salsas</span>
+                {catSalsas.length === 0 ? (
+                  <p className="adm-assoc__vacio">
+                    No hay salsas en el catálogo.{" "}
+                    <em>Créalas en la sección Adiciones &amp; Salsas.</em>
+                  </p>
+                ) : (
+                  <div className="adm-assoc__lista">
+                    {catSalsas.map((s) => {
+                      const sel = selSalsas[s.id] || { seleccionado: false, requerido: false };
+                      return (
+                        <div key={s.id} className="adm-assoc__item">
+                          <input
+                            type="checkbox"
+                            id={`sauce-${s.id}`}
+                            checked={sel.seleccionado}
+                            onChange={(e) =>
+                              setSelSalsas((prev) => ({
+                                ...prev,
+                                [s.id]: { ...sel, seleccionado: e.target.checked },
+                              }))
+                            }
+                          />
+                          <label htmlFor={`sauce-${s.id}`} className="adm-assoc__nombre">
+                            {s.nombre}
+                          </label>
+                          {s.precio > 0
+                            ? <span className="adm-assoc__precio">+{formatCOP(s.precio)}</span>
+                            : <span className="adm-assoc__gratis">Gratis</span>}
+                          {sel.seleccionado && (
+                            <label className="adm-assoc__req">
+                              <input
+                                type="checkbox"
+                                checked={sel.requerido}
+                                onChange={(e) =>
+                                  setSelSalsas((prev) => ({
+                                    ...prev,
+                                    [s.id]: { ...sel, requerido: e.target.checked },
+                                  }))
+                                }
+                              />
+                              Obligatorio
+                            </label>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

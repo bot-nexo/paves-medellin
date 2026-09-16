@@ -52,11 +52,19 @@ const resolveImage = (row) =>
   (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || PLACEHOLDER_IMG;
 
 const normalizeProduct = (row) => {
-  const { categories: _cat, ...rest } = row;
+  const { categories: _cat, product_additions: _pa, product_sauces: _ps, ...rest } = row;
   return {
     ...rest,
     category: row.categories?.nombre || "",
     imagen: resolveImage(row),
+    // Adiciones asociadas al producto (con su flag de requerido), ocultando no disponibles
+    adiciones: (row.product_additions || [])
+      .map((pa) => (pa.additions ? { ...pa.additions, requerido: pa.requerido } : null))
+      .filter((a) => a && a.disponible !== false),
+    // Salsas asociadas al producto (con su flag de requerido), ocultando no disponibles
+    salsas: (row.product_sauces || [])
+      .map((ps) => (ps.sauces ? { ...ps.sauces, requerido: ps.requerido } : null))
+      .filter((s) => s && s.disponible !== false),
   };
 };
 
@@ -183,7 +191,12 @@ export async function getProducts() {
   try {
     const { data, error } = await supabase
       .from("products")
-      .select("*, categories(nombre)")
+      .select(
+        `*,
+        categories(nombre),
+        product_additions(requerido, additions(*)),
+        product_sauces(requerido, sauces(*))`
+      )
       .order("orden", { ascending: true })
       .order("nombre", { ascending: true });
     if (error) throw error;
@@ -233,6 +246,12 @@ export const buildOrderItems = (cart) =>
       .map((o) => o.nombre || o.name || ""),
     toppings: (item.customizations?.toppings || []).map(
       (t) => (typeof t === "object" ? t.nombre || t.name : t) || "",
+    ),
+    adiciones: Object.values(item.customizations?.adiciones || {}).map(
+      (a) => a.nombre || ""
+    ),
+    salsas: Object.values(item.customizations?.salsas || {}).map(
+      (s) => s.nombre || ""
     ),
     observaciones: item.customizations?.observaciones || "",
   }));
@@ -366,6 +385,124 @@ export async function updateCategory(id, cambios) {
 export async function deleteCategory(id) {
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) throw error;
+  invalidateCatalog();
+}
+
+// ── Adiciones (panel admin) ─────────────────────────────────────────────────
+
+/** Lista todas las adiciones del catálogo (disponibles o no). */
+export async function getAdditions() {
+  const { data, error } = await supabase
+    .from("additions")
+    .select("*")
+    .order("orden", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createAddition(data) {
+  const { data: row, error } = await supabase
+    .from("additions")
+    .insert(data)
+    .select()
+    .single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateAddition(id, cambios) {
+  const { error } = await supabase.from("additions").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteAddition(id) {
+  const { error } = await supabase.from("additions").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ── Salsas (panel admin) ────────────────────────────────────────────────────
+
+/** Lista todas las salsas del catálogo (disponibles o no). */
+export async function getSauces() {
+  const { data, error } = await supabase
+    .from("sauces")
+    .select("*")
+    .order("orden", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createSauce(data) {
+  const { data: row, error } = await supabase
+    .from("sauces")
+    .insert(data)
+    .select()
+    .single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateSauce(id, cambios) {
+  const { error } = await supabase.from("sauces").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteSauce(id) {
+  const { error } = await supabase.from("sauces").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ── Asociaciones Producto ↔ Adiciones / Salsas ──────────────────────────────
+
+/**
+ * Sincroniza las adiciones de un producto:
+ * borra todas las filas actuales e inserta las nuevas.
+ * @param {string} productId
+ * @param {Array<{id: string, requerido: boolean}>} items
+ */
+export async function setProductAdditions(productId, items) {
+  // 1. Borrar las filas anteriores
+  const { error: delError } = await supabase
+    .from("product_additions")
+    .delete()
+    .eq("product_id", productId);
+  if (delError) throw delError;
+
+  // 2. Insertar las nuevas (si hay alguna)
+  if (items.length === 0) return;
+  const rows = items.map(({ id, requerido }) => ({
+    product_id: productId,
+    addition_id: id,
+    requerido: !!requerido,
+  }));
+  const { error: insError } = await supabase.from("product_additions").insert(rows);
+  if (insError) throw insError;
+  invalidateCatalog();
+}
+
+/**
+ * Sincroniza las salsas de un producto:
+ * borra todas las filas actuales e inserta las nuevas.
+ * @param {string} productId
+ * @param {Array<{id: string, requerido: boolean}>} items
+ */
+export async function setProductSauces(productId, items) {
+  const { error: delError } = await supabase
+    .from("product_sauces")
+    .delete()
+    .eq("product_id", productId);
+  if (delError) throw delError;
+
+  if (items.length === 0) return;
+  const rows = items.map(({ id, requerido }) => ({
+    product_id: productId,
+    sauce_id: id,
+    requerido: !!requerido,
+  }));
+  const { error: insError } = await supabase.from("product_sauces").insert(rows);
+  if (insError) throw insError;
   invalidateCatalog();
 }
 

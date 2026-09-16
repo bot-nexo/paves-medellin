@@ -89,6 +89,19 @@
   box-shadow: 0 2px 8px rgba(217, 43, 56, 0.3);
 }
 
+.menu-card__badge--personalizable {
+  top: auto;
+  bottom: 52px;
+  left: 12px;
+  right: auto;
+  background: linear-gradient(135deg, rgba(61,35,20,0.85), rgba(92,67,53,0.85));
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(214, 158, 74, 0.4);
+  color: #d69e4a;
+  font-size: 0.68rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
 .menu-card__price-tag {
   position: absolute;
   bottom: 12px;

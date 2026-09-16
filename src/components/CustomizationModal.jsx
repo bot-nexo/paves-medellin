@@ -5,19 +5,25 @@ import "../css/CustomizationModal.css";
 import { formatCOP } from "../utils/price";
 
 const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
-  const [selectedOptions, setSelectedOptions] = useState({});
-  const [selectedToppings, setSelectedToppings] = useState([]);
-  const [observaciones, setObservaciones] = useState("");
+  const [selectedOptions, setSelectedOptions]     = useState({});
+  const [selectedToppings, setSelectedToppings]   = useState([]);
+  const [selectedAdiciones, setSelectedAdiciones] = useState({}); // { [id]: item }
+  const [selectedSalsas, setSelectedSalsas]       = useState({}); // { [id]: item }
+  const [observaciones, setObservaciones]         = useState("");
 
   useEffect(() => {
     if (isOpen && product) {
       if (product.customizations) {
         setSelectedOptions(product.customizations.options || {});
         setSelectedToppings(product.customizations.toppings || []);
+        setSelectedAdiciones(product.customizations.adiciones || {});
+        setSelectedSalsas(product.customizations.salsas || {});
         setObservaciones(product.customizations.observaciones || "");
       } else {
         setSelectedOptions({});
         setSelectedToppings([]);
+        setSelectedAdiciones({});
+        setSelectedSalsas({});
         setObservaciones("");
       }
     }
@@ -54,15 +60,20 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
       extra += opt.precio || opt.price || 0;
     });
     selectedToppings.forEach((top) => {
-      if (typeof top === "object") {
-        extra += top.precio || top.price || 0;
-      }
+      if (typeof top === "object") extra += top.precio || top.price || 0;
+    });
+    Object.values(selectedAdiciones).forEach((a) => {
+      extra += a.precio || 0;
+    });
+    Object.values(selectedSalsas).forEach((s) => {
+      extra += s.precio || 0;
     });
     return basePrice + extra;
   };
 
   const handleConfirm = () => {
     const productOptions = product.options || {};
+    // Validar opciones tipo radio (obligatorias)
     for (const groupName in productOptions) {
       if (groupName !== "adiciones" && groupName !== "toppings" && !selectedOptions[groupName]) {
         Swal.fire({
@@ -75,9 +86,37 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
       }
     }
 
+    // Validar adiciones requeridas
+    const adicionesReq = (product.adiciones || []).filter((a) => a.requerido);
+    for (const a of adicionesReq) {
+      if (!selectedAdiciones[a.id]) {
+        Swal.fire({
+          title: "Adición requerida",
+          text: `Debes elegir la adición: ${a.nombre}`,
+          icon: "warning",
+          confirmButtonColor: "#3D2314",
+        });
+        return;
+      }
+    }
+
+    // Validar salsas requeridas (al menos 1 si alguna está marcada como requerida)
+    const salsasReq = (product.salsas || []).filter((s) => s.requerido);
+    if (salsasReq.length > 0 && Object.keys(selectedSalsas).length === 0) {
+      Swal.fire({
+        title: "Salsa requerida",
+        text: "Debes elegir al menos una salsa.",
+        icon: "warning",
+        confirmButtonColor: "#3D2314",
+      });
+      return;
+    }
+
     onConfirm(product, {
       options: selectedOptions,
       toppings: selectedToppings,
+      adiciones: selectedAdiciones,
+      salsas: selectedSalsas,
       observaciones,
       precioCalculado: calculateTotalPrice(),
     });
@@ -144,6 +183,84 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
                       <div className="option-info">
                         <span className="option-name">{toppingName}</span>
                         {toppingPrice > 0 && <span className="option-price">+{formatCOP(toppingPrice)}</span>}
+                      </div>
+                      {isChecked && <Check size={16} className="check-icon" />}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Adiciones del producto (desde BD) ────────────────────────── */}
+          {(product.adiciones || []).length > 0 && (
+            <div className="custom-section">
+              <h4>
+                ✨ Adiciones
+                {(product.adiciones || []).some((a) => a.requerido) && (
+                  <span style={{ color: "#e68d8d", fontSize: "12px", marginLeft: "6px" }}>* requerido</span>
+                )}
+              </h4>
+              <div className="options-grid">
+                {(product.adiciones || []).map((a) => {
+                  const isChecked = !!selectedAdiciones[a.id];
+                  return (
+                    <label key={a.id} className={`option-card ${isChecked ? "active" : ""}`}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() =>
+                          setSelectedAdiciones((prev) => {
+                            const next = { ...prev };
+                            if (isChecked) delete next[a.id];
+                            else next[a.id] = a;
+                            return next;
+                          })
+                        }
+                      />
+                      <div className="option-info">
+                        <span className="option-name">
+                          {a.nombre}{a.requerido ? " *" : ""}
+                        </span>
+                        {a.precio > 0 && <span className="option-price">+{formatCOP(a.precio)}</span>}
+                      </div>
+                      {isChecked && <Check size={16} className="check-icon" />}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Salsas del producto (desde BD) ───────────────────────────── */}
+          {(product.salsas || []).length > 0 && (
+            <div className="custom-section">
+              <h4>
+                🔥 Salsas
+                {(product.salsas || []).some((s) => s.requerido) && (
+                  <span style={{ color: "#e68d8d", fontSize: "12px", marginLeft: "6px" }}>* elige al menos 1</span>
+                )}
+              </h4>
+              <div className="options-grid">
+                {(product.salsas || []).map((s) => {
+                  const isChecked = !!selectedSalsas[s.id];
+                  return (
+                    <label key={s.id} className={`option-card ${isChecked ? "active" : ""}`}>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() =>
+                          setSelectedSalsas((prev) => {
+                            const next = { ...prev };
+                            if (isChecked) delete next[s.id];
+                            else next[s.id] = s;
+                            return next;
+                          })
+                        }
+                      />
+                      <div className="option-info">
+                        <span className="option-name">{s.nombre}</span>
+                        {s.precio > 0 && <span className="option-price">+{formatCOP(s.precio)}</span>}
                       </div>
                       {isChecked && <Check size={16} className="check-icon" />}
                     </label>

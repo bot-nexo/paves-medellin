@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, Sparkles, ChevronDown } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
-import "../css/Hero.css";
 import { FaShoppingCart } from "react-icons/fa";
+import { StoreIcon } from "lucide-react";
+import "../css/Hero.css";
 
 const Hero = ({
   cartCount = 0,
   onOpenCart,
+  estadoNegocio,
 }) => {
   const { products = [] } = useCatalog();
   const [current, setCurrent] = useState(0);
@@ -37,6 +39,7 @@ const Hero = ({
 
 
   useEffect(() => {
+    console.log('estadoNegocio', estadoNegocio);
     if (isPaused || featured.length === 0) {
       clearTimeout(intervalRef.current);
       clearInterval(progressRef.current);
@@ -58,6 +61,47 @@ const Hero = ({
       clearInterval(progressRef.current);
     };
   }, [current, isPaused, next, featured.length]);
+
+  const renderEstadoNegocio = () => {
+  // 1. Estado Abierto
+  if (estadoNegocio.abierto) {
+    return (
+      <span className="hero-full__badge hero-full__badge--open">
+        <StoreIcon size={16} />
+        <span className="badge__status-dot" />
+        Abierto ahora
+      </span>
+    );
+  }
+
+  // 2. Cierre Manual / Eventualidad (fuerzaCierre)
+  if (estadoNegocio.fuerzaCierre) {
+    return (
+      <span className="hero-full__badge hero-full__badge--closed-forced">
+        <StoreIcon size={16} />
+        Cerrado temporalmente por eventualidad
+      </span>
+    );
+  }
+
+  // 3. Cerrado por Horario Habitual
+  return (
+    <span className="hero-full__badge hero-full__badge--closed">
+      <StoreIcon size={16} />
+      <div className="badge__text-group">
+        <span className="badge__title">Cerrado</span>
+        {estadoNegocio.dateOpen && estadoNegocio.hourOpen && (
+          <span className="badge__subtitle">
+            • Abre el {estadoNegocio.dateOpen} a las {estadoNegocio.hourOpen}
+          </span>
+        )}
+      </div>
+    </span>
+  );
+};
+
+// En tu JSX principal:
+{renderEstadoNegocio()}
 
   // ─────────────────────────────────────────────
   // Animaciones avanzadas (Opción 1)
@@ -153,6 +197,8 @@ const Hero = ({
             </div>
           </div>
         </div>
+
+       {renderEstadoNegocio()}
 
         <a href="#menu" className="hero-full__cta">
           Ver Menú

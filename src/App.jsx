@@ -125,6 +125,18 @@ const App = () => {
           const saborText = b.sabor ? " (" + b.sabor + ")" : "";
           message += "   _BEBIDA: " + b.name + saborText + "_\n";
         }
+        if (item.customizations.toppings && item.customizations.toppings.length > 0) {
+          const toppingsText = item.customizations.toppings.map(t => typeof t === "object" ? t.nombre || t.name : t).join(", ");
+          message += "   _Toppings: " + toppingsText + "_\n";
+        }
+        if (item.customizations.adiciones && Object.keys(item.customizations.adiciones).length > 0) {
+          const adicionesText = Object.values(item.customizations.adiciones).map(a => a.nombre).join(", ");
+          message += "   _Adiciones: " + adicionesText + "_\n";
+        }
+        if (item.customizations.salsas && Object.keys(item.customizations.salsas).length > 0) {
+          const salsasText = Object.values(item.customizations.salsas).map(s => s.nombre).join(", ");
+          message += "   _Salsas: " + salsasText + "_\n";
+        }
         if (item.customizations.observaciones) {
           message += "   _Nota: " + item.customizations.observaciones + "_\n";
         }
@@ -178,7 +190,7 @@ const App = () => {
         path="/*"
         element={
           <div className="app-wrapper">
-            <Hero cartCount={cartCount} onOpenCart={openCart} settings={settings} />
+            <Hero cartCount={cartCount} onOpenCart={openCart} estadoNegocio={estadoNegocio} />
 
             <Menu
               data={products}

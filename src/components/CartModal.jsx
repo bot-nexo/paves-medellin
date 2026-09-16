@@ -118,9 +118,27 @@ const CartModal = ({
                               <p className="custom-detail">
                                 <span className="custom-label">Toppings:</span>{" "}
                                 {item.customizations.toppings
-                                  .map((t) =>
-                                    typeof t === "string" ? t : t.nombre,
-                                  )
+                                  .map((t) => (typeof t === "string" ? t : t.nombre))
+                                  .join(", ")}
+                              </p>
+                            )}
+
+                          {item.customizations.adiciones &&
+                            Object.keys(item.customizations.adiciones).length > 0 && (
+                              <p className="custom-detail">
+                                <span className="custom-label">Adiciones:</span>{" "}
+                                {Object.values(item.customizations.adiciones)
+                                  .map((a) => a.nombre)
+                                  .join(", ")}
+                              </p>
+                            )}
+
+                          {item.customizations.salsas &&
+                            Object.keys(item.customizations.salsas).length > 0 && (
+                              <p className="custom-detail">
+                                <span className="custom-label">Salsas:</span>{" "}
+                                {Object.values(item.customizations.salsas)
+                                  .map((s) => s.nombre)
                                   .join(", ")}
                               </p>
                             )}

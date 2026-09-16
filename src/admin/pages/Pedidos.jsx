@@ -170,9 +170,6 @@ const Pedidos = () => {
       <header className="admin-page__header admin-page__header--row">
         <div>
           <h1 className="admin-page__titulo">Pedidos</h1>
-          <p className="admin-page__sub">
-            {`${conteos.nuevo || 0} nuevos · ${conteos.preparacion || 0} en preparación · ${conteos.camino || 0} en camino`}
-          </p>
         </div>
         <div className="admin-page__acciones">
           {nuevos > 0 && (
@@ -185,7 +182,7 @@ const Pedidos = () => {
               <Bell size={15} /> {nuevos} nuevo(s) 🛎️
             </button>
           )}
-          <button type="button" className="admin-btn-ghost" onClick={cargar}>
+          <button type="button" className="admin-btn-ghost admin-btn-ghost--recargar" onClick={cargar}>
             <RefreshCw size={15} /> Recargar
           </button>
         </div>
@@ -254,7 +251,7 @@ const Pedidos = () => {
                         className={`adm-ped__entrega adm-ped__entrega--${p.tipo_entrega === "recogida" ? "recogida" : "domicilio"
                           }`}
                       >
-                        {p.tipo_entrega === "recogida" ? "🏪 Recogida" : "🛵 Domicilio"}
+                        {p.tipo_entrega === "recogida" ? "💁‍♂️ Recoger" : "🏍️ Domicilio"}
                       </span>
                     </td>
                     <td className="adm-prod__precio">{formatCOP(p.total)}</td>
@@ -262,18 +259,7 @@ const Pedidos = () => {
                       <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>
                         {labelEstado(p.estado)}
                       </span>
-                      <select
-                        className="adm-ped__select-estado"
-                        value={p.estado}
-                        disabled={cargandoId === p.id}
-                        onChange={(e) => cambiarEstado(p, e.target.value)}
-                      >
-                        {ESTADOS.filter((e) => e.id !== "todos").map((e) => (
-                          <option key={e.id} value={e.id}>
-                            {labelEstado(e.id)}
-                          </option>
-                        ))}
-                      </select>
+                      {" "}
                       {paso && (
                         <button
                           type="button"

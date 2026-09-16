@@ -35,6 +35,12 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
           )}
 
           <span className="menu-card__price-tag">{formattedPrice}</span>
+
+          {((product.adiciones?.length > 0) || (product.salsas?.length > 0)) && (
+            <span className="menu-card__badge menu-card__badge--personalizable">
+              ✨ Personalizable
+            </span>
+          )}
         </div>
 
         {/* Contenido */}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  IceCream,
+  Dessert,
   Tags,
   Receipt,
   Store,
@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   User,
+  Sparkles,
 } from "lucide-react";
 import { logoutAdmin } from "./sessionStore";
 import { useAdminSession } from "./useAdminSession";
@@ -22,8 +23,9 @@ import "./admin.css";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/productos", label: "Productos", icon: IceCream },
+  { to: "/admin/productos", label: "Productos", icon: Dessert },
   { to: "/admin/categorias", label: "Categorías", icon: Tags },
+  { to: "/admin/adiciones", label: "Adiciones & Salsas", icon: Sparkles },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
   { to: "/admin/empresa", label: "Empresa", icon: Store },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },

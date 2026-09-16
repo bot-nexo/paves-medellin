@@ -1218,6 +1218,25 @@ select.adm-prod__select:focus {
   animation: adm-late 1.6s ease infinite;
 }
 
+.admin-btn-ghost--recargar {
+  margin-left: 20px;
+  margin-bottom: 18px;
+  margin-top: -2px;
+  padding: 5px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+  color: var(--crema);
+  border-color: rgb(255, 171, 3);
+}
+
+.admin-btn-ghost--recargar:hover,
+.admin-btn-ghost--recargar:focus {
+  color: var(--crema);
+  border-color: rgb(255, 171, 3);
+  border-radius: 8px;
+  background-color: var(--acento);
+}
+
 @keyframes adm-late {
 
   0%,
@@ -2025,4 +2044,200 @@ select.adm-prod__select:focus {
     align-items: center;
     text-align: center;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ADICIONES & SALSAS — Estilos de la página y componentes asociados
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tabs de la página ───────────────────────────────────────────────────── */
+.adm-extras__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--aborde);
+  padding-bottom: 0;
+}
+
+.adm-extras__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--texto-dim);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+}
+
+.adm-extras__tab:hover {
+  color: var(--crema);
+}
+
+.adm-extras__tab--active {
+  color: var(--acento);
+  border-bottom-color: var(--acento);
+}
+
+/* ── Header interno de cada tab ─────────────────────────────────────────── */
+.adm-extras__tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* ── Chip de precio (adm-chip--precio) ──────────────────────────────────── */
+.adm-chip--precio {
+  background: rgba(130, 207, 174, 0.12);
+  color: var(--menta);
+  font-weight: 600;
+}
+
+/* ── Modal pequeño (para adición/salsa) ─────────────────────────────────── */
+.adm-modal--sm {
+  max-width: 420px;
+  width: 100%;
+}
+
+/* ── Cuerpo del modal sin sección de imagen ─────────────────────────────── */
+.adm-modal__cuerpo--solo-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SECCIÓN DE ASOCIACIÓN EN PRODUCT FORM — Adiciones & Salsas del producto
+   ══════════════════════════════════════════════════════════════════════════ */
+.adm-assoc {
+  border-top: 1px solid var(--aborde);
+  padding-top: 20px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.adm-assoc__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adm-assoc__titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--acento);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.adm-assoc__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.adm-assoc__lista::-webkit-scrollbar {
+  width: 4px;
+}
+.adm-assoc__lista::-webkit-scrollbar-track { background: transparent; }
+.adm-assoc__lista::-webkit-scrollbar-thumb {
+  background: var(--aborde);
+  border-radius: 4px;
+}
+
+.adm-assoc__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  border-radius: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.adm-assoc__item:hover {
+  border-color: rgba(214, 158, 74, 0.3);
+  background: rgba(214, 158, 74, 0.04);
+}
+
+.adm-assoc__item input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--acento);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.adm-assoc__nombre {
+  flex: 1;
+  font-size: 13.5px;
+  color: var(--crema);
+}
+
+.adm-assoc__precio {
+  font-size: 12px;
+  color: var(--menta);
+  font-weight: 600;
+  background: rgba(130, 207, 174, 0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.adm-assoc__gratis {
+  font-size: 12px;
+  color: var(--texto-dim);
+}
+
+.adm-assoc__req {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--texto-dim);
+  white-space: nowrap;
+}
+
+.adm-assoc__req input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+}
+
+.adm-assoc__vacio {
+  font-size: 13px;
+  color: var(--texto-dim);
+  font-style: italic;
+  padding: 8px 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CATÁLOGO — Badge "Personalizable" en MenuCard
+   ══════════════════════════════════════════════════════════════════════════ */
+.menu-card__badge--personalizable {
+  background: linear-gradient(135deg, rgba(214,158,74,0.18), rgba(130,207,174,0.12));
+  border: 1px solid rgba(214,158,74,0.35);
+  color: var(--acento, #d69e4a);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
