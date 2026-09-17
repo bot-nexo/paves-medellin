@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { formatCOP } from "../utils/price";
@@ -12,7 +12,7 @@ const VACIO = { nombre: "", precio: "", orden: "", disponible: true };
  * item = fila existente o null para crear.
  * onCreate / onUpdate = funciones async del dataSource ya importadas por el padre.
  */
-const AdditionFormModal = ({ tipo = "addition", item, onClose, onSaved, onCreate, onUpdate }) => {
+const AdditionFormModal = ({ tipo = "addition", item, ordenSugerido = 1, onClose, onSaved, onCreate, onUpdate }) => {
   const esEdicion = !!item;
   const label = tipo === "sauce" ? "salsa" : "adición";
   const labelCap = tipo === "sauce" ? "Salsa" : "Adición";
@@ -25,7 +25,7 @@ const AdditionFormModal = ({ tipo = "addition", item, onClose, onSaved, onCreate
           orden: item.orden ?? "",
           disponible: item.disponible !== false,
         }
-      : { ...VACIO }
+      : { ...VACIO, orden: ordenSugerido }
   );
   const [cargando, setCargando] = useState(false);
 

@@ -755,6 +755,67 @@ select.adm-prod__select:focus {
   border-color: var(--acento);
 }
 
+/* ── Filtro de estado — Segmented Control ──────────────────────────────── */
+.adm-filtro-estado {
+  display: flex;
+  align-items: center;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.adm-filtro-estado__btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto-dim);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+
+.adm-filtro-estado__btn:hover {
+  background: rgba(214, 158, 74, 0.08);
+  color: var(--crema);
+}
+
+.adm-filtro-estado__btn--activo {
+  background: var(--acento);
+  color: #1a0e05;
+  font-weight: 700;
+}
+
+.adm-filtro-estado__btn--activo:hover {
+  background: var(--acento);
+  color: #1a0e05;
+}
+
+.adm-filtro-estado__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.12);
+  line-height: 1;
+}
+
+.adm-filtro-estado__btn--activo .adm-filtro-estado__num {
+  background: rgba(26, 14, 5, 0.2);
+}
+
 /* ── Tabla de Productos ────────────────────────────────────────────────── */
 .admin-card--tabla {
   padding: 0;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Search } from "lucide-react";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
 import Swal from "sweetalert2";
 import {
@@ -18,6 +18,8 @@ const Categorias = () => {
   const [productos, setProductos] = useState([]);
   const [modal, setModal] = useState({ abierto: false, categoria: null });
   const [procesandoId, setProcesandoId] = useState(null);
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("todos"); // "todos" | "visibles" | "ocultas"
   const [paginaActual, setPaginaActual] = useState(1);
   const [itemsPorPagina, setItemsPorPagina] = useState(5);
   const [cargando, setCargando] = useState(false);
@@ -52,11 +54,26 @@ const Categorias = () => {
     cargar();
   }, [cargar]);
 
-  const paginadas = useMemo(() => {
+  // Resetear a página 1 al cambiar filtros
+  useEffect(() => { setPaginaActual(1); }, [busqueda, filtroEstado]);
+
+  const filtradas = useMemo(() => {
     if (!categorias) return [];
+    const q = busqueda.trim().toLowerCase();
+    return categorias.filter((c) => {
+      const okBus    = !q || c.nombre.toLowerCase().includes(q);
+      const okEstado =
+        filtroEstado === "todos"    ? true
+        : filtroEstado === "visibles" ? c.visible
+        : /* ocultas */               !c.visible;
+      return okBus && okEstado;
+    });
+  }, [categorias, busqueda, filtroEstado]);
+
+  const paginadas = useMemo(() => {
     const inicio = (paginaActual - 1) * itemsPorPagina;
-    return categorias.slice(inicio, inicio + itemsPorPagina);
-  }, [categorias, paginaActual, itemsPorPagina]);
+    return filtradas.slice(inicio, inicio + itemsPorPagina);
+  }, [filtradas, paginaActual, itemsPorPagina]);
 
   const conteoPorCategoria = useMemo(() => {
     const mapa = {};
@@ -183,9 +200,39 @@ const Categorias = () => {
         </div>
       </header>
 
+      {/* Barra de filtros */}
+      <div className="adm-prod__filtros">
+        <div className="admin-field__input adm-prod__buscador">
+          <Search size={15} className="admin-field__icon" />
+          <input
+            type="text"
+            placeholder="Buscar por nombre…"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
+        <div className="adm-filtro-estado" role="group" aria-label="Filtrar por estado">
+          {[
+            { valor: "todos",    etiqueta: "Todas",   num: categorias?.length ?? 0 },
+            { valor: "visibles", etiqueta: "Visibles", num: categorias?.filter((c) => c.visible).length ?? 0 },
+            { valor: "ocultas",  etiqueta: "Ocultas",  num: categorias?.filter((c) => !c.visible).length ?? 0 },
+          ].map(({ valor, etiqueta, num }) => (
+            <button
+              key={valor}
+              type="button"
+              className={`adm-filtro-estado__btn${filtroEstado === valor ? " adm-filtro-estado__btn--activo" : ""}`}
+              onClick={() => setFiltroEstado(valor)}
+            >
+              {etiqueta}
+              <span className="adm-filtro-estado__num">{num}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="admin-card admin-card--tabla admin-main-content">
-        {categorias.length === 0 ? (
-          <p className="adm-prod__vacio">No hay categorías. Crea la primera.</p>
+        {filtradas.length === 0 ? (
+          <p className="adm-prod__vacio">No hay categorías que coincidan con el filtro.</p>
         ) : (
           <table className="adm-prod__tabla">
             <thead>
@@ -247,10 +294,10 @@ const Categorias = () => {
         )}
       </div>
 
-      {categorias.length > 0 && (
+      {filtradas.length > 0 && (
         <Pagination
           paginaActual={paginaActual}
-          totalItems={categorias.length}
+          totalItems={filtradas.length}
           itemsPorPagina={itemsPorPagina}
           onCambiarPagina={(p) => setPaginaActual(p)}
           onCambiarItemsPorPagina={(n) => {

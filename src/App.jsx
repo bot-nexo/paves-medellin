@@ -40,6 +40,7 @@ const App = () => {
     closeCheckout,
     addToCart,
     editCartItem,
+    addOneMore,
     confirmCustomization,
     removeItemByStoreKey,
     updateQuantity,
@@ -70,8 +71,9 @@ const App = () => {
     if (cart.length === 0) return;
 
     // 1) Persistir el pedido en la BD (no bloquea: si falla, seguimos a WhatsApp)
-    const summary = calculateOrderSummary(cart, settings.freeDeliveryThreshold);
-    const deliveryFee = summary.esGratis
+    const esDomicilio = deliveryData.tipoEntrega !== "recogida";
+    const summary = calculateOrderSummary(cart, settings.deliveryFee ?? VALOR_DOMICILIO, settings.freeDeliveryThreshold ?? 0, esDomicilio);
+    const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
       : (settings.deliveryFee ?? VALOR_DOMICILIO);
     const saved = await createOrder(deliveryData, cart, {
@@ -147,7 +149,7 @@ const App = () => {
       message += "   Subtotal: $" + (subtotal / 1000).toLocaleString() + " K\n\n";
     });
 
-    const esGratis = summary.esGratis;
+    const esGratis = !esDomicilio || summary.esGratis;
     const totalFinal = summary.subtotal + deliveryFee;
 
     message += "--------------------------------\n";
@@ -209,6 +211,7 @@ const App = () => {
               onUpdateQuantity={updateQuantity}
               onRemove={removeItemByStoreKey}
               onEdit={editCartItem}
+              onAddOneMore={addOneMore}
               onCheckout={openCheckout}
               settings={settings}
             />

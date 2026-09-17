@@ -1,5 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, Flame, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Pencil, Trash2, RefreshCw, Flame, Sparkles, Search } from "lucide-react";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
 import Swal from "sweetalert2";
 import {
@@ -30,11 +30,28 @@ const TabContent = ({
   const [procesandoId, setProcId] = useState(null);
   const [pagina, setPagina]       = useState(1);
   const [porPagina, setPorPagina] = useState(8);
+  const [busqueda, setBusqueda]   = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("todos"); // "todos" | "disponibles" | "inactivos"
+
+  // Resetear página al filtrar
+  useEffect(() => { setPagina(1); }, [busqueda, filtroEstado]);
+
+  const filtrados = useMemo(() => {
+    const q = busqueda.trim().toLowerCase();
+    return (items || []).filter((it) => {
+      const okBus    = !q || it.nombre.toLowerCase().includes(q);
+      const okEstado =
+        filtroEstado === "todos"       ? true
+        : filtroEstado === "disponibles" ? it.disponible
+        : /* inactivos */                 !it.disponible;
+      return okBus && okEstado;
+    });
+  }, [items, busqueda, filtroEstado]);
 
   const paginados = useMemo(() => {
     const inicio = (pagina - 1) * porPagina;
-    return (items || []).slice(inicio, inicio + porPagina);
-  }, [items, pagina, porPagina]);
+    return filtrados.slice(inicio, inicio + porPagina);
+  }, [filtrados, pagina, porPagina]);
 
   const toggleDisponible = async (it) => {
     const nuevo = !it.disponible;
@@ -87,9 +104,39 @@ const TabContent = ({
         </button>
       </div>
 
+      {/* Filtros */}
+      <div className="adm-prod__filtros">
+        <div className="admin-field__input adm-prod__buscador">
+          <Search size={15} className="admin-field__icon" />
+          <input
+            type="text"
+            placeholder={`Buscar ${labelPlur}…`}
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+        </div>
+        <div className="adm-filtro-estado" role="group" aria-label="Filtrar por estado">
+          {[
+            { valor: "todos",       etiqueta: "Todos",       num: (items || []).length },
+            { valor: "disponibles", etiqueta: "Disponibles", num: (items || []).filter((x) => x.disponible).length },
+            { valor: "inactivos",   etiqueta: "Inactivos",   num: (items || []).filter((x) => !x.disponible).length },
+          ].map(({ valor, etiqueta, num }) => (
+            <button
+              key={valor}
+              type="button"
+              className={`adm-filtro-estado__btn${filtroEstado === valor ? " adm-filtro-estado__btn--activo" : ""}`}
+              onClick={() => setFiltroEstado(valor)}
+            >
+              {etiqueta}
+              <span className="adm-filtro-estado__num">{num}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="admin-card admin-card--tabla admin-main-content">
-        {(items || []).length === 0 ? (
-          <p className="adm-prod__vacio">No hay {labelPlur}. Crea la primera.</p>
+        {filtrados.length === 0 ? (
+          <p className="adm-prod__vacio">No hay {labelPlur} que coincidan con el filtro.</p>
         ) : (
           <table className="adm-prod__tabla">
             <thead>
@@ -137,10 +184,10 @@ const TabContent = ({
         )}
       </div>
 
-      {(items || []).length > 0 && (
+      {filtrados.length > 0 && (
         <Pagination
           paginaActual={pagina}
-          totalItems={(items || []).length}
+          totalItems={filtrados.length}
           itemsPorPagina={porPagina}
           onCambiarPagina={setPagina}
           onCambiarItemsPorPagina={(n) => { setPorPagina(n); setPagina(1); }}
@@ -151,6 +198,9 @@ const TabContent = ({
         <AdditionFormModal
           tipo={tipo}
           item={modal.item}
+          ordenSugerido={
+            (items?.reduce((max, x) => Math.max(max, x.orden || 0), 0) || 0) + 1
+          }
           onCreate={onCreate}
           onUpdate={onUpdate}
           onClose={() => setModal({ abierto: false, item: null })}

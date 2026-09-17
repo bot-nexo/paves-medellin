@@ -253,6 +253,28 @@
     background-color: rgba(61, 35, 20, 0.1);
 }
 
+/* Botón "+" de ítems con adiciones/salsas: abre modal en lugar de sumar */
+.qty-btn--custom {
+    color: #b87333;
+    position: relative;
+}
+
+.qty-btn--custom:hover {
+    background-color: rgba(184, 115, 51, 0.12);
+    color: #8b5e3c;
+}
+
+/* Pequeño punto indicador sobre el botón "+" personalizado */
+.qty-btn--custom::after {
+    content: "✦";
+    position: absolute;
+    top: -3px;
+    right: -1px;
+    font-size: 7px;
+    color: #d69e4a;
+    line-height: 1;
+}
+
 .qty-value {
     font-size: 0.85rem;
     font-weight: 700;

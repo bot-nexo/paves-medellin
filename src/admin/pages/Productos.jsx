@@ -19,6 +19,7 @@ const Productos = () => {
   const [categorias, setCategorias] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("todos"); // "todos" | "disponibles" | "inactivos"
   const [modal, setModal] = useState({ abierto: false, producto: null });
   const [procesandoId, setProcesandoId] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -59,33 +60,33 @@ const Productos = () => {
   // Resetear a página 1 al filtrar o buscar
   useEffect(() => {
     setPaginaActual(1);
-  }, [busqueda, filtroCategoria]);
+  }, [busqueda, filtroCategoria, filtroEstado]);
 
   const filtrados = useMemo(() => {
     if (!productos) return [];
     const q = busqueda.trim().toLowerCase();
     return productos.filter((p) => {
-      const okCat = !filtroCategoria || p.category === filtroCategoria;
-      const okBus = !q || p.nombre.toLowerCase().includes(q);
-      return okCat && okBus;
+      const okCat    = !filtroCategoria || p.category === filtroCategoria;
+      const okBus    = !q || p.nombre.toLowerCase().includes(q);
+      const okEstado =
+        filtroEstado === "todos"       ? true
+        : filtroEstado === "disponibles" ? p.disponible !== false
+        : /* inactivos */                 p.disponible === false;
+      return okCat && okBus && okEstado;
     });
-  }, [productos, busqueda, filtroCategoria]);
+  }, [productos, busqueda, filtroCategoria, filtroEstado]);
 
   const paginados = useMemo(() => {
     const inicio = (paginaActual - 1) * itemsPorPagina;
     return filtrados.slice(inicio, inicio + itemsPorPagina);
   }, [filtrados, paginaActual, itemsPorPagina]);
 
-  /** Alterna disponible/destacado con actualización optimista tras la espera */
+  /** Alterna disponible/destacado — sin LoadingOverlay global (solo deshabilita el switch) */
   const toggleCampo = async (p, campo) => {
     const nuevo = !p[campo];
     setProcesandoId(p.id);
     try {
-      setCargandoGlobal(true);
-      await Promise.all([
-        updateProduct(p.id, { [campo]: nuevo }),
-        esperar(timeOut),
-      ]);
+      await updateProduct(p.id, { [campo]: nuevo });
       setProductos((prev) =>
         prev.map((x) => (x.id === p.id ? { ...x, [campo]: nuevo } : x)),
       );
@@ -97,7 +98,6 @@ const Productos = () => {
         confirmButtonColor: "#3D2314",
       });
     } finally {
-      setCargandoGlobal(false);
       setProcesandoId(null);
     }
   };
@@ -223,6 +223,25 @@ const Productos = () => {
             </option>
           ))}
         </select>
+
+        {/* Filtro de estado — segmented control */}
+        <div className="adm-filtro-estado" role="group" aria-label="Filtrar por estado">
+          {[
+            { valor: "todos",       etiqueta: "Todos",       num: productos?.length ?? 0 },
+            { valor: "disponibles", etiqueta: "Disponibles", num: productos?.filter((p) => p.disponible !== false).length ?? 0 },
+            { valor: "inactivos",   etiqueta: "Inactivos",   num: productos?.filter((p) => p.disponible === false).length ?? 0 },
+          ].map(({ valor, etiqueta, num }) => (
+            <button
+              key={valor}
+              type="button"
+              className={`adm-filtro-estado__btn${filtroEstado === valor ? " adm-filtro-estado__btn--activo" : ""}`}
+              onClick={() => setFiltroEstado(valor)}
+            >
+              {etiqueta}
+              <span className="adm-filtro-estado__num">{num}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tabla */}

@@ -254,7 +254,20 @@ const CheckoutModal = ({
                         <span className="item-name">{itemName}</span>
                         {item.customizations && (
                           <span className="item-options">
-                            {Object.values(item.customizations.options || {}).map((o) => o?.nombre).filter(Boolean).join(", ")}
+                            {[
+                              ...Object.values(item.customizations.options || {})
+                                .map((o) => o?.nombre)
+                                .filter(Boolean),
+                              ...(item.customizations.toppings || [])
+                                .map((t) => (typeof t === "string" ? t : t.nombre))
+                                .filter(Boolean),
+                              ...Object.values(item.customizations.adiciones || {})
+                                .map((a) => a.nombre)
+                                .filter(Boolean),
+                              ...Object.values(item.customizations.salsas || {})
+                                .map((s) => s.nombre)
+                                .filter(Boolean),
+                            ].join(", ")}
                           </span>
                         )}
                       </div>

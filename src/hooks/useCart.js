@@ -50,12 +50,19 @@ const useCart = () => {
           .map((key) => customizations.options[key]?.id || "")
           .sort();
 
+        // Incluimos adiciones y salsas en la clave para que combos distintos
+        // nunca se fusionen en la misma línea del carrito.
+        const adicionesIds = Object.keys(customizations.adiciones || {}).sort();
+        const salsasIds    = Object.keys(customizations.salsas    || {}).sort();
+
         const customizationKey = JSON.stringify({
           productId: product.id,
           options: optionsIds,
           toppings: (customizations.toppings || []).map((t) =>
             typeof t === "string" ? t : t.nombre || t.name || "",
           ),
+          adiciones: adicionesIds,
+          salsas: salsasIds,
           observaciones: customizations.observaciones,
         });
 
@@ -95,6 +102,19 @@ const useCart = () => {
     [editingItemKey],
   );
 
+  /**
+   * addOneMore – abre el modal de personalización pre-cargado con las
+   * customizaciones del ítem existente. Si el usuario confirma con el
+   * mismo combo → se suma cantidad. Si cambia algo → línea nueva.
+   */
+  const addOneMore = useCallback((item) => {
+    // Usamos el producto + sus customizaciones actuales como punto de partida
+    setProductToCustomize({ ...item, customizations: item.customizations });
+    setEditingItemKey(null);   // null = modo "agregar", no reemplazar
+    setIsCustomizing(true);
+    setIsCartOpen(false);
+  }, []);
+
   // ── Cart mutations ───────────────────────────────────────────────────
   const removeItemByStoreKey = (storeKey) => {
     setCart((prevCart) =>
@@ -133,6 +153,7 @@ const useCart = () => {
     closeCheckout,
     addToCart,
     editCartItem,
+    addOneMore,
     confirmCustomization,
     removeItemByStoreKey,
     updateQuantity,

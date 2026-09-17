@@ -16,7 +16,7 @@ export const parsePrice = (priceVal) => {
   return isNaN(number) ? 0 : number;
 };
 
-// ── Unit price of a single cart item (base + options + toppings) ──────────
+// ── Unit price of a single cart item (base + options + toppings + adiciones + salsas) ──
 export const calculateItemUnitPrice = (item) => {
   let basePrice = parsePrice(item.precio || item.price);
 
@@ -26,11 +26,21 @@ export const calculateItemUnitPrice = (item) => {
       if (opt) basePrice += parsePrice(opt.precio || opt.price);
     });
 
-    // Toppings / adiciones
+    // Toppings legacy
     (item.customizations.toppings || []).forEach((top) => {
       if (typeof top === "object") {
         basePrice += parsePrice(top.precio || top.price);
       }
+    });
+
+    // Adiciones (object map: { [id]: { nombre, precio, ... } })
+    Object.values(item.customizations.adiciones || {}).forEach((a) => {
+      basePrice += parsePrice(a.precio);
+    });
+
+    // Salsas (object map: { [id]: { nombre, precio, ... } })
+    Object.values(item.customizations.salsas || {}).forEach((s) => {
+      basePrice += parsePrice(s.precio);
     });
   }
 

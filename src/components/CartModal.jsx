@@ -25,6 +25,7 @@ const CartModal = ({
   onUpdateQuantity,
   onRemove,
   onEdit,
+  onAddOneMore,
   onCheckout,
   settings,
 }) => {
@@ -82,6 +83,15 @@ const CartModal = ({
                 const itemUnitPrice = calculateItemUnitPrice(item);
                 const itemTotalPrice = itemUnitPrice * item.quantity;
                 const itemName = item.nombre || "Postre";
+
+                // ¿El ítem tiene adiciones o salsas seleccionadas?
+                const tieneAdiciones =
+                  item.customizations?.adiciones &&
+                  Object.keys(item.customizations.adiciones).length > 0;
+                const tieneSalsas =
+                  item.customizations?.salsas &&
+                  Object.keys(item.customizations.salsas).length > 0;
+                const esPersonalizado = tieneAdiciones || tieneSalsas;
 
                 return (
                   <div
@@ -156,21 +166,29 @@ const CartModal = ({
                     <div className="item-controls">
                       <div className="quantity-selector">
                         <button
-                          onClick={() =>
-                            onUpdateQuantity(item.customizationKey, -1)
-                          }
+                          onClick={() => {
+                            if (item.quantity === 1) {
+                              onRemove(item.customizationKey);
+                            } else {
+                              onUpdateQuantity(item.customizationKey, -1);
+                            }
+                          }}
                           className="qty-btn"
                           type="button"
+                          title={item.quantity === 1 ? "Eliminar" : "Reducir cantidad"}
                         >
-                          <Minus size={14} />
+                          {item.quantity === 1 ? <Trash2 size={14} /> : <Minus size={14} />}
                         </button>
                         <span className="qty-value">{item.quantity}</span>
                         <button
                           onClick={() =>
-                            onUpdateQuantity(item.customizationKey, 1)
+                            esPersonalizado
+                              ? onAddOneMore(item)
+                              : onUpdateQuantity(item.customizationKey, 1)
                           }
-                          className="qty-btn"
+                          className={`qty-btn${esPersonalizado ? " qty-btn--custom" : ""}`}
                           type="button"
+                          title={esPersonalizado ? "Agregar otro (elige adiciones)" : "Agregar uno más"}
                         >
                           <Plus size={14} />
                         </button>
