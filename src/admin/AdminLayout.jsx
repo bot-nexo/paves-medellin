@@ -12,9 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X,
   User,
   Sparkles,
+  ShieldCheck,
+  AlertOctagon,
 } from "lucide-react";
 import { logoutAdmin } from "./sessionStore";
 import { useAdminSession } from "./useAdminSession";
@@ -34,7 +35,7 @@ const NAV_ITEMS = [
 ];
 
 const AdminLayout = () => {
-  const { session } = useAdminSession();
+  const { session, role } = useAdminSession();
   const { settings } = useCatalog();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
@@ -51,6 +52,29 @@ const AdminLayout = () => {
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   const email = session?.user?.email || "";
+  
+  // Lógica de bloqueo por falta de pago
+  const isSuspended = settings && !settings.isActive;
+  
+  if (isSuspended && role !== "superadmin") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", backgroundColor: "#fdf8f5", textAlign: "center", padding: "2rem" }}>
+        <AlertOctagon size={64} color="#d32f2f" style={{ marginBottom: "1rem" }} />
+        <h1 style={{ color: "#3D2314", fontSize: "2rem", marginBottom: "1rem" }}>Servicio Suspendido</h1>
+        <p style={{ color: "#666", fontSize: "1.1rem", maxWidth: "400px", marginBottom: "2rem" }}>
+          Tu acceso al panel de administración ha sido bloqueado temporalmente. Por favor, contacta con el administrador del sistema para regularizar el estado de tu cuenta.
+        </p>
+        <button onClick={handleLogout} className="admin-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+          <LogOut size={18} /> Cerrar Sesión
+        </button>
+      </div>
+    );
+  }
+
+  const navItemsToShow = [...NAV_ITEMS];
+  if (role === "superadmin") {
+    navItemsToShow.push({ to: "/admin/super", label: "Superadmin", icon: ShieldCheck });
+  }
 
   //********************* */
   return (
@@ -85,7 +109,7 @@ const AdminLayout = () => {
 
         {/* Menú de Navegación */}
         <nav className="admin-nav">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          {navItemsToShow.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -180,6 +204,7 @@ const AdminLayout = () => {
         isOpen={isPasswordModalOpen} 
         onClose={() => setIsPasswordModalOpen(false)} 
         email={email} 
+        canChange={settings?.canChangePassword !== false}
       />
     </div>
   );

@@ -244,13 +244,19 @@ const CartModal = ({
                 <button className="btn-back" onClick={onClose} type="button">
                   <ArrowLeft size={16} /> Seguir pidiendo
                 </button>
-                <button
-                  className="btn-checkout"
-                  onClick={onCheckout}
-                  type="button"
-                >
-                  Datos de entrega <ArrowRight size={16} />
-                </button>
+                {settings.isActive === false ? (
+                  <button className="btn-checkout" type="button" disabled style={{ backgroundColor: "#999", cursor: "not-allowed" }}>
+                    En Mantenimiento <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    className="btn-checkout"
+                    onClick={onCheckout}
+                    type="button"
+                  >
+                    Datos de entrega <ArrowRight size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </>

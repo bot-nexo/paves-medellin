@@ -96,6 +96,8 @@ const normalizeSettings = (row) => {
     offersPickup,
     offersLocal,
     forceClosed: row.force_closed === true,
+    isActive: row.is_active !== false,
+    canChangePassword: row.can_change_password !== false,
   };
 };
 
@@ -128,7 +130,10 @@ const buildLocalSettings = () => ({
   freeDeliveryThreshold: MINIMO_ENVIO_GRATIS,
   offersDelivery: true,
   offersPickup: true,
+  offersLocal: true,
   forceClosed: false,
+  isActive: true,
+  canChangePassword: true,
 });
 
 // ── Realtime: refresca el cache cuando el admin cambia algo ──────────────────
@@ -252,6 +257,25 @@ export async function getSettings() {
     cache.settings = buildLocalSettings();
   }
   return cache.settings;
+}
+
+/** Obtiene el rol del usuario desde user_roles. Si falla o no existe, asume 'admin' por defecto. */
+export async function getUserRole(userId) {
+  if (!isSupabaseConfigured || !userId) return "admin";
+  try {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    const resolvedRole = data?.role || "admin";
+    console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
+    return resolvedRole;
+  } catch (err) {
+    console.error("[dataSource] Error obteniendo rol:", err.message);
+    return "admin";
+  }
 }
 
 // ── Pedidos: guardado silencioso antes de enviar a WhatsApp (F2) ─────────────
@@ -545,6 +569,8 @@ const COLUMNAS_SETTINGS = {
   offersPickup: "offers_pickup",
   offersLocal: "offersLocal",
   forceClosed: "force_closed",
+  isActive: "is_active",
+  canChangePassword: "can_change_password",
 };
 
 /** Actualiza la fila única de settings (upsert: crea la fila si no existe). */

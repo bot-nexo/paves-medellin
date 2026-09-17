@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { X, Lock, Loader2 } from "lucide-react";
+import { X, Lock, KeyRound, Loader2, Mail, ShieldAlert, CheckCircle2 } from "lucide-react";
 import Swal from "sweetalert2";
 import { supabase } from "../services/supabaseClient";
 
-const PasswordModal = ({ isOpen, onClose, email }) => {
+const PasswordModal = ({ isOpen, onClose, email, canChange }) => {
   const [passwords, setPasswords] = useState({ oldPass: "", newPass: "", confirmPass: "" });
   const [actualizando, setActualizando] = useState(false);
   const [enviandoRecovery, setEnviandoRecovery] = useState(false);
@@ -13,12 +13,20 @@ const PasswordModal = ({ isOpen, onClose, email }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (passwords.newPass.length < 6) {
-      return Swal.fire({ icon: "warning", text: "La nueva contraseña debe tener al menos 6 caracteres", confirmButtonColor: "#3D2314" });
+      return Swal.fire({
+        icon: "warning",
+        text: "La nueva contraseña debe tener al menos 6 caracteres",
+        confirmButtonColor: "#d69e4a",
+      });
     }
     if (passwords.newPass !== passwords.confirmPass) {
-      return Swal.fire({ icon: "warning", text: "Las contraseñas nuevas no coinciden", confirmButtonColor: "#3D2314" });
+      return Swal.fire({
+        icon: "warning",
+        text: "Las contraseñas nuevas no coinciden",
+        confirmButtonColor: "#d69e4a",
+      });
     }
-    
+
     setActualizando(true);
     try {
       // 1. Re-autenticar con la contraseña antigua
@@ -33,16 +41,26 @@ const PasswordModal = ({ isOpen, onClose, email }) => {
 
       // 2. Si pasa, actualizar
       const { error: updateError } = await supabase.auth.updateUser({
-        password: passwords.newPass
+        password: passwords.newPass,
       });
 
       if (updateError) throw updateError;
 
-      Swal.fire({ icon: "success", title: "Contraseña actualizada", text: "Tu contraseña ha sido cambiada de forma segura.", confirmButtonColor: "#3D2314" });
+      Swal.fire({
+        icon: "success",
+        title: "Contraseña actualizada",
+        text: "Tu contraseña ha sido cambiada de forma segura.",
+        confirmButtonColor: "#d69e4a",
+      });
       onClose();
       setPasswords({ oldPass: "", newPass: "", confirmPass: "" });
     } catch (err) {
-      Swal.fire({ icon: "error", title: "Error", text: err.message, confirmButtonColor: "#3D2314" });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message,
+        confirmButtonColor: "#d69e4a",
+      });
     } finally {
       setActualizando(false);
     }
@@ -52,61 +70,204 @@ const PasswordModal = ({ isOpen, onClose, email }) => {
     setEnviandoRecovery(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/admin"
+        redirectTo: window.location.origin + "/admin",
       });
       if (error) throw error;
-      Swal.fire({ icon: "success", title: "Correo enviado", text: "Revisa tu bandeja de entrada o spam con el link de recuperación.", confirmButtonColor: "#3D2314" });
+      Swal.fire({
+        icon: "success",
+        title: "Correo enviado",
+        text: "Revisa tu bandeja de entrada o spam con el link de recuperación.",
+        confirmButtonColor: "#d69e4a",
+      });
     } catch (err) {
-      Swal.fire({ icon: "error", title: "Error al enviar correo", text: err.message, confirmButtonColor: "#3D2314" });
+      Swal.fire({
+        icon: "error",
+        title: "Error al enviar correo",
+        text: err.message,
+        confirmButtonColor: "#d69e4a",
+      });
     } finally {
       setEnviandoRecovery(false);
     }
   };
 
   return (
-    <div className="adm-modal-overlay">
-      <div className="adm-modal" style={{ maxWidth: "400px" }}>
-        <button type="button" className="adm-modal__cerrar" onClick={onClose}><X size={20} /></button>
-        <div className="adm-modal__header">
-          <h2 className="adm-modal__titulo"><Lock size={18} /> Cambiar Contraseña</h2>
-          <p className="adm-modal__desc">{email}</p>
-        </div>
-        <div className="adm-modal__content">
-          <form onSubmit={handleSubmit} className="adm-cfg__grid" style={{ gridTemplateColumns: "1fr", gap: "1rem" }}>
+    <div className="adm-modal__overlay" onClick={onClose}>
+      <form
+        className="adm-modal adm-modal--compacto"
+        style={{ maxWidth: "440px" }}
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <header className="adm-modal__header">
+          <h2 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <KeyRound size={20} /> Cambiar Contraseña
+          </h2>
+          <button
+            type="button"
+            className="adm-icono-btn"
+            onClick={onClose}
+            aria-label="Cerrar"
+          >
+            <X size={20} />
+          </button>
+        </header>
+
+        <div className="adm-modal__cuerpo adm-modal__cuerpo--solo-campos">
+          {/* Badge del correo actual */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "10px 14px",
+              backgroundColor: "var(--abg-elev)",
+              border: "1px solid var(--aborde)",
+              borderRadius: "10px",
+              fontSize: "13.5px",
+              color: "var(--crema)",
+            }}
+          >
+            <Mail size={16} style={{ color: "var(--acento)", flexShrink: 0 }} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {email}
+            </span>
+          </div>
+
+          {/* Bloqueo si el superadmin lo deshabilitó */}
+          {!canChange && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                backgroundColor: "rgba(211, 47, 47, 0.1)",
+                border: "1px solid rgba(211, 47, 47, 0.3)",
+                padding: "14px",
+                borderRadius: "10px",
+                color: "#ff8a80",
+                fontSize: "13px",
+                lineHeight: "1.4",
+              }}
+            >
+              <ShieldAlert size={20} style={{ flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <strong style={{ display: "block", color: "#ff5252", marginBottom: "3px" }}>
+                  Cambio deshabilitado
+                </strong>
+                El superadministrador ha bloqueado temporalmente el cambio de contraseña para este inquilino.
+              </div>
+            </div>
+          )}
+
+          {/* Campos del formulario */}
+          <div className="adm-modal__campos" style={{ width: "100%" }}>
             <label className="admin-field">
               <span className="admin-field__label">Contraseña Actual *</span>
               <div className="admin-field__input">
-                <input type="password" value={passwords.oldPass} onChange={(e) => setPasswords({ ...passwords, oldPass: e.target.value })} required placeholder="La que usas actualmente" />
+                <Lock size={16} className="admin-field__icon" />
+                <input
+                  type="password"
+                  value={passwords.oldPass}
+                  onChange={(e) =>
+                    setPasswords({ ...passwords, oldPass: e.target.value })
+                  }
+                  required
+                  placeholder="Tu contraseña actual"
+                  disabled={!canChange}
+                />
               </div>
             </label>
-            <div className="divider" style={{ margin: "0" }} />
+
             <label className="admin-field">
               <span className="admin-field__label">Nueva Contraseña *</span>
               <div className="admin-field__input">
-                <input type="password" value={passwords.newPass} onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })} required minLength={6} placeholder="Mínimo 6 caracteres" />
+                <KeyRound size={16} className="admin-field__icon" />
+                <input
+                  type="password"
+                  value={passwords.newPass}
+                  onChange={(e) =>
+                    setPasswords({ ...passwords, newPass: e.target.value })
+                  }
+                  required
+                  minLength={6}
+                  placeholder="Mínimo 6 caracteres"
+                  disabled={!canChange}
+                />
               </div>
             </label>
+
             <label className="admin-field">
               <span className="admin-field__label">Confirmar Nueva Contraseña *</span>
               <div className="admin-field__input">
-                <input type="password" value={passwords.confirmPass} onChange={(e) => setPasswords({ ...passwords, confirmPass: e.target.value })} required minLength={6} />
+                <CheckCircle2 size={16} className="admin-field__icon" />
+                <input
+                  type="password"
+                  value={passwords.confirmPass}
+                  onChange={(e) =>
+                    setPasswords({ ...passwords, confirmPass: e.target.value })
+                  }
+                  required
+                  minLength={6}
+                  placeholder="Repite la nueva contraseña"
+                  disabled={!canChange}
+                />
               </div>
             </label>
-            
-            <button type="submit" className="admin-btn-primary" disabled={actualizando}>
-              {actualizando ? <Loader2 size={16} className="adm-spin" /> : <Lock size={16} />}
-              {actualizando ? "Cambiando..." : "Cambiar Contraseña"}
-            </button>
-          </form>
+          </div>
 
-          <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.85rem", color: "#666" }}>
-            ¿Olvidaste tu contraseña actual? <br />
-            <button type="button" onClick={handleRecuperacion} disabled={enviandoRecovery} style={{ background: "none", border: "none", color: "#ffaa29", cursor: "pointer", fontWeight: "bold", marginTop: "5px" }}>
-              {enviandoRecovery ? "Enviando..." : "Enviar enlace de recuperación"}
+          {/* Link para recuperar por correo */}
+          <div
+            style={{
+              paddingTop: "6px",
+              textAlign: "center",
+              fontSize: "12.5px",
+              color: "var(--texto-dim)",
+            }}
+          >
+            ¿Olvidaste tu contraseña actual?{" "}
+            <button
+              type="button"
+              onClick={handleRecuperacion}
+              disabled={enviandoRecovery || !canChange}
+              style={{
+                background: "none",
+                border: "none",
+                color: canChange ? "var(--acento)" : "var(--texto-dim)",
+                cursor: canChange ? "pointer" : "not-allowed",
+                fontWeight: 600,
+                textDecoration: "underline",
+                padding: "2px 4px",
+              }}
+            >
+              {enviandoRecovery ? "Enviando enlace..." : "Recuperar por correo"}
             </button>
           </div>
         </div>
-      </div>
+
+        <footer className="adm-modal__pie">
+          <button
+            type="button"
+            className="admin-btn-ghost"
+            onClick={onClose}
+            disabled={actualizando}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="admin-btn-primary"
+            disabled={actualizando || !canChange}
+          >
+            {actualizando ? (
+              <Loader2 size={16} className="adm-spin" />
+            ) : (
+              <KeyRound size={16} />
+            )}
+            {actualizando ? "Actualizando…" : "Actualizar Contraseña"}
+          </button>
+        </footer>
+      </form>
     </div>
   );
 };

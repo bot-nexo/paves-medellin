@@ -200,6 +200,11 @@ const App = () => {
         path="/*"
         element={
           <div className="app-wrapper">
+            {settings.isActive === false && (
+              <div style={{ backgroundColor: "#d32f2f", color: "white", textAlign: "center", padding: "10px", fontWeight: "bold", fontSize: "0.9rem", zIndex: 1000, position: "relative" }}>
+                Estamos en mantenimiento o actualización. Pronto volveremos a recibir pedidos.
+              </div>
+            )}
             <Hero cartCount={cartCount} onOpenCart={openCart} estadoNegocio={estadoNegocio} />
 
             <Menu

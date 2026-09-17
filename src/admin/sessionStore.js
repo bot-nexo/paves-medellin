@@ -2,25 +2,32 @@
 // Independiente del contexto de React: el guard y el login leen la misma
 // fuente, sin prop-drilling ni re-renders innecesarios.
 import { supabase, isSupabaseConfigured } from "../services/supabaseClient";
+import { getUserRole } from "../data/dataSource";
 
 let session = null;
+let role = null;
 let ready = false;
 const listeners = new Set();
 
 // Snapshot cacheado: useSyncExternalStore compara por identidad (Object.is).
 // Devolver un objeto nuevo en cada llamada provocaría un bucle infinito de renders.
-let snapshot = { session, ready };
+let snapshot = { session, role, ready };
 
 const emit = () => {
-  const next = { session, ready };
+  const next = { session, role, ready };
   // Solo notificamos (y cambiamos identidad) si hubo una transición real
-  if (next.session === snapshot.session && next.ready === snapshot.ready) return;
+  if (next.session === snapshot.session && next.role === snapshot.role && next.ready === snapshot.ready) return;
   snapshot = next;
   listeners.forEach((fn) => fn());
 };
 
-export const setAdminSession = (newSession) => {
+export const setAdminSession = async (newSession) => {
   session = newSession;
+  if (newSession?.user) {
+    role = await getUserRole(newSession.user.id);
+  } else {
+    role = null;
+  }
   ready = true;
   emit();
 };
@@ -41,10 +48,10 @@ export async function initSessionListener() {
     return;
   }
   const { data } = await supabase.auth.getSession();
-  setAdminSession(data?.session ?? null);
+  await setAdminSession(data?.session ?? null);
 
-  supabase.auth.onAuthStateChange((_event, newSession) => {
-    setAdminSession(newSession);
+  supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    await setAdminSession(newSession);
   });
 }
 
@@ -53,5 +60,5 @@ export async function logoutAdmin() {
   if (isSupabaseConfigured) {
     await supabase.auth.signOut();
   }
-  setAdminSession(null);
+  await setAdminSession(null);
 }
