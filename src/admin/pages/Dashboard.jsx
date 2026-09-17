@@ -29,6 +29,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import "../../css/estadoNegocio.css";
+import { Plus } from "lucide-react";
 
 
 //---------------------------------
@@ -308,45 +309,58 @@ const Dashboard = () => {
       {/* Atención requerida y Últimos pedidos */}
       <div className="adm-dash__fila">
         <section className="adm-dash__panel">
-          <h2 className="adm-dash__panel-titulo">
-            <Package size={18} /> Requieren Atención
-          </h2>
+          <div className="adm-dash__panel-header">
+            <h2 className="adm-dash__panel-titulo">
+              <Package size={18} /> Requieren Atención
+            </h2>
+            <button
+              type="button"
+              className="admin-btn-ghost"
+              onClick={() => navigate("/admin/productos")}
+            >
+              Ver Productos
+            </button>
+          </div>
 
           {m.agotados.length === 0 && m.destacados.length === 0 ? (
-            <p className="adm-dash__vacio">✅ Todo al día. Sin inventario crítico.</p>
+            <p className="adm-dash__vacio">✅ Todo al día.</p>
           ) : (
             <div className="adm-dash__atencion-container">
               {m.agotados.length > 0 && (
                 <ul className="adm-dash__lista">
-                  {m.agotados.map((p) => (
+                  {m.agotados.slice(0, 3).map((p) => (
                     <li key={p.id} className="adm-dash__item--alerta">
                       <XCircle size={14} className="text-red-400" />
                       <span className="adm-dash__item-nombre">{p.nombre}</span>
-                      <span className="adm-badge adm-badge--danger">Agotado</span>
+                      <span className="adm-badge adm-badge--danger">No disponible</span>
                     </li>
                   ))}
+                  {m.agotados.length >= 3 && (
+                    <li className="adm-dash__item--alerta">
+                      <Plus size={14} className="text-red-400" />
+                      <span className="adm-dash__item-nombre">{m.agotados.length - 3} más</span>
+                    </li>
+                  )}
                 </ul>
               )}
 
               {m.destacados.length > 0 && (
                 <ul className="adm-dash__lista">
-                  {m.destacados.slice(0, 4).map((p) => (
+                  {m.destacados.slice(0, 3).map((p) => (
                     <li key={p.id}>
                       <Star size={14} className="text-amber-400" />
                       <span className="adm-dash__item-nombre">{p.nombre}</span>
                       <span className="adm-badge adm-badge--warning">Destacado</span>
                     </li>
                   ))}
+                  {m.destacados.length >= 3 && (
+                    <li className="adm-dash__item--alerta">
+                      <Plus size={14} className="text-amber-400" />
+                      <span className="adm-dash__item-nombre">{m.destacados.length - 3} más</span>
+                    </li>
+                  )}
                 </ul>
               )}
-
-              <button
-                type="button"
-                className="admin-btn-ghost admin-btn--full"
-                onClick={() => navigate("/admin/productos")}
-              >
-                Ir al Inventario
-              </button>
             </div>
           )}
         </section>

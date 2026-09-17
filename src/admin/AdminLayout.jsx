@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { logoutAdmin } from "./sessionStore";
 import { useAdminSession } from "./useAdminSession";
+import useCatalog from "../hooks/useCatalog";
+import PasswordModal from "./PasswordModal";
 import logoImg from "../assets/images/logo.png";
 import "./admin.css";
 
@@ -33,10 +35,12 @@ const NAV_ITEMS = [
 
 const AdminLayout = () => {
   const { session } = useAdminSession();
+  const { settings } = useCatalog();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [name, setName] = useState("Dashboard");
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleLogout = async () => {
     await logoutAdmin();
@@ -61,7 +65,7 @@ const AdminLayout = () => {
         {/* Header del Sidebar */}
         <div className="admin-sidebar__brand">
           <div className="admin-sidebar__logo-wrapper">
-            <img src={logoImg} alt="Logo" className="admin-sidebar__logo" />
+            <img src={settings?.logo_url || logoImg} alt="Logo" className="admin-sidebar__logo" />
           </div>
           {!collapsed && (
             <div className="admin-sidebar__brand-text">
@@ -152,10 +156,16 @@ const AdminLayout = () => {
 
           <div className="admin-topbar__actions">
             {email && (
-              <div className="admin-topbar__user-badge">
+              <button 
+                type="button" 
+                className="admin-topbar__user-badge" 
+                onClick={() => setIsPasswordModalOpen(true)}
+                title="Cambiar contraseña"
+                style={{ background: "none", border: "none", outline: "none", cursor: "pointer", fontFamily: "inherit" }}
+              >
                 <User size={14} />
                 <span>{email}</span>
-              </div>
+              </button>
             )}
           </div>
         </header>
@@ -165,6 +175,12 @@ const AdminLayout = () => {
           <Outlet />
         </main>
       </div>
+
+      <PasswordModal 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
+        email={email} 
+      />
     </div>
   );
 };

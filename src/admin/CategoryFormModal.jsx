@@ -1,13 +1,9 @@
 import { useState } from "react";
-import { X, Loader2 } from "lucide-react";
-import Swal from "sweetalert2";
 import { createCategory, updateCategory } from "../data/dataSource";
+import Swal from "sweetalert2";
+import { X, Loader2 } from "lucide-react";
 import "./admin.css";
 
-/**
- * Modal para crear o editar una categoría.
- * categoria = fila cruda (UUID) o null para crear.
- */
 const CategoryFormModal = ({ categoria, ordenSugerido, onClose, onSaved }) => {
   const esEdicion = !!categoria;
   const [form, setForm] = useState({
@@ -21,6 +17,7 @@ const CategoryFormModal = ({ categoria, ordenSugerido, onClose, onSaved }) => {
 
   const set = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
 
+  //************************************** */
   const guardar = async (e) => {
     e.preventDefault();
     if (!form.nombre.trim()) {
@@ -73,6 +70,7 @@ const CategoryFormModal = ({ categoria, ordenSugerido, onClose, onSaved }) => {
     setCargando(false);
   };
 
+  //************************************** */
   return (
     <div className="adm-modal__overlay" onClick={onClose}>
       <form

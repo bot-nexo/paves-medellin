@@ -20,7 +20,7 @@ const Footer = ({ settings = info }) => {
           {/* Brand Column */}
           <div className="footer-brand">
             <a href="#" className="footer-logo-link">
-              <img src={logoImg} alt="Pavés Medellín" className="footer-logo-img" />
+              <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="footer-logo-img" />
               <div className="footer-logo-text">
                 <span className="footer-brand-name">
                   Pavés <span className="footer-brand-accent">Medellín</span>

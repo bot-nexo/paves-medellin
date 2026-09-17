@@ -42,21 +42,21 @@ const LoadingOverlay = ({
           <div className="pm-sheen-layer"></div>
 
           <img src={logoSrc} alt="" className="pm-badge-img" />
-          <div class="pm-glint pm-glint-1">✦</div>
-          <div class="pm-glint pm-glint-2">✦</div>
+          <div className="pm-glint pm-glint-1">✦</div>
+          <div className="pm-glint pm-glint-2">✦</div>
         </div>
 
-        <div class="pm-brand-info">
-          <h1 class="pm-title">PAVÉS MEDELLÍN</h1>
+        <div className="pm-brand-info">
+          <h1 className="pm-title">PAVÉS MEDELLÍN</h1>
         </div>
 
-        <div class="pm-progress-container">
-          <div class="pm-track">
-            <div class="pm-fill"></div>
+        <div className="pm-progress-container">
+          <div className="pm-track">
+            <div className="pm-fill"></div>
           </div>
-          <div class="pm-status-row">
-            <span class="pm-status-label">{text}
-              <span class="pm-dots-indicator"><span>•</span><span>•</span><span>•</span><span>•</span></span>
+          <div className="pm-status-row">
+            <span className="pm-status-label">{text}
+              <span className="pm-dots-indicator"><span>•</span><span>•</span><span>•</span><span>•</span></span>
             </span>
           </div>
         </div>

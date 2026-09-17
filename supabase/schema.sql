@@ -42,6 +42,7 @@ create table if not exists public.settings (
   instagram               text not null default '',
   facebook                text not null default '',
   tiktok                  text not null default '',
+  logo_url                text not null default '',
   day1                    text not null default '',
   hours1                  text not null default '',
   delivery_fee            int  not null default 3500,

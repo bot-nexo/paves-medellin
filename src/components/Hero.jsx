@@ -12,7 +12,7 @@ const Hero = ({
   onOpenCart,
   estadoNegocio,
 }) => {
-  const { products = [] } = useCatalog();
+  const { products = [], settings } = useCatalog();
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -157,7 +157,7 @@ const Hero = ({
       <section className="hero-full">
         <header className="hero-full__header">
           <div className="hero-full__brand">
-            <img src={logoImg} alt="Pavés Medellín" className="hero-full__logo" />
+            <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="hero-full__logo" />
             <div>
               <h1 className="hero-full__name">
                 Pavés <span>Medellín</span>
@@ -181,7 +181,7 @@ const Hero = ({
       {/* Header */}
       <header className="hero-full__header">
         <div className="hero-full__brand">
-          <img src={logoImg} alt="Pavés Medellín" onError={(e) => {
+          <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" onError={(e) => {
             e.target.style.display = 'none';
           }} className="hero-full__logo" />
           <div>

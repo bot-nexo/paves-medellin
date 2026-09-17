@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Send,
   Clock,
+  Store,
 } from "lucide-react";
 import { FaMotorcycle } from "react-icons/fa";
 import "../css/CheckoutModal.css";
@@ -38,7 +39,9 @@ const CheckoutModal = ({
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
-    tipoEntrega: settings.offersDelivery !== false ? "domicilio" : "recogida",
+    tipoEntrega: settings.offersDelivery !== false ? "domicilio" 
+                 : settings.offersLocal !== false ? "local" 
+                 : "recogida",
     direccion: "",
     unidad: "",
     apto: "",
@@ -47,7 +50,8 @@ const CheckoutModal = ({
   });
 
   const esDomicilio = formData.tipoEntrega === "domicilio";
-  const textoModalidad = esDomicilio ? 'Domicilio' : 'Recoger en tienda';
+  const esLocal = formData.tipoEntrega === "local";
+  const textoModalidad = esDomicilio ? 'Domicilio' : esLocal ? 'Local' : 'Recoger en tienda';
 
   //**************************************** */
   useEffect(() => {
@@ -81,7 +85,7 @@ const CheckoutModal = ({
         title: "Campos incompletos",
         text: esDomicilio
           ? "Por favor completa los campos obligatorios para continuar."
-          : "Nombre, teléfono y medio de pago son obligatorios para recoger en tienda.",
+          : "Nombre, teléfono y medio de pago son obligatorios.",
         icon: "warning",
         confirmButtonColor: "#3D2314",
       });
@@ -141,7 +145,7 @@ const CheckoutModal = ({
           <form onSubmit={handleNext} className="checkout-body">
             <div className="form-grid">
               {/* Modo de entrega (según lo configurado en el panel) */}
-              {(settings.offersDelivery !== false || settings.offersPickup !== false) && (
+              {(settings.offersDelivery !== false || settings.offersPickup !== false || settings.offersLocal !== false) && (
                 <div className="form-group full-width">
                   <label>¿Cómo lo recibes? *</label>
                   <div className="entrega-options">
@@ -159,7 +163,7 @@ const CheckoutModal = ({
                     {settings.offersPickup !== false && (
                       <button
                         type="button"
-                        className={`entrega-option ${!esDomicilio ? "entrega-option--activa" : ""}`}
+                        className={`entrega-option ${formData.tipoEntrega === "recogida" ? "entrega-option--activa" : ""}`}
                         onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "recogida" }))}
                       >
                         <LuHandPlatter size={18} />
@@ -167,10 +171,18 @@ const CheckoutModal = ({
                         <small>Sin costo de domicilio</small>
                       </button>
                     )}
+                    {settings.offersLocal !== false && (
+                      <button
+                        type="button"
+                        className={`entrega-option ${esLocal ? "entrega-option--activa" : ""}`}
+                        onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "local" }))}
+                      >
+                        <Store size={18} />
+                        <span>Comer en el local</span>
+                        <small>Sin recargo</small>
+                      </button>
+                    )}
                   </div>
-                  {settings.offersDelivery === false && (
-                    <p className="entrega-aviso">Este negocio actualmente solo atiende por recogida en tienda.</p>
-                  )}
                 </div>
               )}
               <div className="form-group full-width">
@@ -279,7 +291,7 @@ const CheckoutModal = ({
               <div className="summary-totals">
                 <div className="total-row"><span>Subtotal productos:</span><span>{formatCOP(totalProductos)}</span></div>
                 {!esDomicilio ? (
-                  <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica (recogida)</span></div>
+                  <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica</span></div>
                 ) : (
                   <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}</span></div>
                 )}

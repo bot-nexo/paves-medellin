@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, Flame, Sparkles, Search } from "lucide-react";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
+import AdditionFormModal from "../AdditionFormModal";
+import Pagination from "../Pagination";
+import Switch from "../Switch";
 import Swal from "sweetalert2";
 import {
   getAdditions, createAddition, updateAddition, deleteAddition,
-  getSauces,    createSauce,    updateSauce,    deleteSauce,
+  getSauces, createSauce, updateSauce, deleteSauce,
 } from "../../data/dataSource";
-import Switch from "../Switch";
-import AdditionFormModal from "../AdditionFormModal";
-import Pagination from "../Pagination";
 import { formatCOP } from "../../utils/price";
+import { Plus, Pencil, Trash2, RefreshCw, Flame, Sparkles, Search } from "lucide-react";
 import "../admin.css";
 
 const timeOut = 1200;
@@ -21,29 +21,29 @@ const TabContent = ({
   items, setItems,
   onCreate, onUpdate, onDelete,
 }) => {
-  const label      = tipo === "sauce" ? "salsa"    : "adición";
-  const labelPlur  = tipo === "sauce" ? "salsas"   : "adiciones";
-  const labelCap   = tipo === "sauce" ? "Salsa"    : "Adición";
-  const Icon       = tipo === "sauce" ? Flame       : Sparkles;
+  const label = tipo === "sauce" ? "salsa" : "adición";
+  const labelPlur = tipo === "sauce" ? "salsas" : "adiciones";
+  const labelCap = tipo === "sauce" ? "Salsa" : "Adición";
+  const Icon = tipo === "sauce" ? Flame : Sparkles;
 
-  const [modal, setModal]         = useState({ abierto: false, item: null });
+  const [modal, setModal] = useState({ abierto: false, item: null });
   const [procesandoId, setProcId] = useState(null);
-  const [pagina, setPagina]       = useState(1);
+  const [pagina, setPagina] = useState(1);
   const [porPagina, setPorPagina] = useState(8);
-  const [busqueda, setBusqueda]   = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos"); // "todos" | "disponibles" | "inactivos"
 
-  // Resetear página al filtrar
+  //*********************************** */
   useEffect(() => { setPagina(1); }, [busqueda, filtroEstado]);
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
     return (items || []).filter((it) => {
-      const okBus    = !q || it.nombre.toLowerCase().includes(q);
+      const okBus = !q || it.nombre.toLowerCase().includes(q);
       const okEstado =
-        filtroEstado === "todos"       ? true
-        : filtroEstado === "disponibles" ? it.disponible
-        : /* inactivos */                 !it.disponible;
+        filtroEstado === "todos" ? true
+          : filtroEstado === "disponibles" ? it.disponible
+            : /* inactivos */ !it.disponible;
       return okBus && okEstado;
     });
   }, [items, busqueda, filtroEstado]);
@@ -88,12 +88,11 @@ const TabContent = ({
     } finally { setProcId(null); }
   };
 
+  //*********************************** */
   return (
     <>
       <div className="adm-extras__tab-header">
         <p className="admin-page__sub">
-          {(items || []).length} {labelPlur} ·{" "}
-          {(items || []).filter((x) => x.disponible).length} disponibles
         </p>
         <button
           type="button"
@@ -110,16 +109,16 @@ const TabContent = ({
           <Search size={15} className="admin-field__icon" />
           <input
             type="text"
-            placeholder={`Buscar ${labelPlur}…`}
+            placeholder={`Buscar ${labelPlur} por nombre…`}
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
         </div>
         <div className="adm-filtro-estado" role="group" aria-label="Filtrar por estado">
           {[
-            { valor: "todos",       etiqueta: "Todos",       num: (items || []).length },
+            { valor: "todos", etiqueta: "Todos", num: (items || []).length },
             { valor: "disponibles", etiqueta: "Disponibles", num: (items || []).filter((x) => x.disponible).length },
-            { valor: "inactivos",   etiqueta: "Inactivos",   num: (items || []).filter((x) => !x.disponible).length },
+            { valor: "inactivos", etiqueta: "Inactivos", num: (items || []).filter((x) => !x.disponible).length },
           ].map(({ valor, etiqueta, num }) => (
             <button
               key={valor}
@@ -218,10 +217,10 @@ const TabContent = ({
 
 // ── Página principal ────────────────────────────────────────────────────────
 const Adiciones = () => {
-  const [adiciones, setAdiciones]   = useState(null);
-  const [salsas, setSalsas]         = useState(null);
-  const [tabActivo, setTabActivo]   = useState("adiciones");
-  const [cargando, setCargando]     = useState(false);
+  const [adiciones, setAdiciones] = useState(null);
+  const [salsas, setSalsas] = useState(null);
+  const [tabActivo, setTabActivo] = useState("adiciones");
+  const [cargando, setCargando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);

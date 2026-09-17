@@ -3,6 +3,7 @@ import { Lock, Mail, Eye, EyeOff, CakeSlice, AlertCircle } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { useNavigate } from "react-router-dom";
+import useCatalog from "../hooks/useCatalog";
 
 // Mensajes de error de Supabase → texto claro para el dueño del negocio
 const ERRORES = {
@@ -13,6 +14,7 @@ const ERRORES = {
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { settings } = useCatalog();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [verPass, setVerPass] = useState(false);
@@ -67,7 +69,11 @@ const AdminLogin = () => {
 
       <form className="admin-login__card" onSubmit={handleSubmit}>
         <div className="admin-login__logo">
-          <CakeSlice size={34} strokeWidth={1.6} />
+          {settings?.logo_url ? (
+            <img src={settings.logo_url} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "12px" }} />
+          ) : (
+            <CakeSlice size={34} strokeWidth={1.6} />
+          )}
         </div>
         <h1 className="admin-login__titulo">Panel de Administración</h1>
         <p className="admin-login__subtitulo">Pavés Medellín — acceso exclusivo del negocio</p>

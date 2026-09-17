@@ -95,3 +95,29 @@ export async function uploadProductImage(nombreProducto, file, previousUrl = "")
 
   return data.publicUrl;
 }
+
+/**
+ * Sube el logo del negocio (comprimido) y devuelve su URL pública.
+ * Si ya había un logo anterior en el bucket, se elimina (igual que productos).
+ */
+export async function uploadLogoImage(file, previousUrl = "") {
+  if (!isSupabaseConfigured) throw new Error("Supabase no está configurado");
+
+  const blob = await compressImage(file, 400, 0.85); // logo más pequeño → 400px max
+  const path = `logos/logo-negocio-${Date.now()}.jpg`;
+
+  const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
+    contentType: "image/jpeg",
+    cacheControl: "31536000",
+  });
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+
+  // Eliminar logo anterior si existía
+  if (previousUrl && previousUrl !== data.publicUrl) {
+    deleteProductImage(previousUrl); // reutilizamos la misma función (mismo bucket)
+  }
+
+  return data.publicUrl;
+}

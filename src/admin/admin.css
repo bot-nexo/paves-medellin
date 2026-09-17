@@ -35,7 +35,7 @@
   min-height: 100vh;
   background: var(--abg);
   color: var(--texto);
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
   position: relative;
 }
@@ -432,7 +432,7 @@
     radial-gradient(700px 450px at 90% 100%, rgba(232, 135, 156, 0.07), transparent 60%),
     var(--abg);
   color: var(--texto);
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   padding: 20px;
 }
 
@@ -598,6 +598,26 @@
 .admin-field__toggle:hover {
   color: var(--crema);
 }
+
+/* Estilos para el encabezado del panel de requerimientos */
+.adm-dash__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.adm-dash__panel-titulo {
+  margin: 0;
+  font-size: 20px;
+  color: var(--crema);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 
 /* ── Botones ───────────────────────────────────────────────────────────── */
 .admin-btn-primary {
@@ -1021,8 +1041,9 @@ select.adm-prod__select:focus {
 
 .adm-modal__header h2 {
   margin: 0;
-  font-size: 17px;
-  color: var(--crema);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d69e4a;
 }
 
 .adm-modal__cuerpo {
@@ -1148,6 +1169,39 @@ select.adm-prod__select:focus {
 }
 
 /* ── Módulo Pedidos ────────────────────────────────────────────────────── */
+.adm-ped__filtro-mes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--texto-dim);
+  height: 34px;
+}
+
+.adm-ped__select-mes {
+  background: transparent;
+  border: none;
+  color: var(--crema);
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  padding-right: 16px;
+  /* Basic arrow for dropdown */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23d69e4a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 10px auto;
+}
+
+.adm-ped__filtro-mes:focus-within {
+  border-color: var(--acento);
+}
+
 .adm-ped__chips {
   display: flex;
   gap: 8px;
@@ -1321,6 +1375,198 @@ select.adm-prod__select:focus {
   background-color: var(--acento);
 }
 
+/* ── Pedidos (Tarjetas / Mobile First) ─────────────────────────────────── */
+.adm-ped__grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  width: 100%;
+}
+
+.adm-ped-card {
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+  gap: 12px;
+}
+
+.adm-ped-card--clickable {
+  cursor: pointer;
+}
+
+.adm-ped-card--clickable:hover {
+  border-color: rgba(214, 158, 74, 0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.adm-ped-card--cancelado {
+  opacity: 0.7;
+}
+
+.adm-ped-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--aborde);
+  padding-bottom: 10px;
+}
+
+.adm-ped-card__header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-ped-card__numero {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--crema);
+}
+
+.adm-ped-card__fecha {
+  display: block;
+  font-size: 11px;
+  color: var(--texto-dim);
+}
+
+.adm-ped-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adm-ped-card__cliente {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adm-ped-card__nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--crema);
+}
+
+.adm-ped-card__info {
+  font-size: 13px;
+  color: var(--texto-dim);
+  line-height: 1.4;
+}
+
+.adm-ped-card__resumen-linea {
+  font-size: 13px;
+  color: var(--texto-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.adm-ped-card__footer {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.admin-btn-primary--full {
+  width: 100%;
+  justify-content: center;
+}
+
+.adm-btn-estado--preparacion {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #fff;
+}
+.adm-btn-estado--preparacion:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.adm-btn-estado--camino {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+}
+.adm-btn-estado--camino:hover {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+.adm-btn-estado--entregado {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+.adm-btn-estado--entregado:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.adm-ped-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adm-ped-card__cliente {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adm-ped-card__nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--crema);
+}
+
+.adm-ped-card__info {
+  font-size: 13px;
+  color: var(--texto-dim);
+  line-height: 1.4;
+}
+
+.adm-ped-card__resumen {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--texto);
+  line-height: 1.5;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.adm-ped-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--aborde);
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.adm-ped-card__total {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--acento);
+}
+
+.adm-ped-card__acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 @keyframes adm-late {
 
   0%,
@@ -1453,6 +1699,102 @@ select.adm-prod__select:focus {
   display: flex;
   justify-content: flex-end;
   padding-top: 6px;
+}
+
+/* ── Logo uploader (Empresa) ──────────────────────────────────────────────── */
+.adm-logo-uploader {
+  margin-top: 4px;
+}
+
+.adm-logo-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 300px;
+  height: 110px;
+  border: 2px dashed var(--aborde);
+  border-radius: 14px;
+  background: var(--abg-elev);
+  color: var(--texto-dim);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-size: 13px;
+}
+
+.adm-logo-drop:hover {
+  border-color: var(--acento);
+  background: rgba(214, 158, 74, 0.06);
+  color: var(--crema);
+}
+
+.adm-logo-drop__icon {
+  color: var(--acento);
+  opacity: 0.8;
+}
+
+.adm-logo-drop small {
+  font-size: 11px;
+  color: var(--texto-dim);
+}
+
+.adm-logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.adm-logo-preview__img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  padding: 6px;
+}
+
+.adm-logo-preview__acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adm-logo-preview__cambiar {
+  font-size: 12.5px;
+  padding: 6px 12px;
+}
+
+/* ── Selectores de horario (Empresa) ──────────────────────────────────────── */
+.adm-horario-selectores {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.adm-horario-selectores__grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-horario-selectores__etiq {
+  font-size: 11px;
+  color: var(--texto-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.adm-horario-selectores__sep {
+  font-size: 20px;
+  color: var(--texto-dim);
+  margin-top: 16px;
 }
 
 .adm-cfg__preview {
@@ -1984,12 +2326,37 @@ select.adm-prod__select:focus {
 
   .admin-page__acciones {
     width: 100%;
-    justify-content: flex-start;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .admin-page__acciones .admin-btn-primary,
-  .admin-page__acciones .admin-btn-ghost {
-    flex: 1;
+  .admin-page__acciones .admin-btn-ghost,
+  .adm-ped__filtro-mes {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .adm-ped__select-mes {
+    width: 100%;
+  }
+
+  .adm-ped__chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    overflow-x: visible;
+    padding-bottom: 0;
+    margin-bottom: 16px;
+  }
+  
+  .adm-ped__chips::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .adm-ped__chip {
+    width: 100%;
+    justify-content: center;
   }
 
   .adm-dash__flujo-flecha {

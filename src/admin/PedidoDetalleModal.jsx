@@ -2,18 +2,22 @@ import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote } from
 import { formatCOP } from "../utils/price";
 import "./admin.css";
 
-const ESTADOS = [
-  { id: "nuevo", label: "🆕 Nuevo" },
-  { id: "preparacion", label: "👨‍🍳 En preparación" },
-  { id: "camino", label: "🛵 En camino" },
-  { id: "entregado", label: "✅ Entregado" },
-  { id: "cancelado", label: "❌ Cancelado" },
-];
+const labelEstado = (estado) =>
+({
+  nuevo: "🆕 Nuevo",
+  preparacion: "👨‍🍳 Preparación",
+  camino: "🛵 En camino",
+  entregado: "✅ Entregado",
+  cancelado: "❌ Cancelado",
+}[estado] || estado);
 
-const PedidoDetalleModal = ({ pedido, onClose, onEstado }) => {
+//--------------------------
+const PedidoDetalleModal = ({ pedido, onClose }) => {
   const items = pedido.items || [];
   const fecha = new Date(pedido.created_at).toLocaleString("es-CO", {
     dateStyle: "long",
+  });
+  const hora = new Date(pedido.created_at).toLocaleTimeString("es-CO", {
     timeStyle: "short",
   });
 
@@ -26,13 +30,20 @@ const PedidoDetalleModal = ({ pedido, onClose, onEstado }) => {
     window.open(`https://wa.me/${conIndicativo}?text=${msg}`, "_blank");
   };
 
+  //************************************ */
   return (
     <div className="adm-modal__overlay" onClick={onClose}>
       <div className="adm-modal adm-modal--compacto" onClick={(e) => e.stopPropagation()}>
-        <header className="adm-modal__header">
-          <h2>
-            Pedido #{pedido.numero} · {fecha}
-          </h2>
+        <header className="adm-modal__header" style={{ alignItems: "flex-start" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <h2 style={{ margin: 0, fontSize: '1rem' }}>
+              Pedido #{pedido.numero} · {fecha} a las {hora}
+            </h2>
+            <span className={`adm-ped__estado adm-ped__estado--${pedido.estado}`}
+              style={{ alignSelf: "flex-start", fontSize: '0.8rem' }}>
+              {labelEstado(pedido.estado)}
+            </span>
+          </div>
           <button type="button" className="adm-icono-btn" onClick={onClose} aria-label="Cerrar">
             <X size={18} />
           </button>
@@ -80,12 +91,12 @@ const PedidoDetalleModal = ({ pedido, onClose, onEstado }) => {
                   <strong>{item.nombre}</strong>
                   {[...(item.opciones || []), ...(item.toppings || [])].filter(Boolean).length >
                     0 && (
-                    <small>
-                      {[...(item.opciones || []), ...(item.toppings || [])]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </small>
-                  )}
+                      <small>
+                        {[...(item.opciones || []), ...(item.toppings || [])]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </small>
+                    )}
                   {item.observaciones && <small>"{item.observaciones}"</small>}
                 </div>
                 <span className="adm-det__item-precio">
@@ -118,17 +129,9 @@ const PedidoDetalleModal = ({ pedido, onClose, onEstado }) => {
           <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
             <MessageCircle size={15} /> WhatsApp al cliente
           </button>
-          <select
-            className="adm-ped__select-estado"
-            value={pedido.estado}
-            onChange={(e) => onEstado(pedido, e.target.value)}
-          >
-            {ESTADOS.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.label}
-              </option>
-            ))}
-          </select>
+          <button type="button" className="admin-btn-ghost" onClick={onClose}>
+            Cerrar
+          </button>
         </footer>
       </div>
     </div>

@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Eye, RefreshCw, Bell } from "lucide-react";
 import Swal from "sweetalert2";
+import Pagination from "../Pagination";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
+import PedidoDetalleModal from "../PedidoDetalleModal";
 import {
   getOrders,
   updateOrderStatus,
   subscribeToOrders,
 } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
-import PedidoDetalleModal from "../PedidoDetalleModal";
-import Pagination from "../Pagination";
+import { Eye, RefreshCw, Bell, Calendar, ChevronDown } from "lucide-react";
 import "../admin.css";
 
 const ESTADOS = [
@@ -42,17 +42,19 @@ const resumen = (p) => {
   return texto.length > 44 ? texto.slice(0, 44) + "…" : texto;
 };
 
+//-----------------------------------------
 const Pedidos = () => {
-  const [pedidos, setPedidos] = useState(null); // null = cargando
+  const [pedidos, setPedidos] = useState(null);
   const [filtro, setFiltro] = useState("todos");
+  const [filtroMes, setFiltroMes] = useState(""); // "" = Todos, o "YYYY-MM"
   const [detalle, setDetalle] = useState(null);
   const [cargandoId, setCargandoId] = useState(null);
   const [nuevos, setNuevos] = useState(0);
   const [paginaActual, setPaginaActual] = useState(1);
-  const [itemsPorPagina, setItemsPorPagina] = useState(5);
+  const [itemsPorPagina, setItemsPorPagina] = useState(10);
+  const [pedidoExpandido, setPedidoExpandido] = useState(null); // ID del pedido expandido
 
   const [cargandoGlobal, setCargandoGlobal] = useState(true);
-
   const timeOut = 1500;
   const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -60,11 +62,9 @@ const Pedidos = () => {
   const cargar = useCallback(async () => {
     try {
       setCargandoGlobal(true);
-      const [data] = await Promise.all([
-        getOrders(),
-        esperar(timeOut)
-      ]);
+      const [data] = await Promise.all([getOrders(), esperar(timeOut)]);
       setPedidos(data);
+      setPedidoExpandido(null); // Resetear acordeón al recargar
     } catch (e) {
       Swal.fire({
         title: "Error al cargar pedidos",
@@ -105,23 +105,72 @@ const Pedidos = () => {
     return unsubscribe;
   }, [cargar]);
 
-  // Resetear a página 1 al cambiar filtro
-  useEffect(() => {
-    setPaginaActual(1);
-  }, [filtro]);
-
-  const conteos = useMemo(() => {
-    const base = { todos: pedidos?.length ?? 0 };
-    pedidos?.forEach((p) => {
-      base[p.estado] = (base[p.estado] || 0) + 1;
+  // ... (el resto del código de filtros y paginación se mantiene igual hasta el render)
+  // Calcular los meses disponibles basados en los pedidos
+  const mesesDisponibles = useMemo(() => {
+    if (!pedidos) return [];
+    const setMeses = new Set();
+    pedidos.forEach((p) => {
+      const d = new Date(p.created_at);
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      setMeses.add(mes);
     });
-    return base;
+
+    return Array.from(setMeses)
+      .sort()
+      .reverse()
+      .map((m) => {
+        const [year, month] = m.split("-");
+        const date = new Date(year, month - 1);
+        const label = date.toLocaleString("es-CO", { month: "long", year: "numeric" });
+        return {
+          value: m,
+          label: label.charAt(0).toUpperCase() + label.slice(1),
+        };
+      });
   }, [pedidos]);
 
-  const filtrados = useMemo(
-    () => (pedidos || []).filter((p) => filtro === "todos" || p.estado === filtro),
-    [pedidos, filtro],
-  );
+  // Auto-seleccionar el mes actual o el más reciente al cargar
+  useEffect(() => {
+    if (mesesDisponibles.length > 0 && !filtroMes) {
+      const hoy = new Date();
+      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+      if (mesesDisponibles.some((m) => m.value === mesActual)) {
+        setFiltroMes(mesActual);
+      } else {
+        setFiltroMes(mesesDisponibles[0].value);
+      }
+    }
+  }, [mesesDisponibles, filtroMes]);
+
+  // Resetear a página 1 y cerrar acordeón al cambiar filtros
+  useEffect(() => {
+    setPaginaActual(1);
+    setPedidoExpandido(null);
+  }, [filtro, filtroMes]);
+
+  const conteos = useMemo(() => {
+    const base = { todos: 0 };
+    pedidos?.forEach((p) => {
+      const d = new Date(p.created_at);
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!filtroMes || filtroMes === "todos" || mes === filtroMes) {
+        base.todos++;
+        base[p.estado] = (base[p.estado] || 0) + 1;
+      }
+    });
+    return base;
+  }, [pedidos, filtroMes]);
+
+  const filtrados = useMemo(() => {
+    return (pedidos || []).filter((p) => {
+      const d = new Date(p.created_at);
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const pasaEstado = filtro === "todos" || p.estado === filtro;
+      const pasaMes = !filtroMes || filtroMes === "todos" || mes === filtroMes;
+      return pasaEstado && pasaMes;
+    });
+  }, [pedidos, filtro, filtroMes]);
 
   const paginados = useMemo(() => {
     const inicio = (paginaActual - 1) * itemsPorPagina;
@@ -131,10 +180,7 @@ const Pedidos = () => {
   const cambiarEstado = async (pedido, nuevoEstado) => {
     setCargandoId(pedido.id);
     try {
-      await Promise.all([
-        updateOrderStatus(pedido.id, nuevoEstado),
-        esperar(timeOut)
-      ]);
+      await Promise.all([updateOrderStatus(pedido.id, nuevoEstado), esperar(timeOut)]);
       setPedidos((prev) =>
         prev.map((p) => (p.id === pedido.id ? { ...p, estado: nuevoEstado } : p)),
       );
@@ -156,6 +202,10 @@ const Pedidos = () => {
     if (paso) cambiarEstado(pedido, paso.estado);
   };
 
+  const toggleExpandir = (id) => {
+    setPedidoExpandido((prev) => (prev === id ? null : id));
+  };
+
   if (cargandoGlobal || pedidos === null) {
     return (
       <div className="adm-page" style={{ minHeight: "80vh", position: "relative" }}>
@@ -168,20 +218,23 @@ const Pedidos = () => {
   return (
     <div className="admin-page admin-main-content" style={{ position: "relative" }}>
       <header className="admin-page__header admin-page__header--row">
-        <div>
-          <h1 className="admin-page__titulo">Pedidos</h1>
-        </div>
+        <h1 className="admin-page__titulo">Pedidos</h1>
         <div className="admin-page__acciones">
-          {nuevos > 0 && (
-            <button
-              type="button"
-              className="admin-btn-ghost admin-btn-ghost--alerta"
-              onClick={() => setNuevos(0)}
-              title="Marcar alertas como vistas"
+          <div className="adm-ped__filtro-mes">
+            <Calendar size={15} />
+            <select
+              value={filtroMes}
+              onChange={(e) => setFiltroMes(e.target.value)}
+              className="adm-ped__select-mes"
             >
-              <Bell size={15} /> {nuevos} nuevo(s) 🛎️
-            </button>
-          )}
+              <option value="todos">Todos los tiempos</option>
+              {mesesDisponibles.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <button type="button" className="admin-btn-ghost admin-btn-ghost--recargar" onClick={cargar}>
             <RefreshCw size={15} /> Recargar
           </button>
@@ -203,95 +256,70 @@ const Pedidos = () => {
         ))}
       </div>
 
-      {/* Tabla */}
-      <div className="admin-card admin-card--tabla">
+      {/* Lista de Pedidos (Acordeón) */}
+      <div className="adm-ped__grid">
         {filtrados.length === 0 ? (
-          <p className="adm-prod__vacio">
-            {filtro === "todos"
-              ? "Aún no hay pedidos. Cuando un cliente compre, aparecerá aquí en tiempo real."
-              : "No hay pedidos en este estado."}
-          </p>
+          <div className="admin-card" style={{ gridColumn: "1 / -1" }}>
+            <p className="adm-prod__vacio">
+              {filtro === "todos"
+                ? "Aún no hay pedidos en este rango de tiempo."
+                : "No hay pedidos en este estado."}
+            </p>
+          </div>
         ) : (
-          <table className="adm-prod__tabla">
-            <thead>
-              <tr>
-                <th>Nº</th>
-                <th>Cliente</th>
-                <th>Resumen</th>
-                <th>Entrega</th>
-                <th>Total</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th className="adm-prod__col-acciones">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginados.map((p) => {
-                const paso = SIGUIENTE[p.estado];
-                return (
-                  <tr
-                    key={p.id}
-                    className={p.estado === "cancelado" ? "adm-prod__fila--agotada" : ""}
-                  >
-                    <td className="adm-ped__numero">#{p.numero}</td>
-                    <td>
-                      <strong className="adm-ped__nombre">{p.nombre}</strong>
-                      <small className="adm-ped__tel">{p.telefono}</small>
-                      <small className="adm-ped__dir">
-                        {p.direccion}
-                        {p.unidad ? `, ${p.unidad}` : ""}
-                        {p.apto ? `, ${p.apto}` : ""}
-                      </small>
-                    </td>
-                    <td className="adm-ped__resumen" title={resumen(p)}>
-                      {resumen(p)}
-                    </td>
-                    <td>
-                      <span
-                        className={`adm-ped__entrega adm-ped__entrega--${p.tipo_entrega === "recogida" ? "recogida" : "domicilio"
-                          }`}
-                      >
-                        {p.tipo_entrega === "recogida" ? "💁‍♂️ Recoger" : "🏍️ Domicilio"}
-                      </span>
-                    </td>
-                    <td className="adm-prod__precio">{formatCOP(p.total)}</td>
-                    <td>
-                      <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>
-                        {labelEstado(p.estado)}
-                      </span>
-                      {" "}
-                      {paso && (
-                        <button
-                          type="button"
-                          className="admin-btn-ghost admin-btn-ghost--mini"
-                          disabled={cargandoId === p.id}
-                          onClick={() => avanzarEstado(p)}
-                        >
-                          {paso.label}
-                        </button>
+          paginados.map((p) => {
+            const paso = SIGUIENTE[p.estado];
+            
+            return (
+              <div 
+                key={p.id} 
+                className={`adm-ped-card adm-ped-card--clickable ${p.estado === "cancelado" ? "adm-ped-card--cancelado" : ""}`}
+                onClick={() => setDetalle(p)}
+              >
+                <div className="adm-ped-card__header">
+                  <div className="adm-ped-card__header-info">
+                    <span className="adm-ped-card__numero">#{p.numero}</span>
+                    <span className="adm-ped-card__fecha">
+                      {new Date(p.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
+                    </span>
+                  </div>
+                  <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>
+                    {labelEstado(p.estado)}
+                  </span>
+                </div>
+
+                <div className="adm-ped-card__body">
+                  <div className="adm-ped-card__cliente">
+                    <span className="adm-ped-card__nombre">{p.nombre}</span>
+                    <span className="adm-ped-card__info">
+                      {p.tipo_entrega === "recogida" ? (
+                        <strong>💁‍♂️ Recoger en tienda</strong>
+                      ) : (
+                        <>🏍️ Domicilio</>
                       )}
-                    </td>
-                    <td className="adm-ped__fecha">
-                      {new Date(p.created_at).toLocaleString("es-CO", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
-                    </td>
-                    <td className="adm-prod__col-acciones">
-                      <button
-                        type="button"
-                        className="adm-icono-btn"
-                        title="Ver detalle"
-                        onClick={() => setDetalle(p)}
-                      >
-                        <Eye size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      {" · "}{formatCOP(p.total)}
+                    </span>
+                  </div>
+                  <div className="adm-ped-card__resumen-linea">
+                    {resumen(p)}
+                  </div>
+                </div>
+
+                {paso && (
+                  <div className="adm-ped-card__footer">
+                    <button
+                      type="button"
+                      className={`admin-btn-primary admin-btn-primary--full adm-btn-estado--${paso.estado}`}
+                      disabled={cargandoId === p.id}
+                      onClick={(e) => { e.stopPropagation(); avanzarEstado(p); }}
+                    >
+                      {paso.label}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 

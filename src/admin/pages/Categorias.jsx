@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, Search } from "lucide-react";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
 import Swal from "sweetalert2";
+import Pagination from "../Pagination";
+import CategoryFormModal from "../CategoryFormModal";
+import Switch from "../Switch";
 import {
   getProducts,
   getCategoriesRaw,
   updateCategory,
   deleteCategory,
 } from "../../data/dataSource";
-import Switch from "../Switch";
-import CategoryFormModal from "../CategoryFormModal";
-import Pagination from "../Pagination";
+import { Plus, Pencil, Trash2, RefreshCw, Search } from "lucide-react";
 import "../admin.css";
 
 const Categorias = () => {
@@ -61,11 +61,11 @@ const Categorias = () => {
     if (!categorias) return [];
     const q = busqueda.trim().toLowerCase();
     return categorias.filter((c) => {
-      const okBus    = !q || c.nombre.toLowerCase().includes(q);
+      const okBus = !q || c.nombre.toLowerCase().includes(q);
       const okEstado =
-        filtroEstado === "todos"    ? true
-        : filtroEstado === "visibles" ? c.visible
-        : /* ocultas */               !c.visible;
+        filtroEstado === "todos" ? true
+          : filtroEstado === "visibles" ? c.visible
+            : /* ocultas */ !c.visible;
       return okBus && okEstado;
     });
   }, [categorias, busqueda, filtroEstado]);
@@ -177,9 +177,7 @@ const Categorias = () => {
       <header className="admin-page__header admin-page__header--row">
         <div>
           <h1 className="admin-page__titulo">Categorías</h1>
-          <p className="admin-page__sub">
-            {`${categorias.length} categorías · ${totalVisibles} visibles en la tienda`}
-          </p>
+
         </div>
         <div className="admin-page__acciones">
           <button
@@ -195,7 +193,7 @@ const Categorias = () => {
             className="admin-btn-primary admin-btn-primary--compacto"
             onClick={() => setModal({ abierto: true, categoria: null })}
           >
-            <Plus size={16} /> Nueva categoría
+            <Plus size={16} /> Nueva
           </button>
         </div>
       </header>
@@ -213,9 +211,9 @@ const Categorias = () => {
         </div>
         <div className="adm-filtro-estado" role="group" aria-label="Filtrar por estado">
           {[
-            { valor: "todos",    etiqueta: "Todas",   num: categorias?.length ?? 0 },
+            { valor: "todos", etiqueta: "Todas", num: categorias?.length ?? 0 },
             { valor: "visibles", etiqueta: "Visibles", num: categorias?.filter((c) => c.visible).length ?? 0 },
-            { valor: "ocultas",  etiqueta: "Ocultas",  num: categorias?.filter((c) => !c.visible).length ?? 0 },
+            { valor: "ocultas", etiqueta: "Ocultas", num: categorias?.filter((c) => !c.visible).length ?? 0 },
           ].map(({ valor, etiqueta, num }) => (
             <button
               key={valor}

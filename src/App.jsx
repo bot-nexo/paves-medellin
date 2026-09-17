@@ -71,7 +71,7 @@ const App = () => {
     if (cart.length === 0) return;
 
     // 1) Persistir el pedido en la BD (no bloquea: si falla, seguimos a WhatsApp)
-    const esDomicilio = deliveryData.tipoEntrega !== "recogida";
+    const esDomicilio = deliveryData.tipoEntrega === "domicilio";
     const summary = calculateOrderSummary(cart, settings.deliveryFee ?? VALOR_DOMICILIO, settings.freeDeliveryThreshold ?? 0, esDomicilio);
     const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
@@ -98,14 +98,22 @@ const App = () => {
     }
     if (deliveryData.tipoEntrega === "recogida") {
       message += "🏪 *MODALIDAD: RECOGER EN TIENDA*\n\n";
+    } else if (deliveryData.tipoEntrega === "local") {
+      message += "🍽️ *MODALIDAD: COMER EN EL LOCAL*\n\n";
+    } else {
+      message += "🛵 *MODALIDAD: DOMICILIO*\n\n";
     }
     message += "--------------------------------\n\n";
-    message += "*DATOS DE ENTREGA*\n";
+    message += "*DATOS DEL CLIENTE*\n";
     message += "• *Nombre:* " + deliveryData.nombre + "\n";
     message += "• *Telefono:* " + deliveryData.telefono + "\n";
-    message += "• *Direccion:* " + deliveryData.direccion + "\n";
-    if (deliveryData.unidad) message += "• *Unidad:* " + deliveryData.unidad + "\n";
-    message += "• *Apto/Piso:* " + deliveryData.apto + "\n";
+    
+    if (esDomicilio) {
+      message += "• *Direccion:* " + deliveryData.direccion + "\n";
+      if (deliveryData.unidad) message += "• *Unidad:* " + deliveryData.unidad + "\n";
+      if (deliveryData.apto) message += "• *Apto/Piso:* " + deliveryData.apto + "\n";
+    }
+    
     message += "• *Pago:* " + deliveryData.pago + "\n\n";
     message += "*DETALLE DEL PEDIDO*\n";
 
@@ -156,7 +164,7 @@ const App = () => {
     message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
     message +=
       "   Domicilio: " +
-      (esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
+      (!esDomicilio ? "No aplica" : esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
       "\n";
     message += "--------------------------------\n";
     message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";

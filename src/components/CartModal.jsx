@@ -220,32 +220,23 @@ const CartModal = ({
 
             {/* Footer with Summary */}
             <div className="cart-footer">
-              <div
-                className={`delivery-badge ${esGratis ? "free" : "pending"}`}
-              >
-                <FaMotorcycle size={18} />
-                <span>
-                  {esGratis
-                    ? "Genial! Tu domicilio es GRATIS"
-                    : `Agrega ${formatCOP(faltanteGratis)} mas para obtener envio GRATIS`}
-                </span>
-              </div>
-
-              <div className="cart-breakdown">
-                <div className="breakdown-row">
-                  <span>Subtotal:</span>
-                  <span>{formatCOP(totalPlatos)}</span>
-                </div>
-                <div className="breakdown-row">
-                  <span>Domicilio estimado:</span>
-                  <span className={esGratis ? "free-text" : ""}>
-                    {esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}
+              {settings.offersDelivery !== false && (
+                <div
+                  className={`delivery-badge ${esGratis ? "free" : "pending"}`}
+                >
+                  <FaMotorcycle size={18} />
+                  <span>
+                    {esGratis
+                      ? "¡Si pides a domicilio, el envío es GRATIS! 🎉"
+                      : `Si pides a domicilio, agrega ${formatCOP(faltanteGratis)} más para envío GRATIS`}
                   </span>
                 </div>
-                <div className="divider" />
+              )}
+
+              <div className="cart-breakdown">
                 <div className="breakdown-row total">
-                  <span>Total Estimado:</span>
-                  <span className="total-amount">{formatCOP(totalNeto)}</span>
+                  <span>Subtotal carrito:</span>
+                  <span>{formatCOP(totalPlatos)}</span>
                 </div>
               </div>
 

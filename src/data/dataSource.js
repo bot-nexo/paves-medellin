@@ -68,23 +68,36 @@ const normalizeProduct = (row) => {
   };
 };
 
-const normalizeSettings = (row) => ({
-  name: localInfo.name,
-  phone: row.phone || localInfo.phone,
-  address: row.address || localInfo.address,
-  mapsGoogle: row.maps_url || localInfo.mapsGoogle,
-  instagram: row.instagram || localInfo.instagram,
-  facebook: row.facebook || localInfo.facebook,
-  tiktok: row.tiktok || localInfo.tiktok,
-  closed: localInfo.closed || "",
-  day1: row.day1 || localInfo.day1,
-  hours1: row.hours1 || localInfo.hours1,
-  deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO,
-  freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS,
-  offersDelivery: row.offers_delivery !== false,
-  offersPickup: row.offers_pickup !== false,
-  forceClosed: row.force_closed === true,
-});
+const normalizeSettings = (row) => {
+  let offersDelivery = row.offers_delivery !== false;
+  let offersPickup = row.offers_pickup !== false;
+  let offersLocal = row.offersLocal !== false;
+
+  // Seguro contra BD inconsistente
+  if (!offersDelivery && !offersPickup && !offersLocal) {
+    offersDelivery = true;
+  }
+
+  return {
+    name: localInfo.name,
+    phone: row.phone || localInfo.phone,
+    address: row.address || localInfo.address,
+    mapsGoogle: row.maps_url || localInfo.mapsGoogle,
+    instagram: row.instagram || localInfo.instagram,
+    facebook: row.facebook || localInfo.facebook,
+    tiktok: row.tiktok || localInfo.tiktok,
+    closed: localInfo.closed || "",
+    day1: row.day1 || localInfo.day1,
+    hours1: row.hours1 || localInfo.hours1,
+    logo_url: row.logo_url || "",
+    deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO,
+    freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS,
+    offersDelivery,
+    offersPickup,
+    offersLocal,
+    forceClosed: row.force_closed === true,
+  };
+};
 
 // ── Fallbacks locales (datos actuales del catálogo) ──────────────────────────
 const buildLocalCategories = () =>
@@ -525,10 +538,12 @@ export async function setProductSauces(productId, items) {
 // Mapea las claves normalizadas → columnas reales de la tabla settings
 const COLUMNAS_SETTINGS = {
   mapsGoogle: "maps_url",
+  logo_url: "logo_url",
   deliveryFee: "delivery_fee",
   freeDeliveryThreshold: "free_delivery_threshold",
   offersDelivery: "offers_delivery",
   offersPickup: "offers_pickup",
+  offersLocal: "offersLocal",
   forceClosed: "force_closed",
 };
 
