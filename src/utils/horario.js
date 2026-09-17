@@ -31,7 +31,7 @@ export const parseHorario = (horarioStr) => {
 
 
 // Convierte minutos totales (ej: 840) a formato hh:mm AM/PM o 24h
-const formatMinutosAHora = (minutosTotales, format24 = false) => {
+const formatMinutosAHora = (minutosTotales, format24 = true) => {
   if (minutosTotales == null) return "";
 
   const horas = Math.floor(minutosTotales / 60);
@@ -78,9 +78,9 @@ export const estaAbiertoSegunHorario = (settings = {}) => {
     ? mins >= p.apertura || mins < p.cierre
     : mins >= p.apertura && mins < p.cierre;
   // Uso con tu objeto:
-  const openHourStr = formatMinutosAHora(p.apertura);   // Output: "2:00 PM"
-  const closeHourStr = formatMinutosAHora(p.cierre); // Output: "8:00 PM"
-
+  const openHourStr = formatMinutosAHora(p.apertura, true);   // Output: "2:00 PM"
+  const closeHourStr = formatMinutosAHora(p.cierre, true); // Output: "8:00 PM"
+  
   return {
     abierto: dentro && !fuerzaCierre,
     fuerzaCierre,

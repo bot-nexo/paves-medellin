@@ -33,7 +33,6 @@ const useCatalog = () => {
     offersPickup: false,
     freeDeliveryThreshold: 0,
   });
-  console.log("Load", categories)
 
   const load = useCallback(async () => {
     const [cats, prods, sett] = await Promise.all([

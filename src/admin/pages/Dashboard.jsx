@@ -2,6 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
 import {
+  getOrders,
+  getProducts,
+  getSettings,
+  subscribeToOrders,
+  isUsingSupabase,
+} from "../../data/dataSource";
+import { estaAbiertoSegunHorario } from "../../utils/horario";
+import { formatCOP } from "../../utils/price";
+import {
   Bell,
   CakeSlice,
   ChefHat,
@@ -16,19 +25,13 @@ import {
   Wifi,
   WifiOff,
   XCircle,
+  Settings,
   ArrowRight
 } from "lucide-react";
-import {
-  getOrders,
-  getProducts,
-  getSettings,
-  subscribeToOrders,
-  isUsingSupabase,
-} from "../../data/dataSource";
-import { estaAbiertoSegunHorario } from "../../utils/horario";
-import { formatCOP } from "../../utils/price";
 import "../../css/estadoNegocio.css";
 
+
+//---------------------------------
 const esHoy = (iso) => {
   if (!iso) return false;
   const d = new Date(iso);
@@ -42,6 +45,7 @@ const esHoy = (iso) => {
 
 const horaCorta = (iso) =>
   new Date(iso).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+//---------------------------------
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -119,7 +123,7 @@ const Dashboard = () => {
 
   const estadoNegocio = estaAbiertoSegunHorario(settings || {});
 
-  // 1. Carga inicial (Pantalla Completa mientras se obtiene el primer paquete de datos)
+  // Carga inicial (Pantalla Completa mientras se obtiene el primer paquete de datos)
   if (pedidos === null || productos === null) {
     return (
       <LoadingOverlay fullScreen text="Cargando Dashboard" minTime={timeOut} />
@@ -129,7 +133,7 @@ const Dashboard = () => {
   // *****************************************/
   return (
     <div className="adm-page" style={{ position: "relative" }}>
-      {/* 2. Carga en segundo plano al pulsar "Sincronizar" */}
+      {/*  Carga en segundo plano al pulsar "Sincronizar" */}
       {cargando && (
         <LoadingOverlay text="Sincronizando información" minTime={timeOut} />
       )}
@@ -295,7 +299,7 @@ const Dashboard = () => {
               <ClipboardList size={18} /> Gestión Pedidos
             </button>
             <button type="button" className="adm-dash__acceso" onClick={() => navigate("/admin/configuracion")}>
-              <Wallet size={18} /> Domicilios
+              <Settings size={18} /> Configuración
             </button>
           </div>
         </section>

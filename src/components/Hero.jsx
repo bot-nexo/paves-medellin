@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Sparkles, ChevronDown } from "lucide-react";
+import { Star, Sparkles } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { FaShoppingCart } from "react-icons/fa";
@@ -22,6 +22,7 @@ const Hero = ({
   const AUTOPLAY_DURATION = 7000;
   const featured = products.length > 0 ? products : [];
 
+  //********************************* */
   const formatCOP = (val) => {
     if (!val) return "$0";
     return new Intl.NumberFormat("es-CO", {
@@ -39,7 +40,6 @@ const Hero = ({
 
 
   useEffect(() => {
-    console.log('estadoNegocio', estadoNegocio);
     if (isPaused || featured.length === 0) {
       clearTimeout(intervalRef.current);
       clearInterval(progressRef.current);
@@ -99,10 +99,10 @@ const Hero = ({
       </span>
     );
   };
-
+  
   // En tu JSX principal:
   { renderEstadoNegocio() }
-
+  
   // ─────────────────────────────────────────────
   // Animaciones avanzadas (Opción 1)
   // ─────────────────────────────────────────────
@@ -174,7 +174,7 @@ const Hero = ({
 
   const activeProduct = featured[current];
   const activeCount = products.length;
-
+  
   //************************************ */
   return (
     <section className="hero-full">

@@ -556,6 +556,29 @@
   color: var(--texto-dim);
 }
 
+.admin-field__input-area textarea {
+  flex: 1;
+  min-width: 100%;
+  background: var(--abg-elev);
+  border: 1px solid var(--aborde);
+  border-radius: 10px;
+  outline: none;
+  color: var(--crema);
+  font-size: 14.5px;
+  padding: 12px 0;
+}
+
+.admin-field__input-area textarea:focus {
+  min-width: 100%;
+  background: var(--abg-elev);
+  border: 1px solid var(--acento);
+  border-radius: 10px;
+  outline: none;
+  color: var(--crema);
+  font-size: 14.5px;
+  padding: 12px 8px;
+}
+
 .admin-page__titulo {
   margin: 0;
   font-size: 22px;
@@ -2154,7 +2177,11 @@ select.adm-prod__select:focus {
 .adm-assoc__lista::-webkit-scrollbar {
   width: 4px;
 }
-.adm-assoc__lista::-webkit-scrollbar-track { background: transparent; }
+
+.adm-assoc__lista::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .adm-assoc__lista::-webkit-scrollbar-thumb {
   background: var(--aborde);
   border-radius: 4px;
@@ -2229,8 +2256,8 @@ select.adm-prod__select:focus {
    CATÁLOGO — Badge "Personalizable" en MenuCard
    ══════════════════════════════════════════════════════════════════════════ */
 .menu-card__badge--personalizable {
-  background: linear-gradient(135deg, rgba(214,158,74,0.18), rgba(130,207,174,0.12));
-  border: 1px solid rgba(214,158,74,0.35);
+  background: linear-gradient(135deg, rgba(214, 158, 74, 0.18), rgba(130, 207, 174, 0.12));
+  border: 1px solid rgba(214, 158, 74, 0.35);
   color: var(--acento, #d69e4a);
   font-size: 10px;
   font-weight: 700;

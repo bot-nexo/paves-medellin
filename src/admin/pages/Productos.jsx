@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pencil, Trash2, RefreshCw } from "lucide-react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
+import Pagination from "../Pagination";
+import ProductFormModal from "../ProductFormModal";
+import Switch from "../Switch";
 import {
   getProducts,
   getCategoriesRaw,
@@ -9,13 +11,11 @@ import {
   deleteProduct,
 } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
-import ProductFormModal from "../ProductFormModal";
-import Switch from "../Switch";
-import Pagination from "../Pagination";
+import { Plus, Search, Pencil, Trash2, RefreshCw } from "lucide-react";
 import "../admin.css";
 
 const Productos = () => {
-  const [productos, setProductos] = useState(null); // null = cargando
+  const [productos, setProductos] = useState(null);
   const [categorias, setCategorias] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("");
@@ -36,8 +36,9 @@ const Productos = () => {
         Promise.all([getProducts(), getCategoriesRaw()]),
         esperar(timeOut),
       ]);
+      const tempCats = cats?.filter((c) => c.nombre !== "Todos") ?? cats;
       setProductos(prods);
-      setCategorias(cats);
+      setCategorias(tempCats);
     } catch (e) {
       Swal.fire({
         title: "Error al cargar",
@@ -167,13 +168,13 @@ const Productos = () => {
           {productos ? (
             <>
               <span className="adm-chip">
-                <strong className="adm-chip__num">{productos.length}</strong> productos
+                <strong className="adm-chip__num">{productos.length}</strong> Productos
               </span>
               <span className="adm-chip adm-chip--peligro">
-                <strong className="adm-chip__num">{totalAgotados}</strong> inactivos
+                <strong className="adm-chip__num">{totalAgotados}</strong> Inactivos
               </span>
               <span className="adm-chip adm-chip--acento">
-                <strong className="adm-chip__num">{totalDestacados}</strong> destacados
+                <strong className="adm-chip__num">{totalDestacados}</strong> Destacados
               </span>
             </>
           ) : (
@@ -194,7 +195,7 @@ const Productos = () => {
             className="admin-btn-primary admin-btn-primary--compacto"
             onClick={() => setModal({ abierto: true, producto: null })}
           >
-            <Plus size={16} /> Nuevo producto
+            <Plus size={16} /> Nuevo
           </button>
         </div>
       </header>

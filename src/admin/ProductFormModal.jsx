@@ -32,15 +32,15 @@ const ProductFormModal = ({
   const [form, setForm] = useState(
     esEdicion
       ? {
-          nombre: producto.nombre || "",
-          category_id: producto.category_id || "",
-          precio: producto.precio ?? "",
-          descripcion: producto.descripcion || "",
-          nota: producto.nota || "",
-          destacado: !!producto.destacado,
-          disponible: producto.disponible !== false,
-          orden: producto.orden ?? "",
-        }
+        nombre: producto.nombre || "",
+        category_id: producto.category_id || "",
+        precio: producto.precio ?? "",
+        descripcion: producto.descripcion || "",
+        nota: producto.nota || "",
+        destacado: !!producto.destacado,
+        disponible: producto.disponible !== false,
+        orden: producto.orden ?? "",
+      }
       : { ...VACIO, orden: ordenSugerido },
   );
   const [imagenUrlPrevio, setImagenUrlPrevio] = useState(producto?.imagen_url || "");
@@ -50,10 +50,10 @@ const ProductFormModal = ({
 
   // ── Catálogos de adiciones y salsas ──────────────────────────────────────
   const [catAdiciones, setCatAdiciones] = useState([]);  // todos los ítems disponibles
-  const [catSalsas, setCatSalsas]       = useState([]);
+  const [catSalsas, setCatSalsas] = useState([]);
   // Selección actual: { [id]: { seleccionado: bool, requerido: bool } }
   const [selAdiciones, setSelAdiciones] = useState({});
-  const [selSalsas, setSelSalsas]       = useState({});
+  const [selSalsas, setSelSalsas] = useState({});
 
   // Carga los catálogos y las asociaciones actuales del producto
   useEffect(() => {
@@ -85,7 +85,7 @@ const ProductFormModal = ({
     };
     cargar();
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const set = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }));
@@ -190,6 +190,7 @@ const ProductFormModal = ({
     setCargando(false);
   };
 
+  //******************************** */
   return (
     <div className="adm-modal__overlay" onClick={onClose}>
       <form className="adm-modal" onClick={(e) => e.stopPropagation()} onSubmit={guardar}>
@@ -267,7 +268,7 @@ const ProductFormModal = ({
 
             <label className="admin-field">
               <span className="admin-field__label">Descripción</span>
-              <div className="admin-field__input">
+              <div className="admin-field__input-area">
                 <textarea
                   rows={3}
                   value={form.descripcion}
