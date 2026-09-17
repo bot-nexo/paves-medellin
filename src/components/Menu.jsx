@@ -11,7 +11,7 @@ const Menu = ({
   setSelectedProduct,
   addToCart,
 }) => {
-  const [activeCategory, setActiveCategory] = useState("Todo");
+  const [activeCategory, setActiveCategory] = useState("Todos");
   const [filteredData, setFilteredData] = useState([]);
 
   //************************************ */
@@ -21,7 +21,7 @@ const Menu = ({
       return;
     }
 
-    if (activeCategory === "Todo") {
+    if (activeCategory === "Todos") {
       setFilteredData(data);
     } else {
       const filtered = data.filter((item) => {
@@ -51,18 +51,23 @@ const Menu = ({
 
         {/* Category Filter */}
         <div className="category-filter-wrapper">
-          <div className="category-filter">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                className={`filter-btn ${activeCategory === cat.id ? "active" : ""}`}
-                onClick={() => setActiveCategory(cat.id)}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+          <nav className="category-filter" aria-label="Filtro de categorías">
+            {categories.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`filter-btn ${isActive ? "filter-btn--active" : ""}`}
+                  onClick={() => setActiveCategory(cat.id)}
+                  aria-pressed={isActive}
+                >
+                  {cat.icon && <span className="filter-btn__icon">{cat.icon}</span>}
+                  <span className="filter-btn__label">{cat.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
         {/* Product Grid */}

@@ -9,7 +9,6 @@ import {
 import {
   categories as localCategories,
   products as localProducts,
-  info as localInfo,
 } from "../data/menu";
 
 
@@ -24,15 +23,17 @@ import {
 const useCatalog = () => {
   // Estado inicial sincrónico con datos locales (comportamiento actual).
   // Se excluye "Todo": es una categoría fija que Menu.jsx agrega siempre.
-  const [categories, setCategories] = useState(
-    localCategories.filter((c) => c.id !== "Todo"),
-  );
+  // const [categories1, setCategorie1s] = useState(
+  //   localCategories.filter((c) => c.id !== "Todo"),
+  // );
+  const [categories, setCategories] = useState(localCategories);
   const [products, setProducts] = useState(localProducts);
   const [settings, setSettings] = useState({
     offersDelivery: false,
     offersPickup: false,
     freeDeliveryThreshold: 0,
   });
+  console.log("Load", categories)
 
   const load = useCallback(async () => {
     const [cats, prods, sett] = await Promise.all([
@@ -45,7 +46,6 @@ const useCatalog = () => {
     // no se muestran en la tienda. La lógica de "mostrar agotado tachado"
     // llegará con el pulido del panel (F8).
     setProducts(prods.filter((p) => p.disponible !== false));
-    console.log("useCatalog",sett);
     setSettings(sett);
   }, []);
 

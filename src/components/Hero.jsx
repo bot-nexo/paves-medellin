@@ -63,45 +63,45 @@ const Hero = ({
   }, [current, isPaused, next, featured.length]);
 
   const renderEstadoNegocio = () => {
-  // 1. Estado Abierto
-  if (estadoNegocio.abierto) {
-    return (
-      <span className="hero-full__badge hero-full__badge--open">
-        <StoreIcon size={16} />
-        <span className="badge__status-dot" />
-        Abierto ahora
-      </span>
-    );
-  }
+    // 1. Estado Abierto
+    if (estadoNegocio.abierto) {
+      return (
+        <span className="hero-full__badge hero-full__badge--open">
+          <StoreIcon className="ico-hero" />
+          <span className="badge__status-dot statuts-open" />
+          Abierto ahora
+        </span>
+      );
+    }
 
-  // 2. Cierre Manual / Eventualidad (fuerzaCierre)
-  if (estadoNegocio.fuerzaCierre) {
-    return (
-      <span className="hero-full__badge hero-full__badge--closed-forced">
-        <StoreIcon size={16} />
-        Cerrado temporalmente por eventualidad
-      </span>
-    );
-  }
+    // 2. Cierre Manual / Eventualidad (fuerzaCierre)
+    if (estadoNegocio.fuerzaCierre) {
+      return (
+        <span className="hero-full__badge hero-full__badge--closed-forced">
+          <StoreIcon className="ico-hero" />
+          <span className="badge__status-dot statuts-closed" />
+          Cerrado temporalmente por eventualidad
+        </span>
+      );
+    }
 
-  // 3. Cerrado por Horario Habitual
-  return (
-    <span className="hero-full__badge hero-full__badge--closed">
-      <StoreIcon size={16} />
-      <div className="badge__text-group">
-        <span className="badge__title">Cerrado</span>
-        {estadoNegocio.dateOpen && estadoNegocio.hourOpen && (
+    // 3. Cerrado por Horario Habitual
+    return (
+      <span className="hero-full__badge hero-full__badge--closed">
+        <StoreIcon className="ico-hero" />
+        <div className="badge__text-group">
+          <span className="badge__status-dot statuts-closed1" />
+          <span className="badge__title">Cerrado</span>
           <span className="badge__subtitle">
-            • Abre el {estadoNegocio.dateOpen} a las {estadoNegocio.hourOpen}
+            Abre a las {estadoNegocio.openHour}
           </span>
-        )}
-      </div>
-    </span>
-  );
-};
+        </div>
+      </span>
+    );
+  };
 
-// En tu JSX principal:
-{renderEstadoNegocio()}
+  // En tu JSX principal:
+  { renderEstadoNegocio() }
 
   // ─────────────────────────────────────────────
   // Animaciones avanzadas (Opción 1)
@@ -193,17 +193,16 @@ const Hero = ({
                 <Star size={11} fill="currentColor" /> 4.9
               </span>
               <span className="hero-full__dot">·</span>
-              <span>{activeCount} productos</span>
+              <span className="hero-full__prodNum">{activeCount} productos</span>
             </div>
           </div>
         </div>
-
-       {renderEstadoNegocio()}
-
         <a href="#menu" className="hero-full__cta">
           Ver Menú
-          <ChevronDown size={15} />
         </a>
+
+        {renderEstadoNegocio()}
+
       </header>
 
       {/* Stage */}

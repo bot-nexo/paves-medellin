@@ -137,6 +137,14 @@ const initRealtime = () => {
       () => invalidate("categories", getCategories))
     .on("postgres_changes", { event: "*", schema: "public", table: "settings" },
       () => invalidate("settings", getSettings))
+    .on("postgres_changes", { event: "*", schema: "public", table: "additions" },
+      () => invalidate("products", getProducts))
+    .on("postgres_changes", { event: "*", schema: "public", table: "sauces" },
+      () => invalidate("products", getProducts))
+    .on("postgres_changes", { event: "*", schema: "public", table: "product_additions" },
+      () => invalidate("products", getProducts))
+    .on("postgres_changes", { event: "*", schema: "public", table: "product_sauces" },
+      () => invalidate("products", getProducts))
     .subscribe((status) => {
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         realtimeInitialized = false; // permite reintento en la próxima lectura
@@ -414,11 +422,13 @@ export async function createAddition(data) {
 export async function updateAddition(id, cambios) {
   const { error } = await supabase.from("additions").update(cambios).eq("id", id);
   if (error) throw error;
+  invalidateCatalog();
 }
 
 export async function deleteAddition(id) {
   const { error } = await supabase.from("additions").delete().eq("id", id);
   if (error) throw error;
+  invalidateCatalog();
 }
 
 // ── Salsas (panel admin) ────────────────────────────────────────────────────
@@ -441,17 +451,20 @@ export async function createSauce(data) {
     .select()
     .single();
   if (error) throw error;
+  invalidateCatalog();
   return row;
 }
 
 export async function updateSauce(id, cambios) {
   const { error } = await supabase.from("sauces").update(cambios).eq("id", id);
   if (error) throw error;
+  invalidateCatalog();
 }
 
 export async function deleteSauce(id) {
   const { error } = await supabase.from("sauces").delete().eq("id", id);
   if (error) throw error;
+  invalidateCatalog();
 }
 
 // ── Asociaciones Producto ↔ Adiciones / Salsas ──────────────────────────────

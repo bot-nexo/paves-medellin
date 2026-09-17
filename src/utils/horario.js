@@ -29,6 +29,24 @@ export const parseHorario = (horarioStr) => {
   return { ok: true, apertura, cierre, cruzaMedianoche: cierre <= apertura };
 };
 
+
+// Convierte minutos totales (ej: 840) a formato hh:mm AM/PM o 24h
+const formatMinutosAHora = (minutosTotales, format24 = false) => {
+  if (minutosTotales == null) return "";
+
+  const horas = Math.floor(minutosTotales / 60);
+  const minutos = minutosTotales % 60;
+  const minsPadded = minutos.toString().padStart(2, "0");
+
+  if (format24) {
+    return `${horas.toString().padStart(2, "0")}:${minsPadded}`;
+  }
+
+  const period = horas >= 12 ? "PM" : "AM";
+  const horas12 = horas % 12 || 12;
+  return `${horas12}:${minsPadded} ${period}`;
+};
+
 /**
  * Estado del negocio para la tienda y el checkout.
  * @returns {{abierto:boolean, fuerzaCierre:boolean, dentroHorario:boolean, horarioTexto:string, siempreAbierto:boolean}}
@@ -40,7 +58,7 @@ export const estaAbiertoSegunHorario = (settings = {}) => {
 
   if (!p.ok) {
     // Sin horario legible → se asume abierto salvo cierre manual (no bloquear ventas)
-    return { abierto: !fuerzaCierre, fuerzaCierre, dentroHorario: true, horarioTexto, siempreAbierto: false };
+    return { abierto: !fuerzaCierre, fuerzaCierre, dentroHorario: true, horarioTexto, siempreAbierto: false, openHour: "", closeHour: "" };
   }
   if (p.siempreAbierto) {
     return {
@@ -49,6 +67,8 @@ export const estaAbiertoSegunHorario = (settings = {}) => {
       dentroHorario: true,
       horarioTexto: horarioTexto || "24 horas",
       siempreAbierto: true,
+      openHour: "8:00 AM",
+      closeHour: "10:00 PM",
     };
   }
 
@@ -57,12 +77,17 @@ export const estaAbiertoSegunHorario = (settings = {}) => {
   const dentro = p.cruzaMedianoche
     ? mins >= p.apertura || mins < p.cierre
     : mins >= p.apertura && mins < p.cierre;
+  // Uso con tu objeto:
+  const openHourStr = formatMinutosAHora(p.apertura);   // Output: "2:00 PM"
+  const closeHourStr = formatMinutosAHora(p.cierre); // Output: "8:00 PM"
 
   return {
     abierto: dentro && !fuerzaCierre,
     fuerzaCierre,
     dentroHorario: dentro,
     horarioTexto,
+    openHour: openHourStr,
+    closeHour: closeHourStr,
     siempreAbierto: false,
   };
 };

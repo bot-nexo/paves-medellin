@@ -1,14 +1,16 @@
 /* ══════════════════════════════════════════════════════════════════════════
    MENU CARD — Elegante pastelero
    Tarjeta con imagen, precio, acciones y panel deslizante de detalles.
-   Compatible: alturas automáticas, sin flip 3D, prefijos -webkit,
-   tap-highlight desactivado y respeto por prefers-reduced-motion.
    ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Estructura de Tarjeta ──────────────────────────────────────────────── */
 
 .menu-card {
   position: relative;
   width: 100%;
-  height: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   border-radius: 20px;
   background-color: #fdfbf7;
   border: 1px solid rgba(61, 35, 20, 0.08);
@@ -34,7 +36,6 @@
   outline-offset: 2px;
 }
 
-/* El hover levita solo cuando el panel está cerrado */
 .menu-card--open:hover {
   transform: none;
 }
@@ -43,9 +44,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
-/* ── Media ──────────────────────────────────────────────────────────────── */
+/* ── Media e Imagen ─────────────────────────────────────────────────────── */
 
 .menu-card__media {
   position: relative;
@@ -53,6 +55,7 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background-color: #f7f3ec;
+  flex-shrink: 0;
 }
 
 .menu-card__image {
@@ -73,6 +76,7 @@
   pointer-events: none;
 }
 
+/* Badges sobre la imagen */
 .menu-card__badge {
   position: absolute;
   top: 12px;
@@ -87,19 +91,27 @@
   font-size: 0.72rem;
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(217, 43, 56, 0.3);
+  z-index: 2;
 }
 
 .menu-card__badge--personalizable {
-  top: auto;
-  bottom: 52px;
-  left: 12px;
-  right: auto;
-  background: linear-gradient(135deg, rgba(61,35,20,0.85), rgba(92,67,53,0.85));
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(214, 158, 74, 0.4);
-  color: #d69e4a;
+  position: absolute;
+  top: 15px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  color: #ffffff !important;
+  background-color: #d40b0b !important;
   font-size: 0.68rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font-weight: 800;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+  opacity: 1 !important;
 }
 
 .menu-card__price-tag {
@@ -114,24 +126,24 @@
   font-size: 0.95rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   white-space: nowrap;
+  z-index: 2;
 }
 
-/* ── Contenido ──────────────────────────────────────────────────────────── */
+/* ── Contenido Frontal ────────────────────────────────────────────────── */
 
 .menu-card__content {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
   padding: 1.1rem 1.15rem 1.2rem;
-  flex-grow: 1;
+  flex: 1;
 }
 
-.menu-card__text {
+.menu-card__body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  flex-grow: 1;
 }
 
 .menu-card__title {
@@ -170,6 +182,7 @@
   line-height: 1.4;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  margin-top: 0.4rem;
 }
 
 .menu-card__nota svg {
@@ -177,13 +190,14 @@
   margin-top: 2px;
 }
 
-/* ── Acciones ───────────────────────────────────────────────────────────── */
+/* ── Acciones Frontales (Alineadas al fondo) ────────────────────────────── */
 
 .menu-card__actions {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 0.6rem;
-  margin-top: 0.25rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
 }
 
 .menu-card__btn-details {
@@ -238,17 +252,18 @@
   box-shadow: 0 2px 8px rgba(217, 43, 56, 0.3);
 }
 
-/* ── Panel deslizante de detalles ───────────────────────────────────────── */
+/* ── Panel Deslizante de Detalles ───────────────────────────────────────── */
 
 .menu-card__panel {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 20;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   border-radius: inherit;
-  background: linear-gradient(165deg, #fffdf9, #fdf6ec);
-  padding: 1.15rem 1.25rem;
+  background: #ffffff;
+  padding: 1.25rem;
   opacity: 0;
   visibility: hidden;
   transform: translateY(12px);
@@ -256,8 +271,7 @@
     opacity 0.3s ease,
     transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     visibility 0s linear 0.35s;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .menu-card--open .menu-card__panel {
@@ -269,115 +283,137 @@
     transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Encabezado del panel */
+/* Header del Panel */
 .menu-card__panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.menu-card__panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .menu-card__panel-title {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #d92b38;
+  color: #1e293b;
   margin: 0;
 }
 
+.menu-card__badge-tag {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #ffedd5;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .menu-card__panel-close {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border: none;
   border-radius: 50%;
-  background-color: rgba(61, 35, 20, 0.06);
-  color: #3d2314;
+  background-color: #f8fafc;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .menu-card__panel-close:hover {
-  background-color: #3d2314;
-  color: #ffffff;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
-/* Descripción completa dentro del panel */
+/* Cuerpo del Panel */
+.menu-card__panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
 .menu-card__panel-description {
-  font-size: 0.86rem;
-  color: #5c4335;
-  line-height: 1.6;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #475569;
   margin: 0 0 1rem 0;
 }
 
-/* Toppings */
+/* Chips para Toppings */
+.menu-card__toppings-section {
+  margin-top: 0.5rem;
+}
+
 .menu-card__toppings-title {
   display: block;
-  font-size: 0.76rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #3d2314;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
-.menu-card__toppings {
+.menu-card__toppings-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   list-style: none;
   padding: 0;
-  margin: 0 0 1rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  margin: 0;
 }
 
-.menu-card__toppings li {
-  font-size: 0.85rem;
-  color: #5c4335;
-  line-height: 1.5;
-  padding-left: 1.1rem;
-  position: relative;
+.menu-card__topping-chip {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
 }
 
-.menu-card__toppings li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.55em;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #d92b38;
+/* Footer del Panel */
+.menu-card__panel-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #f1f5f9;
 }
 
-/* Botón grande del panel */
 .menu-card__btn-add-full {
   width: 100%;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3d2314, #5c4335);
+  gap: 0.4rem;
+  background: #e11d48;
   color: #ffffff;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
+  padding: 0.65rem 1rem;
+  border-radius: 10px;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+  transition: background 0.2s ease;
   -webkit-appearance: none;
   appearance: none;
 }
 
 .menu-card__btn-add-full:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(61, 35, 20, 0.3);
+  background: #be123c;
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
+/* ── Responsive & Accesibilidad ─────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .menu-card__media {
@@ -394,6 +430,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .menu-card,
   .menu-card__image,
   .menu-card__panel,
@@ -401,4 +438,58 @@
   .menu-card__btn-add-full {
     transition: none;
   }
+}
+
+/****************************** */
+/* 1. Prepara el contenedor de la imagen */
+.menu-card__media {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 2. Haz de luz deslumbrante */
+.menu-card__media::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent);
+  transform: skewX(-25deg);
+  transition: left 0.75s ease-in-out;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 3. Disparar animación en hover */
+.menu-card:hover .menu-card__media::after {
+  left: 140%;
+}
+
+.menu-card:hover .menu-card__image {
+  transform: scale(1.08) rotate(1deg);
+  /* Ligera rotación para dinamismo */
+}
+
+@keyframes fotoRespiracion {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Se aplica sutilmente solo a los productos destacados/populares */
+.menu-card:has(.menu-card__badge) .menu-card__image {
+  animation: fotoRespiracion 4s ease-in-out infinite;
 }

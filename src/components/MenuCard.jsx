@@ -11,6 +11,7 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
     product.descripcion ||
     "Delicioso postre artesanal preparado con crema y Leche Klim.";
 
+  //*************************************** */
   return (
     <article
       className={`menu-card ${isDetailsOpen ? "menu-card--open" : ""}`}
@@ -35,31 +36,25 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
           )}
 
           <span className="menu-card__price-tag">{formattedPrice}</span>
-
-          {((product.adiciones?.length > 0) || (product.salsas?.length > 0)) && (
-            <span className="menu-card__badge menu-card__badge--personalizable">
-              ✨ Personalizable
-            </span>
-          )}
         </div>
 
-        {/* Contenido */}
+        {/* Contenido (Alineado con Flexbox) */}
         <div className="menu-card__content">
-          <div className="menu-card__text">
+          <div className="menu-card__body">
             <h3 className="menu-card__title">{titleText}</h3>
             <p className="menu-card__description">{descriptionText}</p>
-          </div>
 
-          {product.nota && (
-            <span className="menu-card__nota">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              {product.nota}
-            </span>
-          )}
+            {product.nota && (
+              <span className="menu-card__nota">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {product.nota}
+              </span>
+            )}
+          </div>
 
           <div className="menu-card__actions">
             <button
@@ -91,7 +86,14 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
           aria-hidden={!isDetailsOpen}
         >
           <div className="menu-card__panel-header">
-            <h4 className="menu-card__panel-title">Detalles</h4>
+            <div className="menu-card__panel-title-wrap">
+              <h4 className="menu-card__panel-title">Detalles</h4>
+              {((product.adiciones?.length > 0) || (product.salsas?.length > 0)) && (
+                <span className="menu-card__badge-tag">
+                  ✨ Personalizable
+                </span>
+              )}
+            </div>
             <button
               type="button"
               className="menu-card__panel-close"
@@ -102,26 +104,33 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
             </button>
           </div>
 
-          <p className="menu-card__panel-description">{descriptionText}</p>
+          <div className="menu-card__panel-body">
+            <p className="menu-card__panel-description">{descriptionText}</p>
 
-          {product.toppings?.length > 0 && (
-            <>
-              <span className="menu-card__toppings-title">Toppings incluidos:</span>
-              <ul className="menu-card__toppings">
-                {product.toppings.map((top, idx) => (
-                  <li key={idx}>{top}</li>
-                ))}
-              </ul>
-            </>
-          )}
-          <button
-            type="button"
-            className="menu-card__btn-add-full"
-            onClick={() => onAddToCart(product)}
-          >
-            <Plus size={17} />
-            <span>Agregar &middot; {formattedPrice}</span>
-</button>
+            {product.toppings?.length > 0 && (
+              <div className="menu-card__toppings-section">
+                <span className="menu-card__toppings-title">Toppings incluidos:</span>
+                <ul className="menu-card__toppings-list">
+                  {product.toppings.map((top, idx) => (
+                    <li key={idx} className="menu-card__topping-chip">
+                      {top}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="menu-card__panel-footer">
+            <button
+              type="button"
+              className="menu-card__btn-add-full"
+              onClick={() => onAddToCart(product)}
+            >
+              <Plus size={17} />
+              <span>Agregar &middot; {formattedPrice}</span>
+            </button>
+          </div>
         </div>
       </div>
     </article>

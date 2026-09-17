@@ -16,7 +16,7 @@ import { info } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
-import { createOrder,  getSettings } from "./data/dataSource";
+import { createOrder } from "./data/dataSource";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,

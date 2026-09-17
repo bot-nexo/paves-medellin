@@ -338,10 +338,24 @@
 .badge__status-dot {
   width: 7px;
   height: 7px;
-  background-color: #22c55e;
   border-radius: 50%;
   display: inline-block;
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.statuts-open {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.statuts-closed {
+  background-color: #9a5801;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.statuts-closed1 {
+  background-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
 .badge__text-group {
@@ -357,9 +371,9 @@
 }
 
 .badge__subtitle {
-  font-weight: 500;
+  color: rgba(96, 96, 96, 0.99);
+  font-weight: 600;
   text-transform: none;
-  opacity: 0.9;
 }
 
 .hero-full__actions {
@@ -487,9 +501,69 @@
 @media (max-width: 640px) {
   .hero-full__float-cart {
     bottom: 1.25rem;
-    right: 1.25rem;
-    padding: 0.75rem 1.1rem 0.75rem 0.95rem;
-    font-size: 0.85rem;
+    right: 1.35rem;
+    padding: 0.5rem 0.8rem 0.5rem 0.6rem;
+    font-size: 0.65rem;
+  }
+
+  .hero-full__name {
+    font-size: 1.2rem;
+  }
+
+  .hero-full__prodNum {
+    font-size: 0.7rem;
+  }
+
+  .hero-full__header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    /* Columna 1: Marca | Columna 2: Botón Ver Menú */
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .hero-full__brand {
+    grid-column: 1 / 2;
+  }
+
+  .hero-full__cta {
+    margin-top: -20px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.65rem;
+  }
+
+  /* Badge Estado (Cerrado/Abierto) en Móvil */
+  .hero-full__header>*:nth-child(2):not(.hero-full__brand):not(.hero-full__cta),
+  .hero-full__badge {
+    grid-column: 1 / -1;
+    /* Pasa a una nueva fila completa abajo */
+    justify-self: center;
+    width: 100%;
+    text-align: center;
+    position: static !important;
+    /* Desactiva posiciones absolutas que lo montaban */
+    transform: none !important;
+    margin-top: 0.1rem;
+    box-sizing: border-box;
+  }
+
+  .hero-full__badge.hero-full__badge--open {
+    margin-left: 6px;
+  }
+
+  .hero-full__badge {
+    margin-right: 6px;
+    margin-left: 6px;
+    font-size: 0.65rem;
+  }
+
+
+
+  .hero-full__badge--closed1 {
+    margin-top: -6px;
+    margin-left: 120px;
+    margin-right: 120px;
   }
 }
 

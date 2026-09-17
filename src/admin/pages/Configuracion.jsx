@@ -23,6 +23,7 @@ const Configuracion = () => {
           freeDeliveryThreshold: s.freeDeliveryThreshold ?? 40000,
           offersDelivery: s.offersDelivery !== false,
           offersPickup: s.offersPickup !== false,
+          offersLocal: s.offersLocal !== false,
           forceClosed: s.forceClosed === true,
         });
       } catch (e) {
@@ -54,7 +55,7 @@ const Configuracion = () => {
       return;
     }
 
-    if (!form.offersDelivery && !form.offersPickup) {
+    if (!form.offersDelivery && !form.offersPickup && !form.offersLocal) {
       Swal.fire({
         icon: "warning",
         text: "Debes mantener al menos una modalidad de entrega activa.",
@@ -71,6 +72,7 @@ const Configuracion = () => {
           freeDeliveryThreshold: umbral,
           offersDelivery: form.offersDelivery,
           offersPickup: form.offersPickup,
+          offersLocal: form.offersLocal,
         }),
         esperar(timeOut),
       ]);
@@ -172,7 +174,15 @@ const Configuracion = () => {
                   checked={form.offersPickup}
                   onChange={(e) => setForm((f) => ({ ...f, offersPickup: e.target.checked }))}
                 />
-                <span>🏪 Recoger en tienda</span>
+                <span>💁‍♂️ Recoger en tienda</span>
+              </label>
+              <label className="adm-toggle-fila">
+                <input
+                  type="checkbox"
+                  checked={form.offersLocal}
+                  onChange={(e) => setForm((f) => ({ ...f, offersLocal: e.target.checked }))}
+                />
+                <span>🍽️ Local</span>
               </label>
             </div>
             <span className="adm-modal__precio-hint">

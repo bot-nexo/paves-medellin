@@ -48,6 +48,7 @@ create table if not exists public.settings (
   free_delivery_threshold int  not null default 45000,
   offers_delivery         boolean not null default true,   -- 🛵 domicilio
   offers_pickup           boolean not null default true,   -- 🏪 recogida en tienda
+  offersLocal             boolean not null default true,   -- 🍽️ local
   force_closed            boolean not null default false,  -- cierre de emergencia
   updated_at              timestamptz not null default now()
 );
