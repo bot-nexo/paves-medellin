@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  X,
   User,
   Sparkles,
   ShieldCheck,

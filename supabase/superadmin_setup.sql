@@ -14,6 +14,11 @@ CREATE POLICY "user_roles_superadmin_all" ON public.user_roles FOR ALL USING (
     (SELECT role FROM public.user_roles WHERE id = auth.uid()) = 'superadmin'
 );
 
+-- Restricción a nivel de BD: Solo puede existir 1 superadmin en toda la tabla
+CREATE UNIQUE INDEX IF NOT EXISTS only_one_superadmin_idx 
+ON public.user_roles (role) 
+WHERE role = 'superadmin';
+
 -- 2. Añadir nuevas columnas a la tabla de settings
 ALTER TABLE public.settings
 ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true,

@@ -8,9 +8,23 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+// Limpiar sesiones previas que hayan quedado en localStorage
+if (typeof window !== "undefined" && window.localStorage) {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch {
+    // Ignorar si el almacenamiento local está restringido
+  }
+}
+
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
+        storage: typeof window !== "undefined" ? window.sessionStorage : undefined,
         persistSession: true,
         autoRefreshToken: true,
       },
