@@ -82,10 +82,17 @@ const App = () => {
     const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
       : (settings.deliveryFee ?? VALOR_DOMICILIO);
-    const saved = await createOrder(deliveryData, cart, {
+
+    let obsParaBD = deliveryData.observaciones || "";
+    if (summary.discount > 0) {
+      const msjDescuento = `Descuento Amor y Amistad aplicado: -$${(summary.discount / 1000).toLocaleString()} K`;
+      obsParaBD = obsParaBD ? `${obsParaBD} | ${msjDescuento}` : msjDescuento;
+    }
+
+    const saved = await createOrder({ ...deliveryData, observaciones: obsParaBD }, cart, {
       subtotal: summary.subtotal,
       deliveryFee,
-      total: summary.subtotal + deliveryFee,
+      total: summary.totalNeto,
     });
 
     // 2) Armar el mensaje de WhatsApp (idéntico al actual + nº de pedido si existe)
@@ -170,16 +177,19 @@ const App = () => {
     });
 
     const esGratis = !esDomicilio || summary.esGratis;
-    const totalFinal = summary.subtotal + deliveryFee;
+    const totalPagar = summary.subtotal - summary.discount;
 
     message += "--------------------------------\n";
     message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
+    if (summary.discount > 0) {
+      message += "   Descuento Amor y Amistad: -$" + (summary.discount / 1000).toLocaleString() + " K\n";
+    }
     message +=
       "   Domicilio: " +
       (!esDomicilio ? "No aplica" : "Por cotizar") +
       "\n";
     message += "--------------------------------\n";
-    message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
+    message += "*TOTAL A PAGAR: $" + (totalPagar / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
     message += "\n_Pedido generado desde la web_";
 
     window.open(
