@@ -138,17 +138,24 @@
     font-weight: 700;
     color: #3d2314 !important;
     display: flex;
-    align-items: center;
     gap: 0.4rem;
 }
 
-/* Aviso de Transferencia Bancaria */
+/* Aviso de Transferencia Bancaria y Domicilio */
 .checkout-aviso-transferencia {
     background-color: #faf7f2;
-    padding: 1.25rem;
+    padding: 1rem 1.25rem;
     border-radius: 12px;
     border: 1px dashed rgba(61, 35, 20, 0.25);
-    margin-bottom: 0.5rem;
+    margin: 1rem 1.5rem 0 1.5rem;
+}
+
+.checkout-aviso-amarillo {
+    background-color: #fff9e6;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #ffd54f;
+    margin: 1rem 1.5rem 0 1.5rem;
 }
 
 .checkout-aviso-transferencia-header {
@@ -186,6 +193,7 @@
 }
 
 .checkout-aviso-transferencia-list li strong {
+    
     font-weight: 800;
     margin-right: 0.3rem;
 }

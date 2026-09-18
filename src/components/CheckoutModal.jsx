@@ -66,7 +66,7 @@ const CheckoutModal = ({
     subtotal: totalProductos,
     esGratis,
     totalNeto: totalNetoAPagar,
-  } = calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, esDomicilio);
+  } = calculateOrderSummary(cart, 0, Infinity, esDomicilio);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -95,6 +95,41 @@ const CheckoutModal = ({
   };
 
   const handleSubmit = () => {
+    let alertHtml = "";
+
+    if (esDomicilio) {
+      alertHtml += `<div style="text-align: left; margin-bottom: 15px;">
+        <h4 style="color: #3d2314; margin-bottom: 5px; font-weight: 800;">🛵 Sobre tu Domicilio</h4>
+        <p style="margin: 0; font-size: 0.95rem; color: #555; line-height: 1.4;">El valor del domicilio te lo cotizaremos y te lo haremos saber lo más pronto posible por WhatsApp.</p>
+      </div>`;
+    }
+
+    if (formData.pago.includes("Transferencia")) {
+      alertHtml += `<div style="text-align: left;">
+        <h4 style="color: #3d2314; margin-bottom: 5px; font-weight: 800;">💳 Sobre tu Pago</h4>
+        <p style="margin: 0; font-size: 0.95rem; color: #555; line-height: 1.4;">Recuerda que debes transferir a nuestras cuentas y enviarnos el comprobante por WhatsApp para hacer efectivo tu pedido.</p>
+      </div>`;
+    }
+
+    if (alertHtml !== "") {
+      Swal.fire({
+        title: "¡Información Importante!",
+        html: alertHtml,
+        icon: "info",
+        confirmButtonText: "Entendido, enviar pedido",
+        confirmButtonColor: "#3D2314",
+        allowOutsideClick: false,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          procesarPedido();
+        }
+      });
+    } else {
+      procesarPedido();
+    }
+  };
+
+  const procesarPedido = () => {
     // tipoEntrega y observaciones viajan con los datos (quedan en la BD del pedido)
     onConfirm({ ...formData, observaciones: formData.observaciones || "" });
     setStep(1);
@@ -105,7 +140,7 @@ const CheckoutModal = ({
       direccion: "",
       unidad: "",
       apto: "",
-      pago: "Efectivo",
+      pago: prev.pago,
       observaciones: "",
     }));
   };
@@ -141,7 +176,7 @@ const CheckoutModal = ({
           </div>
         )}
         {formData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0 && (
-          <div className="form-group full-width checkout-aviso-cerrado">
+          <div className="checkout-aviso-transferencia">
             <div className="checkout-aviso-transferencia-header">
               <CreditCard size={18} className="checkout-aviso-transferencia-icon" />
               <span>Pago por Transferencia</span>
@@ -156,6 +191,19 @@ const CheckoutModal = ({
             <p>
               Por favor, transfiere el total a alguna de estas cuentas y recuerda enviar el comprobante por WhatsApp para procesar tu pedido.
             </p>
+          </div>
+        )}
+
+        {esDomicilio && (
+          <div className="checkout-aviso-amarillo">
+            <div className="checkout-aviso-transferencia-header">
+              <FaMotorcycle size={18} className="checkout-aviso-transferencia-icon" style={{ color: "#d97706" }} />
+              <span style={{ color: "#d97706" }}>Cotización de Domicilio</span>
+            </div>
+            <p className="checkout-aviso-transferencia-list" style={{ color: "#92400e", fontSize: "0.85rem", margin: 0, fontStyle: "normal" }} >
+              Te cotizaremos el valor exacto de tu domicilio y te avisaremos lo más pronto posible.
+            </p>
+            <strong style={{ color: "#823200ff", fontSize: "0.9rem", margin: 0, fontStyle: "italic" }}> El valor total que ves aquí no incluye el domicilio.</strong>
           </div>
         )}
 
@@ -175,7 +223,7 @@ const CheckoutModal = ({
                       >
                         <FaMotorcycle size={18} />
                         <span>Domicilio</span>
-                        <small>{formatCOP(settings.deliveryFee ?? 0)} · gratis desde {formatCOP(settings.freeDeliveryThreshold ?? 0)}</small>
+                        <small>El valor se cotizará por interno</small>
                       </button>
                     )}
                     {settings.offersPickup !== false && (
@@ -328,7 +376,7 @@ const CheckoutModal = ({
                 {!esDomicilio ? (
                   <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica</span></div>
                 ) : (
-                  <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}</span></div>
+                  <div className="total-row"><span>Domicilio:</span><span className="text-free" style={{ color: "#d92b38" }}>Por cotizar</span></div>
                 )}
                 <div className="divider" />
                 <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>

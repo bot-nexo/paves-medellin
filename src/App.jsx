@@ -176,10 +176,10 @@ const App = () => {
     message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
     message +=
       "   Domicilio: " +
-      (!esDomicilio ? "No aplica" : esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
+      (!esDomicilio ? "No aplica" : "Por cotizar") +
       "\n";
     message += "--------------------------------\n";
-    message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";
+    message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
     message += "\n_Pedido generado desde la web_";
 
     window.open(
