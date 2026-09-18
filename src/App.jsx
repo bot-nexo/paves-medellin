@@ -57,7 +57,13 @@ const App = () => {
   // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
   const estadoNegocio = estaAbiertoSegunHorario(settings);
 
-  //***************************** */
+  // Actualiza el <title> del documento con la razón social de la BD
+  useEffect(() => {
+    if (settings?.razon_social) {
+      document.title = `${settings.razon_social} | Menú`;
+    }
+  }, [settings?.razon_social]);
+
   useEffect(() => {
     AOS.init({ duration: 1600, once: true, offset: 100 });
   }, []);

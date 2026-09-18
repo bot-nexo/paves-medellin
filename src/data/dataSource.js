@@ -80,6 +80,7 @@ const normalizeSettings = (row) => {
 
   return {
     name: localInfo.name,
+    razon_social: row.razon_social || localInfo.name,
     phone: row.phone || localInfo.phone,
     address: row.address || localInfo.address,
     mapsGoogle: row.maps_url || localInfo.mapsGoogle,

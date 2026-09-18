@@ -3,189 +3,227 @@
 -- Ejecutar en Supabase → SQL Editor. Idempotente (se puede re-ejecutar).
 -- Orden de ejecución: 1) schema.sql  2) seed.sql
 -- ============================================================================
-
 -- ── Categorías ──────────────────────────────────────────────────────────────
-create table if not exists public.categories (
-  id         uuid primary key default gen_random_uuid(),
-  nombre     text not null unique,
-  emoji      text not null default '',
-  label      text not null default '',      -- etiqueta completa con emoji ("🍨 Pavés 8oz")
-  orden      int  not null default 0,
-  visible    boolean not null default true,
-  created_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.categories (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre text NOT NULL UNIQUE,
+  emoji text NOT NULL DEFAULT '',
+  label text NOT NULL DEFAULT '',
+  -- etiqueta completa con emoji ("🍨 Pavés 8oz")
+ orden int NOT NULL DEFAULT 0,
+  visible boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- ── Productos ───────────────────────────────────────────────────────────────
-create table if not exists public.products (
-  id          uuid primary key default gen_random_uuid(),
-  nombre      text not null unique,
-  category_id uuid references public.categories(id) on delete set null,
-  descripcion text not null default '',
-  precio      int  not null default 0,        -- COP, sin decimales
-  imagen_url  text not null default '',       -- URL de Storage (http); asset local se resuelve en lectura
-  destacado   boolean not null default false,
-  disponible  boolean not null default true,
-  nota        text not null default '',       -- ej: "LA PUEDES PEDIR CON 4 HORAS..."
-  orden       int  not null default 0,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.products (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre text NOT NULL UNIQUE,
+  category_id uuid REFERENCES public.categories(id) ON delete set NULL,
+  descripcion text NOT NULL DEFAULT '',
+  precio int NOT NULL DEFAULT 0,
+  -- COP, sin decimales
+ imagen_url text NOT NULL DEFAULT '',
+  -- URL de Storage (http); asset local se resuelve en lectura
+ destacado boolean NOT NULL DEFAULT false,
+  disponible boolean NOT NULL DEFAULT true,
+  nota text NOT NULL DEFAULT '',
+  -- ej: "LA PUEDES PEDIR CON 4 HORAS..."
+ orden int NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-create index if not exists products_category_idx on public.products (category_id);
+CREATE INDEX IF NOT EXISTS products_category_idx ON public.products (category_id);
 
 -- ── Configuración del negocio (fila única id=1) ─────────────────────────────
-create table if not exists public.settings (
-  id                      int primary key default 1 check (id = 1),
-  phone                   text not null default '',
-  address                 text not null default '',
-  maps_url                text not null default '',
-  instagram               text not null default '',
-  facebook                text not null default '',
-  tiktok                  text not null default '',
-  logo_url                text not null default '',
-  day1                    text not null default '',
-  hours1                  text not null default '',
-  delivery_fee            int  not null default 3500,
-  free_delivery_threshold int  not null default 45000,
-  offers_delivery         boolean not null default true,   -- 🛵 domicilio
-  offers_pickup           boolean not null default true,   -- 🏪 recogida en tienda
-  offersLocal             boolean not null default true,   -- 🍽️ local
-  force_closed            boolean not null default false,  -- cierre de emergencia
-  updated_at              timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.settings (
+  id int PRIMARY KEY DEFAULT 1 check (id = 1),
+  phone text NOT NULL DEFAULT '',
+  address text NOT NULL DEFAULT '',
+  razon_social text NOT NULL DEFAULT '',
+  maps_url text NOT NULL DEFAULT '',
+  instagram text NOT NULL DEFAULT '',
+  facebook text NOT NULL DEFAULT '',
+  tiktok text NOT NULL DEFAULT '',
+  logo_url text NOT NULL DEFAULT '',
+  day1 text NOT NULL DEFAULT '',
+  hours1 text NOT NULL DEFAULT '',
+  delivery_fee int NOT NULL DEFAULT 3500,
+  free_delivery_threshold int NOT NULL DEFAULT 45000,
+  offers_delivery boolean NOT NULL DEFAULT true,
+  -- 🛵 domicilio
+ offers_pickup boolean NOT NULL DEFAULT true,
+  -- 🏪 recogida en tienda
+ offersLocal boolean NOT NULL DEFAULT true,
+  -- 🍽️ local
+ force_closed boolean NOT NULL DEFAULT false,
+  -- cierre de emergencia
+ updated_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- ── Pedidos (el público inserta; solo el admin lee/actualiza) ───────────────
-create table if not exists public.orders (
-  id           uuid primary key default gen_random_uuid(),
-  numero       int generated always as identity,  -- nº de pedido legible (#1, #2, ...)
-  nombre       text not null,
-  telefono     text not null,
-  direccion    text not null default '',
-  unidad       text not null default '',
-  apto         text not null default '',
-  observaciones text not null default '',
-  pago         text not null default '',
-  tipo_entrega text not null default 'domicilio', -- 'domicilio' | 'recogida'
-  subtotal     int  not null default 0,
-  delivery_fee int  not null default 0,
-  total        int  not null default 0,
-  items        jsonb not null default '[]'::jsonb, -- snapshot del carrito al momento del pedido
-  estado       text not null default 'nuevo'
-               check (estado in ('nuevo','preparacion','camino','entregado','cancelado')),
-  created_at   timestamptz not null default now(),
-  unique (numero)
+CREATE TABLE IF NOT EXISTS public.orders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  numero int generated always AS identity,
+  -- nº de pedido legible (#1, #2, ...)
+ nombre text NOT NULL,
+  telefono text NOT NULL,
+  direccion text NOT NULL DEFAULT '',
+  unidad text NOT NULL DEFAULT '',
+  apto text NOT NULL DEFAULT '',
+  observaciones text NOT NULL DEFAULT '',
+  pago text NOT NULL DEFAULT '',
+  tipo_entrega text NOT NULL DEFAULT 'domicilio',
+  -- 'domicilio' | 'recogida'
+ subtotal int NOT NULL DEFAULT 0,
+  delivery_fee int NOT NULL DEFAULT 0,
+  total int NOT NULL DEFAULT 0,
+  items jsonb NOT NULL DEFAULT '[]'::jsonb,
+  -- snapshot del carrito al momento del pedido
+ estado text NOT NULL DEFAULT 'nuevo' check (estado IN ('nuevo','preparacion','camino','entregado','cancelado')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (numero)
 );
 
-create index if not exists orders_created_at_idx on public.orders (created_at desc);
-create index if not exists orders_estado_idx on public.orders (estado);
+CREATE INDEX IF NOT EXISTS orders_created_at_idx ON public.orders (created_at desc);
+
+CREATE INDEX IF NOT EXISTS orders_estado_idx ON public.orders (estado);
 
 -- ── Trigger updated_at automático ───────────────────────────────────────────
-create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
 begin
   new.updated_at = now();
   return new;
 end $$;
 
-drop trigger if exists products_updated_at on public.products;
-create trigger products_updated_at before update on public.products
-for each row execute function public.set_updated_at();
+DROP TRIGGER IF EXISTS products_updated_at ON public.products;
 
-drop trigger if exists settings_updated_at on public.settings;
-create trigger settings_updated_at before update on public.settings
-for each row execute function public.set_updated_at();
+CREATE TRIGGER products_updated_at
+BEFORE update ON public.products
+FOR EACH ROW execute function public.set_updated_at();
+
+DROP TRIGGER IF EXISTS settings_updated_at ON public.settings;
+
+CREATE TRIGGER settings_updated_at
+BEFORE update ON public.settings
+FOR EACH ROW execute function public.set_updated_at();
 
 -- ── Row Level Security ──────────────────────────────────────────────────────
-alter table public.categories enable row level security;
-alter table public.products   enable row level security;
-alter table public.settings   enable row level security;
-alter table public.orders     enable row level security;
+ALTER TABLE public.categories enable row level security;
+
+ALTER TABLE public.products enable row level security;
+
+ALTER TABLE public.settings enable row level security;
+
+ALTER TABLE public.orders enable row level security;
 
 -- ── GRANTs a nivel Postgres (necesarios además de RLS) ─────────────────────
 -- Sin esto, anon recibe "permission denied" y el front cae al fallback local.
-grant usage on schema public to anon, authenticated;
-grant select on public.categories, public.products, public.settings to anon, authenticated;
-grant insert on public.orders to anon, authenticated;
-grant all on all tables in schema public to authenticated;
-grant usage, select on all sequences in schema public to anon, authenticated;
+GRANT usage ON schema public TO anon, authenticated;
+
+GRANT select ON public.categories, public.products, public.settings TO anon, authenticated;
+
+GRANT insert ON public.orders TO anon, authenticated;
+
+GRANT all ON all tables IN schema public TO authenticated;
+
+GRANT usage, select ON all sequences IN schema public TO anon, authenticated;
 
 -- Lectura pública del catálogo (anon + autenticados)
-drop policy if exists "categorias_lectura_publica" on public.categories;
-create policy "categorias_lectura_publica" on public.categories
-  for select to anon, authenticated using (true);
+drop policy IF EXISTS "categorias_lectura_publica" ON public.categories;
 
-drop policy if exists "productos_lectura_publica" on public.products;
-create policy "productos_lectura_publica" on public.products
-  for select to anon, authenticated using (true);
+create policy "categorias_lectura_publica" ON public.categories for select TO anon, authenticated
+USING (true);
 
-drop policy if exists "settings_lectura_publica" on public.settings;
-create policy "settings_lectura_publica" on public.settings
-  for select to anon, authenticated using (true);
+drop policy IF EXISTS "productos_lectura_publica" ON public.products;
+
+create policy "productos_lectura_publica" ON public.products for select TO anon, authenticated
+USING (true);
+
+drop policy IF EXISTS "settings_lectura_publica" ON public.settings;
+
+create policy "settings_lectura_publica" ON public.settings for select TO anon, authenticated
+USING (true);
 
 -- Escritura solo con sesión iniciada (el dueño/admin)
-drop policy if exists "categorias_admin_todo" on public.categories;
-create policy "categorias_admin_todo" on public.categories
-  for all to authenticated using (true) with check (true);
+drop policy IF EXISTS "categorias_admin_todo" ON public.categories;
 
-drop policy if exists "productos_admin_todo" on public.products;
-create policy "productos_admin_todo" on public.products
-  for all to authenticated using (true) with check (true);
+create policy "categorias_admin_todo" ON public.categories for all TO authenticated
+USING (true) WITH check (true);
 
-drop policy if exists "settings_admin_todo" on public.settings;
-create policy "settings_admin_todo" on public.settings
-  for all to authenticated using (true) with check (true);
+drop policy IF EXISTS "productos_admin_todo" ON public.products;
+
+create policy "productos_admin_todo" ON public.products for all TO authenticated
+USING (true) WITH check (true);
+
+drop policy IF EXISTS "settings_admin_todo" ON public.settings;
+
+create policy "settings_admin_todo" ON public.settings for all TO authenticated
+USING (true) WITH check (true);
 
 -- Pedidos: el público solo crea; el admin lee y actualiza estados
-drop policy if exists "pedidos_insert_publico" on public.orders;
-create policy "pedidos_insert_publico" on public.orders
-  for insert to anon, authenticated with check (true);
+drop policy IF EXISTS "pedidos_insert_publico" ON public.orders;
 
-drop policy if exists "pedidos_select_admin" on public.orders;
-create policy "pedidos_select_admin" on public.orders
-  for select to authenticated using (true);
+create policy "pedidos_insert_publico" ON public.orders for insert TO anon, authenticated WITH check (true);
 
-drop policy if exists "pedidos_update_admin" on public.orders;
-create policy "pedidos_update_admin" on public.orders
-  for update to authenticated using (true) with check (true);
+drop policy IF EXISTS "pedidos_select_admin" ON public.orders;
+
+create policy "pedidos_select_admin" ON public.orders for select TO authenticated
+USING (true);
+
+drop policy IF EXISTS "pedidos_update_admin" ON public.orders;
+
+create policy "pedidos_update_admin" ON public.orders for update TO authenticated
+USING (true) WITH check (true);
 
 -- ── Storage: imágenes de productos ──────────────────────────────────────────
-insert into storage.buckets (id, name, public)
-values ('product-images', 'product-images', true)
-on conflict (id) do nothing;
+INSERT INTO storage.buckets (id, name, public)
+VALUES
+  ('product-images', 'product-images', TRUE)
+ON CONFLICT (id) DO NOTHING;
 
-drop policy if exists "imagenes_lectura_publica" on storage.objects;
-create policy "imagenes_lectura_publica" on storage.objects
-  for select to anon, authenticated using (bucket_id = 'product-images');
+drop policy IF EXISTS "imagenes_lectura_publica" ON storage.objects;
 
-drop policy if exists "imagenes_admin_insert" on storage.objects;
-create policy "imagenes_admin_insert" on storage.objects
-  for insert to authenticated with check (bucket_id = 'product-images');
+create policy "imagenes_lectura_publica" ON storage.objects for select TO anon, authenticated
+USING (bucket_id = 'product-images');
 
-drop policy if exists "imagenes_admin_update" on storage.objects;
-create policy "imagenes_admin_update" on storage.objects
-  for update to authenticated using (bucket_id = 'product-images');
+drop policy IF EXISTS "imagenes_admin_insert" ON storage.objects;
 
-drop policy if exists "imagenes_admin_delete" on storage.objects;
-create policy "imagenes_admin_delete" on storage.objects
-  for delete to authenticated using (bucket_id = 'product-images');
+create policy "imagenes_admin_insert" ON storage.objects for insert TO authenticated WITH check (bucket_id = 'product-images');
+
+drop policy IF EXISTS "imagenes_admin_update" ON storage.objects;
+
+create policy "imagenes_admin_update" ON storage.objects for update TO authenticated
+USING (bucket_id = 'product-images');
+
+drop policy IF EXISTS "imagenes_admin_delete" ON storage.objects;
+
+create policy "imagenes_admin_delete" ON storage.objects for delete TO authenticated
+USING (bucket_id = 'product-images');
 
 -- ── Migraciones ligeras (por si ya ejecutaste una versión anterior) ─────────
-alter table public.orders add column if not exists observaciones text not null default '';
-alter table public.orders add column if not exists tipo_entrega text not null default 'domicilio';
-alter table public.settings add column if not exists offers_delivery boolean not null default true;
-alter table public.settings add column if not exists offers_pickup boolean not null default true;
-alter table public.settings add column if not exists force_closed boolean not null default false;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS observaciones text NOT NULL DEFAULT '';
+
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS tipo_entrega text NOT NULL DEFAULT 'domicilio';
+
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS offers_delivery boolean NOT NULL DEFAULT true;
+
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS offers_pickup boolean NOT NULL DEFAULT true;
+
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS force_closed boolean NOT NULL DEFAULT false;
 
 -- ── RPC segura: crear pedido y devolver su nº ───────────────────────────────
 -- Evita dar SELECT de orders a anon (protege teléfonos/direcciones de otros
 -- clientes): la función corre con privilegios del dueño y SOLO devuelve el nº.
-create or replace function public.crear_pedido(
-  p_nombre text, p_telefono text, p_direccion text, p_unidad text,
-  p_apto text, p_observaciones text, p_pago text,
-  p_subtotal int, p_delivery_fee int, p_total int, p_items jsonb,
-  p_tipo_entrega text default 'domicilio'
-) returns int
-language plpgsql security definer set search_path = public as $$
+CREATE OR REPLACE FUNCTION public.crear_pedido( p_nombre text, p_telefono text, p_direccion text, p_unidad text, p_apto text, p_observaciones text, p_pago text, p_subtotal int, p_delivery_fee int, p_total int, p_items jsonb, p_tipo_entrega text DEFAULT 'domicilio' )
+RETURNS int
+LANGUAGE plpgsql
+SECURITY DEFINER set search_path = public
+AS $$
 declare
   v_numero int;
 begin
@@ -199,20 +237,22 @@ begin
   return v_numero;
 end $$;
 
-grant execute on function public.crear_pedido(text, text, text, text, text, text, text, int, int, int, jsonb, text)
-  to anon, authenticated;
+GRANT execute ON function public.crear_pedido(text, text, text, text, text, text, text, int, int, int, jsonb, text) TO anon, authenticated;
 
 -- ── Realtime: publicar tablas para postgres_changes ────────────────────────
 -- Sin esto, las suscripciones en tiempo real no reciben eventos.
-do $$ begin
+DO $$ begin
   alter publication supabase_realtime add table public.products;
 exception when duplicate_object then null; end $$;
-do $$ begin
+
+DO $$ begin
   alter publication supabase_realtime add table public.categories;
 exception when duplicate_object then null; end $$;
-do $$ begin
+
+DO $$ begin
   alter publication supabase_realtime add table public.settings;
 exception when duplicate_object then null; end $$;
-do $$ begin
+
+DO $$ begin
   alter publication supabase_realtime add table public.orders;
 exception when duplicate_object then null; end $$;

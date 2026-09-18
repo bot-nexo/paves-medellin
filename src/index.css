@@ -1,5 +1,6 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   PAVES MEDELLÍN — Tema Principal (Optimizado para Mobile y Desktop)
+﻿/* ══════════════════════════════════════════════════════════════════════════
+   PAVES MEDELLÍN — Tema Principal · Catálogo siempre oscuro
+   Paleta: #f5c842 (dorado), #ff6b8a (rosa), #f0e6d8 (crema), #d92b38 (fresa)
    ══════════════════════════════════════════════════════════════════════════ */
 
 @import "tailwindcss";
@@ -23,8 +24,8 @@ body {
   font-weight: 400;
   font-size: 16px;
   line-height: 1.6;
-  color: #3d2314;
-  background-color: #fdfbf7;
+  color: #f0e6d8;
+  background-color: #0f0a07;
   overflow-x: hidden;
 }
 
@@ -39,7 +40,7 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: #3d2314;
+  color: #f0e6d8;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -66,24 +67,27 @@ button { font-family: inherit; cursor: pointer; }
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, #3d2314, #5c4335);
-  color: #ffffff;
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  background: linear-gradient(135deg, rgba(245,200,66,0.15), rgba(255,107,138,0.15));
+  color: #f5c842;
   font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(61, 35, 20, 0.3);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 12px rgba(245,200,66,0.2);
   z-index: 900;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeInUp 0.4s ease;
 }
 
 .scroll-top:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(61, 35, 20, 0.4);
-  background: linear-gradient(135deg, #d92b38, #b51f2a);
+  background: linear-gradient(135deg, rgba(245,200,66,0.28), rgba(255,107,138,0.28));
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 20px rgba(245,200,66,0.35);
+  border-color: rgba(245,200,66,0.6);
 }
 
 @keyframes fadeInUp {
@@ -101,20 +105,17 @@ button { font-family: inherit; cursor: pointer; }
   50% { transform: scale(1.05); }
 }
 
-/* SweetAlert2 siempre por encima de cualquier modal (z-index 9999) */
-.swal2-container {
-  z-index: 9999 !important;
-}
+.swal2-container { z-index: 9999 !important; }
 
 ::selection {
-  background-color: rgba(217, 43, 56, 0.15);
-  color: #3d2314;
+  background-color: rgba(245, 200, 66, 0.25);
+  color: #f0e6d8;
 }
 
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #fdfbf7; }
-::-webkit-scrollbar-thumb { background: rgba(61, 35, 20, 0.2); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(61, 35, 20, 0.35); }
+::-webkit-scrollbar-track { background: #0f0a07; }
+::-webkit-scrollbar-thumb { background: rgba(245, 200, 66, 0.18); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(245, 200, 66, 0.35); }
 
 /* Footer styles now in src/css/Footer.css */
 

@@ -20,10 +20,10 @@ const Footer = ({ settings = info }) => {
           {/* Brand Column */}
           <div className="footer-brand">
             <a href="#" className="footer-logo-link">
-              <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="footer-logo-img" />
+              <img src={settings?.logo_url || logoImg} alt={settings?.razon_social || "Pavés Medellín"} className="footer-logo-img" />
               <div className="footer-logo-text">
                 <span className="footer-brand-name">
-                  Pavés <span className="footer-brand-accent">Medellín</span>
+                  {settings?.razon_social || "Pavés Medellín"}
                 </span>
                 <span className="footer-brand-tagline">Postres Artesanales</span>
               </div>
@@ -83,7 +83,7 @@ const Footer = ({ settings = info }) => {
         {/* Bottom Bar */}
         <div className="footer-bottom">
           <div className="footer-bottom__left">
-            <span>© {currentYear} Pavés Medellín. Todos los derechos reservados.</span>
+            <span>© {currentYear} {settings?.razon_social || "Pavés Medellín"}. Todos los derechos reservados.</span>
           </div>
           <div className="footer-bottom__right">
             <span className="footer-dev-tag">

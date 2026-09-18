@@ -157,10 +157,10 @@ const Hero = ({
       <section className="hero-full">
         <header className="hero-full__header">
           <div className="hero-full__brand">
-            <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="hero-full__logo" />
+            <img src={settings?.logo_url || logoImg} alt={settings?.razon_social || "Pavés Medellín"} className="hero-full__logo" />
             <div>
               <h1 className="hero-full__name">
-                Pavés <span>Medellín</span>
+                {settings?.razon_social || "Pavés Medellín"}
               </h1>
             </div>
           </div>
@@ -181,12 +181,12 @@ const Hero = ({
       {/* Header */}
       <header className="hero-full__header">
         <div className="hero-full__brand">
-          <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" onError={(e) => {
+          <img src={settings?.logo_url || logoImg} alt={settings?.razon_social || "Pavés Medellín"} onError={(e) => {
             e.target.style.display = 'none';
           }} className="hero-full__logo" />
           <div>
             <h1 className="hero-full__name">
-              Pavés <span>Medellín</span>
+              {settings?.razon_social || "Pavés Medellín"}
             </h1>
             <div className="hero-full__meta">
               <span className="hero-full__rating">
@@ -198,8 +198,8 @@ const Hero = ({
           </div>
         </div>
         <a href="#menu" className="hero-full__cta">
-          Ver Menú
-        </a>
+            Ver Menú
+          </a>
 
         {renderEstadoNegocio()}
 

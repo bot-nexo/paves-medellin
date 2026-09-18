@@ -1,12 +1,13 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   MENU SECTION & CATEGORIES FILTER
+   MENU SECTION & CATEGORIES FILTER — Premium Dark Edition
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Sección Principal ──────────────────────────────────────────────────── */
 
 .menu-section {
   padding: 6rem 0;
-  background: #fecdcd;
+  background: #180e09; /* Dark background */
+  position: relative;
 }
 
 .menu-header {
@@ -20,14 +21,15 @@
   gap: 0.4rem;
   padding: 0.4rem 1rem;
   border-radius: 99px;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(217, 43, 56, 0.25);
-  color: #b4232e;
+  background: rgba(245, 200, 66, 0.08); /* Gold background */
+  border: 1px solid rgba(245, 200, 66, 0.3); /* Gold border */
+  color: #f5c842; /* Gold text */
   font-size: 0.82rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(245, 200, 66, 0.15); /* Subtle glow */
 }
 
 .badge-icon {
@@ -38,15 +40,16 @@
 .menu-title {
   font-size: 2.5rem;
   font-weight: 900;
-  color: #3d2314;
+  color: #f0e6d8; /* Light text */
   letter-spacing: -0.02em;
   margin: 0 0 0.6rem 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Text shadow for depth */
 }
 
 .menu-slogan {
   font-size: 1.08rem;
   font-weight: 600;
-  color: #6b6b6b;
+  color: #a89080; /* Muted text */
   margin: 0 auto;
   max-width: 500px;
 }
@@ -62,14 +65,11 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  /* Firefox */
   -ms-overflow-style: none;
-  /* IE/Edge */
 }
 
 .category-filter-wrapper::-webkit-scrollbar {
   display: none;
-  /* Chrome, Safari, Opera */
 }
 
 .category-filter {
@@ -78,13 +78,16 @@
   justify-content: center;
   gap: 0.55rem;
   min-width: max-content;
-  padding: 0.35rem 1rem;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(61, 35, 20, 0.08);
+  padding: 0.4rem 1rem;
+  background: rgba(30, 15, 8, 0.85); /* Darker glass background */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 200, 66, 0.15); /* Gold border */
   border-radius: 999px;
-  box-shadow: 0 4px 16px rgba(61, 35, 20, 0.04);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.5), 
+    0 0 0 1px rgba(245,200,66,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.05); /* Multi-layer shadow */
 }
 
 /* ── Botones de Categoría ───────────────────────────────────────────────── */
@@ -93,26 +96,35 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.55rem 1.1rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 999px;
   border: 1.5px solid transparent;
   background: transparent;
-  color: #7a6353;
+  color: #a89080; /* Muted text */
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy transition */
   -webkit-tap-highlight-color: transparent;
 }
 
+.filter-btn:hover {
+  background: rgba(245, 200, 66, 0.08);
+  color: #f5c842;
+  transform: translateY(-2px); /* Lift on hover */
+}
 
-/* Soporta la clase tanto 'active' como 'filter-btn--active' */
+/* Active state with gold gradient and glow */
 .filter-btn.active,
 .filter-btn--active {
-  background: red;
-  color: #ffffff !important;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #f5c842, #e8a820) !important;
+  color: #1a0a04 !important;
+  box-shadow: 
+    0 4px 15px rgba(245, 200, 66, 0.4),
+    0 0 20px rgba(245, 200, 66, 0.2); /* Glowing effect */
+  transform: translateY(-2px) scale(1.05); /* Enlarge slightly */
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .filter-btn__icon {
@@ -133,7 +145,7 @@
 .menu-empty {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6b5244;
+  color: #a89080; /* Muted text */
   font-weight: 600;
   font-size: 1.05rem;
 }
@@ -169,34 +181,10 @@
     padding: 0 1rem;
   }
 
-  .menu-card__media {
-    aspect-ratio: 16 / 10;
-    /* Imagen un poco más compacta en móvil */
-  }
-
-  .menu-card__content {
-    padding: 0.95rem 1rem 1rem;
-  }
-
-  .menu-card__actions {
-    gap: 0.5rem;
-  }
-
-  .menu-card__btn-details {
-    padding: 0.6rem 0.75rem;
-    font-size: 0.8rem;
-  }
-
-  .menu-card__btn-add {
-    padding: 0.6rem 0.85rem;
-    font-size: 0.84rem;
-  }
-
   .category-filter-wrapper {
     justify-content: flex-start;
     padding: 0.5rem 1rem 1rem 1rem;
     margin-bottom: 1.5rem;
-    /* Elimina hacks de 100vw que rompen el ancho de la pantalla */
     width: 100%;
   }
 
@@ -204,23 +192,13 @@
     display: flex;
     justify-content: flex-start;
     gap: 0.5rem;
-    padding: 0.3rem;
-    background: rgba(255, 255, 255, 0.6);
+    padding: 0.4rem;
+    background: rgba(30, 15, 8, 0.85); /* Maintain dark glass */
   }
 
   .filter-btn {
     padding: 0.5rem 0.9rem;
     font-size: 0.8rem;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(61, 35, 20, 0.08);
     flex-shrink: 0;
   }
-
-  .filter-btn.active,
-  .filter-btn--active {
-    background-color: #ff0000 !important;
-    color: #ffffff !important;
-  }
-
-
 }

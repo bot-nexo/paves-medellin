@@ -94,7 +94,9 @@ const AdminLayout = () => {
           </div>
           {!collapsed && (
             <div className="admin-sidebar__brand-text">
-              <span className="admin-sidebar__titulo">Paves Medellin</span>
+              <span className="admin-sidebar__titulo">
+                {settings?.razon_social || "Panel Admin"}
+              </span>
               <span className="admin-sidebar__subtitulo">Panel Admin</span>
             </div>
           )}

@@ -8,13 +8,13 @@ import "../admin.css";
 
 // ── Campos de texto simples (sin lógica especial) ───────────────────────────
 const CAMPOS_TEXTO = [
-  { clave: "phone",      label: "WhatsApp de pedidos",   placeholder: "573157978326", pista: "Con indicativo de país, sin espacios ni '+' (ej: 573157978326). Aquí llegan los pedidos." },
-  { clave: "address",    label: "Dirección del negocio",  placeholder: "Cl. 101c #74-40, Pedregal, Medellín" },
-  { clave: "mapsGoogle", label: "Enlace de Google Maps",  placeholder: "https://maps.app.goo.gl/…" },
-  { clave: "day1",       label: "Días de atención",       placeholder: "Todos los días" },
-  { clave: "instagram",  label: "Instagram (URL)",         placeholder: "https://www.instagram.com/…" },
-  { clave: "facebook",   label: "Facebook (URL)",          placeholder: "https://www.facebook.com/…" },
-  { clave: "tiktok",     label: "TikTok (URL)",            placeholder: "https://www.tiktok.com/@…" },
+  { clave: "phone", label: "WhatsApp de pedidos", placeholder: "573157978326", pista: "Con indicativo de país, sin espacios ni '+' (ej: 573157978326). Aquí llegan los pedidos." },
+  { clave: "address", label: "Dirección del negocio", placeholder: "Cl. 101c #74-40, Pedregal, Medellín" },
+  { clave: "mapsGoogle", label: "Enlace de Google Maps", placeholder: "https://maps.app.goo.gl/…" },
+  { clave: "day1", label: "Días de atención", placeholder: "Todos los días" },
+  { clave: "instagram", label: "Instagram (URL)", placeholder: "https://www.instagram.com/…" },
+  { clave: "facebook", label: "Facebook (URL)", placeholder: "https://www.facebook.com/…" },
+  { clave: "tiktok", label: "TikTok (URL)", placeholder: "https://www.tiktok.com/@…" },
 ];
 
 // ── Helpers de hora ──────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ const parsearHorarioASelectores = (hours1 = "") => {
 
   return {
     apertura: normalizar(partes[0]),
-    cierre:   normalizar(partes[1]),
+    cierre: normalizar(partes[1]),
   };
 };
 
@@ -73,14 +73,15 @@ const Empresa = () => {
   const [form, setForm] = useState(null);
   // Selectores de hora (estado separado para no mezclar con los campos de texto)
   const [horaApertura, setHoraApertura] = useState("");
-  const [horaCierre,   setHoraCierre]   = useState("");
+  const [horaCierre, setHoraCierre] = useState("");
   // Logo
-  const [nuevoLogo,   setNuevoLogo]   = useState(null);   // File
+  const [nuevoLogo, setNuevoLogo] = useState(null);   // File
   const [vistaPrevia, setVistaPrevia] = useState(null);   // blob URL
   const [logoUrlPrevio, setLogoUrlPrevio] = useState(""); // URL actual en BD
+  const [razonSocial, setRazonSocial] = useState("");
   const inputLogoRef = useRef(null);
 
-  const [cargando,  setCargando]  = useState(true);
+  const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const timeOut = 1500;
   const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -101,6 +102,8 @@ const Empresa = () => {
         // Logo actual
         setLogoUrlPrevio(s.logo_url || "");
         setVistaPrevia(s.logo_url || null);
+        //razon social
+        setRazonSocial(s.razon_social || "");
       } catch (e) {
         Swal.fire({ title: "Error al cargar", text: e.message, icon: "error", confirmButtonColor: "#3D2314" });
       } finally {
@@ -147,7 +150,7 @@ const Empresa = () => {
       // Construir el string hours1 desde los selectores
       const hours1 = buildHours1(horaApertura, horaCierre);
 
-      const payload = { ...form, hours1 };
+      const payload = { ...form, hours1, razon_social: razonSocial };
 
       // Subir logo si hay uno nuevo seleccionado
       if (nuevoLogo) {
@@ -310,6 +313,22 @@ const Empresa = () => {
                   Selecciona ambas horas para que el badge de abierto/cerrado funcione correctamente.
                 </span>
               )}
+            </label>
+
+            {/* ── Razón social ──────────────────────────────────────────── */}
+            <label className="admin-field">
+              <span className="admin-field__label">Razón social</span>
+              <div className="admin-field__input">
+                <input
+                  type="text"
+                  value={razonSocial}
+                  onChange={(e) => setRazonSocial(e.target.value)}
+                  placeholder="Ej: Paves Medellín S.A.S."
+                />
+              </div>
+              <span className="adm-modal__precio-hint">
+                Nombre legal o comercial del negocio que aparece en la tienda.
+              </span>
             </label>
 
           </div>
