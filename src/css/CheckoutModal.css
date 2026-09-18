@@ -142,6 +142,62 @@
     gap: 0.4rem;
 }
 
+/* Aviso de Transferencia Bancaria */
+.checkout-aviso-transferencia {
+    background-color: #faf7f2;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px dashed rgba(61, 35, 20, 0.25);
+    margin-bottom: 0.5rem;
+}
+
+.checkout-aviso-transferencia-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #3d2314;
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+}
+
+.checkout-aviso-transferencia-icon {
+    color: #d92b38;
+}
+
+.checkout-aviso-transferencia-list {
+    margin: 0 0 0.8rem 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.checkout-aviso-transferencia-list li {
+    background: #ffffff;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(61, 35, 20, 0.08);
+    font-size: 0.88rem;
+    color: #3d2314;
+    display: flex;
+    align-items: center;
+}
+
+.checkout-aviso-transferencia-list li strong {
+    font-weight: 800;
+    margin-right: 0.3rem;
+}
+
+.checkout-aviso-transferencia p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6b5244;
+    line-height: 1.4;
+    font-style: italic;
+}
+
 .form-group input,
 .form-group select,
 .form-group textarea {

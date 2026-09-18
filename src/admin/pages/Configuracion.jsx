@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
-import { Loader2, Save, Truck, Power } from "lucide-react";
+import { Loader2, Save, Truck, Power, CreditCard, Plus, Trash2 } from "lucide-react";
 import { getSettings, updateSettings } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
 import "../admin.css";
@@ -25,6 +25,7 @@ const Configuracion = () => {
           offersPickup: s.offersPickup !== false,
           offersLocal: s.offersLocal !== false,
           forceClosed: s.forceClosed === true,
+          bankAccounts: Array.isArray(s.bankAccounts) ? s.bankAccounts : [],
         });
       } catch (e) {
         Swal.fire({
@@ -73,6 +74,7 @@ const Configuracion = () => {
           offersDelivery: form.offersDelivery,
           offersPickup: form.offersPickup,
           offersLocal: form.offersLocal,
+          bankAccounts: form.bankAccounts.filter(acc => acc.bankName.trim() || acc.accountNumber.trim()),
         }),
         esperar(timeOut),
       ]);
@@ -104,6 +106,26 @@ const Configuracion = () => {
       <LoadingOverlay fullScreen text="Cargando configuración" minTime={timeOut} />
     );
   }
+
+  // Helper para manejar las cuentas bancarias
+  const addBankAccount = () => {
+    setForm(f => ({ ...f, bankAccounts: [...f.bankAccounts, { bankName: "", accountNumber: "" }] }));
+  };
+
+  const updateBankAccount = (index, field, value) => {
+    setForm(f => {
+      const newAccounts = [...f.bankAccounts];
+      newAccounts[index] = { ...newAccounts[index], [field]: value };
+      return { ...f, bankAccounts: newAccounts };
+    });
+  };
+
+  const removeBankAccount = (index) => {
+    setForm(f => ({
+      ...f,
+      bankAccounts: f.bankAccounts.filter((_, i) => i !== index)
+    }));
+  };
 
   //*********************************************************** */
   return (
@@ -187,6 +209,67 @@ const Configuracion = () => {
             </div>
             <span className="adm-modal__precio-hint">
               El checkout solo ofrece las modalidades activas. Debe quedar al menos una.
+            </span>
+          </div>
+
+          {/* Datos Bancarios */}
+          <div className="adm-cfg__seccion">
+            <div className="adm-cfg__seccion-titulo" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div><CreditCard size={15} style={{ display: 'inline', marginRight: '5px' }} /> Datos para pagos por transferencia</div>
+              <button 
+                type="button" 
+                onClick={addBankAccount}
+                className="admin-btn-primary admin-btn-primary--compacto"
+                style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 8px", fontSize: "0.85rem" }}
+              >
+                <Plus size={14} /> Añadir Cuenta
+              </button>
+            </div>
+            
+            {form.bankAccounts.map((acc, index) => (
+              <div key={index} className="adm-cfg__grid" style={{ marginBottom: "16px", padding: "12px", border: "1px dashed #e2cdc2", borderRadius: "8px", position: "relative" }}>
+                <button 
+                  type="button" 
+                  onClick={() => removeBankAccount(index)}
+                  style={{ position: "absolute", top: "8px", right: "8px", color: "#d32f2f", background: "none", border: "none", cursor: "pointer" }}
+                  title="Eliminar cuenta"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <label className="admin-field">
+                  <span className="admin-field__label">Banco {index + 1} (Ej: Bancolombia / Nequi)</span>
+                  <div className="admin-field__input">
+                    <input
+                      type="text"
+                      value={acc.bankName}
+                      onChange={(e) => updateBankAccount(index, "bankName", e.target.value)}
+                      placeholder="Opcional"
+                    />
+                  </div>
+                </label>
+
+                <label className="admin-field">
+                  <span className="admin-field__label">Número de cuenta</span>
+                  <div className="admin-field__input">
+                    <input
+                      type="text"
+                      value={acc.accountNumber}
+                      onChange={(e) => updateBankAccount(index, "accountNumber", e.target.value)}
+                      placeholder="Opcional"
+                    />
+                  </div>
+                </label>
+              </div>
+            ))}
+            
+            {form.bankAccounts.length === 0 && (
+              <div style={{ textAlign: "center", padding: "20px", color: "#888", fontStyle: "italic", border: "1px dashed #e2cdc2", borderRadius: "8px" }}>
+                No hay cuentas configuradas. Usa el botón "Añadir Cuenta" para agregar una.
+              </div>
+            )}
+            
+            <span className="adm-modal__precio-hint">
+              Si configuras estas cuentas, se mostrarán en el checkout indicando a dónde transferir.
             </span>
           </div>
 

@@ -45,7 +45,7 @@ const CheckoutModal = ({
     direccion: "",
     unidad: "",
     apto: "",
-    pago: "Efectivo",
+    pago: "Transferencia",
     observaciones: "",
   });
 
@@ -140,6 +140,24 @@ const CheckoutModal = ({
             </span>
           </div>
         )}
+        {formData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0 && (
+          <div className="form-group full-width checkout-aviso-cerrado">
+            <div className="checkout-aviso-transferencia-header">
+              <CreditCard size={18} className="checkout-aviso-transferencia-icon" />
+              <span>Pago por Transferencia</span>
+            </div>
+            <ul className="checkout-aviso-transferencia-list">
+              {settings.bankAccounts.map((acc, i) => (
+                <li key={i}>
+                  <strong>{acc.bankName}</strong> N° {acc.accountNumber}
+                </li>
+              ))}
+            </ul>
+            <p>
+              Por favor, transfiere el total a alguna de estas cuentas y recuerda enviar el comprobante por WhatsApp para procesar tu pedido.
+            </p>
+          </div>
+        )}
 
         {step === 1 ? (
           <form onSubmit={handleNext} className="checkout-body">
@@ -197,7 +215,8 @@ const CheckoutModal = ({
                 <label><CreditCard size={15} /> Medio de Pago *</label>
                 <select name="pago" value={formData.pago} onChange={handleChange}>
                   {/* <option value="Efectivo">Efectivo</option> */}
-                  <option value="Transferencia (Bancolombia/Nequi)">Transferencia (Bancolombia/Nequi)</option>
+                  {/* <option value="Transferencia (Bancolombia/Nequi)">Transferencia (Bancolombia/Nequi)</option> */}
+                  <option value="Transferencia">Transferencia</option>
                   {/* <option value="Datáfono">Datáfono a domicilio</option> */}
                 </select>
               </div>
@@ -244,7 +263,23 @@ const CheckoutModal = ({
                   <p><strong>Dirección:</strong> {formData.direccion}{formData.unidad && `, ${formData.unidad}`}{`, ${formData.apto}`}</p>
                 )}
                 <p><strong>Método de pago:</strong> {formData.pago}</p>
-                {formData.observaciones && <p className="note"><strong>Nota:</strong> &quot;{formData.observaciones}&quot;</p>}
+                {formData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0 && (
+                  <div className="checkout-aviso-transferencia" style={{ padding: "0.85rem", marginTop: "1rem" }}>
+                    <div className="checkout-aviso-transferencia-header" style={{ marginBottom: "0.5rem" }}>
+                      <CreditCard size={15} className="checkout-aviso-transferencia-icon" />
+                      <span>Cuentas para transferencia:</span>
+                    </div>
+                    <ul className="checkout-aviso-transferencia-list" style={{ marginBottom: "0.5rem" }}>
+                      {settings.bankAccounts.map((acc, i) => (
+                        <li key={i} style={{ padding: "0.4rem 0.6rem" }}>
+                          <strong>{acc.bankName}</strong> N° {acc.accountNumber}
+                        </li>
+                      ))}
+                    </ul>
+                    <p style={{ fontSize: "0.8rem" }}>No olvides enviar el comprobante por WhatsApp.</p>
+                  </div>
+                )}
+                {formData.observaciones && <p className="note" style={{ marginTop: "8px" }}><strong>Nota:</strong> &quot;{formData.observaciones}&quot;</p>}
               </div>
             </div>
 

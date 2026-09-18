@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS public.settings (
   -- 🍽️ local
  force_closed boolean NOT NULL DEFAULT false,
   -- cierre de emergencia
+ bank_accounts jsonb NOT NULL DEFAULT '[]'::jsonb,
+  -- lista de cuentas bancarias
  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -215,6 +217,12 @@ ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS offers_delivery boolean NOT
 ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS offers_pickup boolean NOT NULL DEFAULT true;
 
 ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS force_closed boolean NOT NULL DEFAULT false;
+
+ALTER TABLE public.settings DROP COLUMN IF EXISTS bank_name;
+
+ALTER TABLE public.settings DROP COLUMN IF EXISTS account_number;
+
+ALTER TABLE public.settings ADD COLUMN IF NOT EXISTS bank_accounts jsonb NOT NULL DEFAULT '[]'::jsonb;
 
 -- ── RPC segura: crear pedido y devolver su nº ───────────────────────────────
 -- Evita dar SELECT de orders a anon (protege teléfonos/direcciones de otros

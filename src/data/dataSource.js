@@ -97,6 +97,7 @@ const normalizeSettings = (row) => {
     offersPickup,
     offersLocal,
     forceClosed: row.force_closed === true,
+    bankAccounts: Array.isArray(row.bank_accounts) ? row.bank_accounts : [],
     isActive: row.is_active !== false,
     canChangePassword: row.can_change_password !== false,
   };
@@ -133,6 +134,7 @@ const buildLocalSettings = () => ({
   offersPickup: true,
   offersLocal: true,
   forceClosed: false,
+  bankAccounts: [],
   isActive: true,
   canChangePassword: true,
 });
@@ -570,6 +572,7 @@ const COLUMNAS_SETTINGS = {
   offersPickup: "offers_pickup",
   offersLocal: "offersLocal",
   forceClosed: "force_closed",
+  bankAccounts: "bank_accounts",
   isActive: "is_active",
   canChangePassword: "can_change_password",
 };

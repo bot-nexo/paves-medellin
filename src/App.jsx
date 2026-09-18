@@ -120,8 +120,14 @@ const App = () => {
       if (deliveryData.apto) message += "• *Apto/Piso:* " + deliveryData.apto + "\n";
     }
     
-    message += "• *Pago:* " + deliveryData.pago + "\n\n";
-    message += "*DETALLE DEL PEDIDO*\n";
+    message += "• *Pago:* " + deliveryData.pago + "\n";
+    if (deliveryData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0) {
+      settings.bankAccounts.forEach(acc => {
+        message += "   _Bco: " + acc.bankName + " N° " + acc.accountNumber + "_\n";
+      });
+      message += "   _👉 *POR FAVOR ENVÍA EL COMPROBANTE AQUÍ*_ \n";
+    }
+    message += "\n*DETALLE DEL PEDIDO*\n";
 
     let total = 0;
 
