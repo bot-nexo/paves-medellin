@@ -2,17 +2,31 @@ import logoImg from "../assets/images/logo.png";
 import { info } from "../data/menu";
 import { MapPin, Clock, ExternalLink } from "lucide-react";
 import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
+import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
 import "../css/Footer.css";
 
 // settings viene del dataSource vía useCatalog (editable desde el panel admin).
 // Fallback a la info estática si no se pasa (robustez).
-const Footer = ({ settings = info }) => {
+const Footer = ({ settings = info, design = DEFAULT_CATALOG_DESIGN }) => {
+  const d = design || DEFAULT_CATALOG_DESIGN;
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="footer-modern">
+    <footer
+      className="footer-modern"
+      style={{
+        background: d.footerBg || "linear-gradient(180deg, #1a0f08 0%, #0d0705 100%)",
+        color: d.footerText || "rgba(255, 255, 255, 0.7)",
+        fontFamily: d.fontFamily || "inherit",
+      }}
+    >
       {/* Top accent line */}
-      <div className="footer-accent-line" />
+      <div
+        className="footer-accent-line"
+        style={{
+          background: `linear-gradient(90deg, transparent, ${d.footerAccent || "#d92b38"}, transparent)`,
+        }}
+      />
 
       <div className="container">
         {/* Main Footer Grid */}
@@ -23,7 +37,7 @@ const Footer = ({ settings = info }) => {
               <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="footer-logo-img" />
               <div className="footer-logo-text">
                 <span className="footer-brand-name">
-                  Pavés <span className="footer-brand-accent">Medellín</span>
+                  Pavés <span className="footer-brand-accent" style={{ color: d.footerAccent || "#d92b38" }}>Medellín</span>
                 </span>
                 <span className="footer-brand-tagline">Postres Artesanales</span>
               </div>

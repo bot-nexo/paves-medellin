@@ -3,6 +3,8 @@ import {
   getCategories,
   getProducts,
   getSettings,
+  getCatalogDesign,
+  DEFAULT_CATALOG_DESIGN,
   subscribeToCatalog,
   invalidateCatalog,
 } from "../data/dataSource";
@@ -21,11 +23,6 @@ import {
  * edita algo, la tienda se actualiza sola).
  */
 const useCatalog = () => {
-  // Estado inicial sincrónico con datos locales (comportamiento actual).
-  // Se excluye "Todo": es una categoría fija que Menu.jsx agrega siempre.
-  // const [categories1, setCategorie1s] = useState(
-  //   localCategories.filter((c) => c.id !== "Todo"),
-  // );
   const [categories, setCategories] = useState(localCategories);
   const [products, setProducts] = useState(localProducts);
   const [settings, setSettings] = useState({
@@ -33,19 +30,21 @@ const useCatalog = () => {
     offersPickup: false,
     freeDeliveryThreshold: 0,
   });
+  const [design, setDesign] = useState(DEFAULT_CATALOG_DESIGN);
 
   const load = useCallback(async () => {
-    const [cats, prods, sett] = await Promise.all([
+    const [cats, prods, sett, dsg] = await Promise.all([
       getCategories(),
       getProducts(),
       getSettings(),
+      getCatalogDesign(),
     ]);
     setCategories(cats);
     // Los productos agotados (disponible=false, editables desde la BD/panel)
-    // no se muestran en la tienda. La lógica de "mostrar agotado tachado"
-    // llegará con el pulido del panel (F8).
+    // no se muestran en la tienda.
     setProducts(prods.filter((p) => p.disponible !== false));
     setSettings(sett);
+    if (dsg) setDesign(dsg);
   }, []);
 
   useEffect(() => {
@@ -65,7 +64,7 @@ const useCatalog = () => {
     };
   }, [load]);
 
-  return { categories, products, settings, reloadCatalog: load };
+  return { categories, products, settings, design, reloadCatalog: load };
 };
 
 export default useCatalog;

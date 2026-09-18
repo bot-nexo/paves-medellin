@@ -19,7 +19,7 @@ import {
 import { calculateItemUnitPrice } from "../utils/price";
 
 // ── Cache en memoria + suscripción a cambios (realtime) ─────────────────────
-const cache = { categories: null, products: null, settings: null };
+const cache = { categories: null, products: null, settings: null, design: null };
 const listeners = new Set();
 
 const notify = () => listeners.forEach((fn) => { try { fn(); } catch { /* noop */ } });
@@ -101,6 +101,190 @@ const normalizeSettings = (row) => {
   };
 };
 
+// ── Promociones y Combos Iniciales por Defecto ─────────────────────────────
+export const DEFAULT_PROMOTIONS_ITEMS = [
+  {
+    id: "promo-1",
+    titulo: "2x1 en Pavés Seleccionados",
+    tag: "Viernes & Sábados",
+    descripcion: "Lleva dos deliciosos Pavés de 8oz al precio de uno en sabores tradicionales.",
+    descuento: "2x1",
+    imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "promo-2",
+    titulo: "Envío Gratis en Compras > $45.000",
+    tag: "Toda la semana",
+    descripcion: "Disfruta de tus postres favoritos en casa sin costo adicional de domicilio.",
+    descuento: "ENVÍO GRATIS",
+    imagen: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=500&auto=format&fit=crop&q=80",
+  },
+];
+
+export const DEFAULT_COMBOS_ITEMS = [
+  {
+    id: "combo-1",
+    nombre: "Combo Dúo Pavé + Torta",
+    precio: 32000,
+    precioOriginal: 38000,
+    badge: "Ahorra $6.000",
+    descripcion: "1 Pavé 8oz tradicional de Leche Klim + 1 Porción de Torta húmeda de chocolate con toppings.",
+    incluye: ["1x Pavé 8oz (Leche Klim)", "1x Torta húmeda de chocolate"],
+    imagen: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "combo-2",
+    nombre: "Pack Familiar 4 Pavés",
+    precio: 62000,
+    precioOriginal: 72000,
+    badge: "Más Popular 🔥",
+    descripcion: "4 Pavés de 8oz a elección, perfecto para compartir en familia o con amigos.",
+    incluye: ["4x Pavés 8oz a elección", "Cucharas y servilletas"],
+    imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80",
+  },
+];
+
+// ── Diseño del Menú / Catálogo por Defecto (Fallback idéntico al actual) ────
+export const DEFAULT_CATALOG_DESIGN = {
+  // Global
+  appBg: "#fdfbf7",
+  fontFamily: "Montserrat",
+
+  // Hero
+  heroBg: "linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%)",
+  heroHeaderBg: "rgba(255, 255, 255, 0.72)",
+  heroCtaBg: "#d92b38",
+  heroCtaText: "#ffffff",
+  heroBadgeBg: "rgba(255, 255, 255, 0.92)",
+  heroBadgeText: "#d92b38",
+  heroFloatCartBg: "#3d2314",
+  heroFloatCartText: "#ffffff",
+
+  // Promociones
+  showPromotions: true,
+  promotionsTitle: "Promociones & Especiales",
+  promotionsSubtitle: "Aprovecha nuestras ofertas por tiempo limitado en tus postres favoritos",
+  promotionsBg: "#fff5f5",
+  promotionsCardBg: "#ffffff",
+  promotionsAccent: "#d92b38",
+  promotionsItems: DEFAULT_PROMOTIONS_ITEMS,
+
+  // Combos
+  showCombos: true,
+  combosTitle: "Combos & Packs para Compartir",
+  combosSubtitle: "Las combinaciones perfectas al mejor precio para tus momentos dulces",
+  combosBg: "#fbf8f3",
+  combosCardBg: "#ffffff",
+  combosAccent: "#d92b38",
+  combosItems: DEFAULT_COMBOS_ITEMS,
+
+  // Menú
+  bgColor: "#fecdcd",
+  cardBg: "#fdfbf7",
+  headerBadgeBg: "rgba(255, 255, 255, 0.75)",
+  headerBadgeText: "#b4232e",
+  textPrimary: "#3d2314",
+  textMuted: "#7a6353",
+  borderColor: "rgba(61, 35, 20, 0.08)",
+  cardRadius: "20px",
+  cardShadow: "md",
+  btnPrimaryBg: "#d92b38",
+  btnPrimaryText: "#ffffff",
+  btnDetailsBg: "transparent",
+  btnDetailsText: "#3d2314",
+  btnDetailsBorder: "rgba(61, 35, 20, 0.12)",
+  priceTagBg: "#3d2314",
+  priceTagText: "#ffffff",
+  badgePopularBg: "#d92b38",
+  badgePopularText: "#ffffff",
+  categoryBarBg: "rgba(255, 255, 255, 0.7)",
+  categoryActiveBg: "#d92b38",
+  categoryActiveText: "#ffffff",
+  categoryInactiveBg: "transparent",
+  categoryInactiveText: "#7a6353",
+  columnsDesktop: "auto",
+  columnsMobile: "1",
+  cardLayout: "vertical",
+  imageAspectRatio: "4/3",
+
+  // Footer
+  footerBg: "linear-gradient(180deg, #1a0f08 0%, #0d0705 100%)",
+  footerText: "rgba(255, 255, 255, 0.7)",
+  footerAccent: "#d92b38",
+};
+
+const normalizeCatalogDesign = (row) => ({
+  // Global
+  appBg: row.app_bg || DEFAULT_CATALOG_DESIGN.appBg,
+  fontFamily: row.font_family || DEFAULT_CATALOG_DESIGN.fontFamily,
+
+  // Hero
+  heroBg: row.hero_bg || DEFAULT_CATALOG_DESIGN.heroBg,
+  heroHeaderBg: row.hero_header_bg || DEFAULT_CATALOG_DESIGN.heroHeaderBg,
+  heroCtaBg: row.hero_cta_bg || DEFAULT_CATALOG_DESIGN.heroCtaBg,
+  heroCtaText: row.hero_cta_text || DEFAULT_CATALOG_DESIGN.heroCtaText,
+  heroBadgeBg: row.hero_badge_bg || DEFAULT_CATALOG_DESIGN.heroBadgeBg,
+  heroBadgeText: row.hero_badge_text || DEFAULT_CATALOG_DESIGN.heroBadgeText,
+  heroFloatCartBg: row.hero_float_cart_bg || DEFAULT_CATALOG_DESIGN.heroFloatCartBg,
+  heroFloatCartText: row.hero_float_cart_text || DEFAULT_CATALOG_DESIGN.heroFloatCartText,
+
+  // Promociones
+  showPromotions: row.show_promotions !== false,
+  promotionsTitle: row.promotions_title || DEFAULT_CATALOG_DESIGN.promotionsTitle,
+  promotionsSubtitle: row.promotions_subtitle || DEFAULT_CATALOG_DESIGN.promotionsSubtitle,
+  promotionsBg: row.promotions_bg || DEFAULT_CATALOG_DESIGN.promotionsBg,
+  promotionsCardBg: row.promotions_card_bg || DEFAULT_CATALOG_DESIGN.promotionsCardBg,
+  promotionsAccent: row.promotions_accent || DEFAULT_CATALOG_DESIGN.promotionsAccent,
+  promotionsItems: Array.isArray(row.promotions_items) && row.promotions_items.length > 0
+    ? row.promotions_items
+    : DEFAULT_PROMOTIONS_ITEMS,
+
+  // Combos
+  showCombos: row.show_combos !== false,
+  combosTitle: row.combos_title || DEFAULT_CATALOG_DESIGN.combosTitle,
+  combosSubtitle: row.combos_subtitle || DEFAULT_CATALOG_DESIGN.combosSubtitle,
+  combosBg: row.combos_bg || DEFAULT_CATALOG_DESIGN.combosBg,
+  combosCardBg: row.combos_card_bg || DEFAULT_CATALOG_DESIGN.combosCardBg,
+  combosAccent: row.combos_accent || DEFAULT_CATALOG_DESIGN.combosAccent,
+  combosItems: Array.isArray(row.combos_items) && row.combos_items.length > 0
+    ? row.combos_items
+    : DEFAULT_COMBOS_ITEMS,
+
+  // Menú
+  bgColor: row.bg_color || DEFAULT_CATALOG_DESIGN.bgColor,
+  cardBg: row.card_bg || DEFAULT_CATALOG_DESIGN.cardBg,
+  headerBadgeBg: row.header_badge_bg || DEFAULT_CATALOG_DESIGN.headerBadgeBg,
+  headerBadgeText: row.header_badge_text || DEFAULT_CATALOG_DESIGN.headerBadgeText,
+  textPrimary: row.text_primary || DEFAULT_CATALOG_DESIGN.textPrimary,
+  textMuted: row.text_muted || DEFAULT_CATALOG_DESIGN.textMuted,
+  borderColor: row.border_color || DEFAULT_CATALOG_DESIGN.borderColor,
+  cardRadius: row.card_radius || DEFAULT_CATALOG_DESIGN.cardRadius,
+  cardShadow: row.card_shadow || DEFAULT_CATALOG_DESIGN.cardShadow,
+  btnPrimaryBg: row.btn_primary_bg || DEFAULT_CATALOG_DESIGN.btnPrimaryBg,
+  btnPrimaryText: row.btn_primary_text || DEFAULT_CATALOG_DESIGN.btnPrimaryText,
+  btnDetailsBg: row.btn_details_bg || DEFAULT_CATALOG_DESIGN.btnDetailsBg,
+  btnDetailsText: row.btn_details_text || DEFAULT_CATALOG_DESIGN.btnDetailsText,
+  btnDetailsBorder: row.btn_details_border || DEFAULT_CATALOG_DESIGN.btnDetailsBorder,
+  priceTagBg: row.price_tag_bg || DEFAULT_CATALOG_DESIGN.priceTagBg,
+  priceTagText: row.price_tag_text || DEFAULT_CATALOG_DESIGN.priceTagText,
+  badgePopularBg: row.badge_popular_bg || DEFAULT_CATALOG_DESIGN.badgePopularBg,
+  badgePopularText: row.badge_popular_text || DEFAULT_CATALOG_DESIGN.badgePopularText,
+  categoryBarBg: row.category_bar_bg || DEFAULT_CATALOG_DESIGN.categoryBarBg,
+  categoryActiveBg: row.category_active_bg || DEFAULT_CATALOG_DESIGN.categoryActiveBg,
+  categoryActiveText: row.category_active_text || DEFAULT_CATALOG_DESIGN.categoryActiveText,
+  categoryInactiveBg: row.category_inactive_bg || DEFAULT_CATALOG_DESIGN.categoryInactiveBg,
+  categoryInactiveText: row.category_inactive_text || DEFAULT_CATALOG_DESIGN.categoryInactiveText,
+  columnsDesktop: row.columns_desktop || DEFAULT_CATALOG_DESIGN.columnsDesktop,
+  columnsMobile: row.columns_mobile || DEFAULT_CATALOG_DESIGN.columnsMobile,
+  cardLayout: row.card_layout || DEFAULT_CATALOG_DESIGN.cardLayout,
+  imageAspectRatio: row.image_aspect_ratio || DEFAULT_CATALOG_DESIGN.imageAspectRatio,
+
+  // Footer
+  footerBg: row.footer_bg || DEFAULT_CATALOG_DESIGN.footerBg,
+  footerText: row.footer_text || DEFAULT_CATALOG_DESIGN.footerText,
+  footerAccent: row.footer_accent || DEFAULT_CATALOG_DESIGN.footerAccent,
+});
+
 // ── Fallbacks locales (datos actuales del catálogo) ──────────────────────────
 const buildLocalCategories = () =>
   localCategories
@@ -163,6 +347,8 @@ const initRealtime = () => {
       () => invalidate("products", getProducts))
     .on("postgres_changes", { event: "*", schema: "public", table: "product_sauces" },
       () => invalidate("products", getProducts))
+    .on("postgres_changes", { event: "*", schema: "public", table: "catalog_design" },
+      () => invalidate("design", getCatalogDesign))
     .subscribe((status) => {
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         realtimeInitialized = false; // permite reintento en la próxima lectura
@@ -175,6 +361,7 @@ export const invalidateCatalog = () => {
   cache.categories = null;
   cache.products = null;
   cache.settings = null;
+  cache.design = null;
 };
 
 // ── API pública: getters (siempre async, shape uniforme) ─────────────────────
@@ -257,6 +444,30 @@ export async function getSettings() {
     cache.settings = buildLocalSettings();
   }
   return cache.settings;
+}
+
+/** Configuración de diseño y aspecto visual del catálogo. */
+export async function getCatalogDesign() {
+  if (cache.design) return cache.design;
+
+  if (!isSupabaseConfigured) {
+    cache.design = { ...DEFAULT_CATALOG_DESIGN };
+    return cache.design;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("catalog_design")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) throw error;
+    cache.design = data ? normalizeCatalogDesign(data) : { ...DEFAULT_CATALOG_DESIGN };
+  } catch (e) {
+    console.warn("[dataSource] design → fallback local:", e.message);
+    cache.design = { ...DEFAULT_CATALOG_DESIGN };
+  }
+  return cache.design;
 }
 
 /** Obtiene el rol del usuario desde user_roles. Si falla o no existe, asume 'admin' por defecto. */
@@ -582,6 +793,85 @@ export async function updateSettings(cambios) {
   const { error } = await supabase.from("settings").upsert({ id: 1, ...fila });
   if (error) throw error;
   invalidateCatalog(); // la tienda refresca WhatsApp/domicilios en segundos
+}
+
+const COLUMNAS_DESIGN = {
+  // Global
+  appBg: "app_bg",
+  fontFamily: "font_family",
+
+  // Hero
+  heroBg: "hero_bg",
+  heroHeaderBg: "hero_header_bg",
+  heroCtaBg: "hero_cta_bg",
+  heroCtaText: "hero_cta_text",
+  heroBadgeBg: "hero_badge_bg",
+  heroBadgeText: "hero_badge_text",
+  heroFloatCartBg: "hero_float_cart_bg",
+  heroFloatCartText: "hero_float_cart_text",
+
+  // Promociones
+  showPromotions: "show_promotions",
+  promotionsTitle: "promotions_title",
+  promotionsSubtitle: "promotions_subtitle",
+  promotionsBg: "promotions_bg",
+  promotionsCardBg: "promotions_card_bg",
+  promotionsAccent: "promotions_accent",
+  promotionsItems: "promotions_items",
+
+  // Combos
+  showCombos: "show_combos",
+  combosTitle: "combos_title",
+  combosSubtitle: "combos_subtitle",
+  combosBg: "combos_bg",
+  combosCardBg: "combos_card_bg",
+  combosAccent: "combos_accent",
+  combosItems: "combos_items",
+
+  // Menú
+  bgColor: "bg_color",
+  cardBg: "card_bg",
+  headerBadgeBg: "header_badge_bg",
+  headerBadgeText: "header_badge_text",
+  textPrimary: "text_primary",
+  textMuted: "text_muted",
+  borderColor: "border_color",
+  cardRadius: "card_radius",
+  cardShadow: "card_shadow",
+  btnPrimaryBg: "btn_primary_bg",
+  btnPrimaryText: "btn_primary_text",
+  btnDetailsBg: "btn_details_bg",
+  btnDetailsText: "btn_details_text",
+  btnDetailsBorder: "btn_details_border",
+  priceTagBg: "price_tag_bg",
+  priceTagText: "price_tag_text",
+  badgePopularBg: "badge_popular_bg",
+  badgePopularText: "badge_popular_text",
+  categoryBarBg: "category_bar_bg",
+  categoryActiveBg: "category_active_bg",
+  categoryActiveText: "category_active_text",
+  categoryInactiveBg: "category_inactive_bg",
+  categoryInactiveText: "category_inactive_text",
+  columnsDesktop: "columns_desktop",
+  columnsMobile: "columns_mobile",
+  cardLayout: "card_layout",
+  imageAspectRatio: "image_aspect_ratio",
+
+  // Footer
+  footerBg: "footer_bg",
+  footerText: "footer_text",
+  footerAccent: "footer_accent",
+};
+
+/** Actualiza la configuración de diseño del catálogo. */
+export async function updateCatalogDesign(cambios) {
+  const fila = {};
+  Object.entries(cambios).forEach(([clave, valor]) => {
+    fila[COLUMNAS_DESIGN[clave] || clave] = valor;
+  });
+  const { error } = await supabase.from("catalog_design").upsert({ id: 1, ...fila });
+  if (error) throw error;
+  invalidateCatalog();
 }
 
 const normalizeOrder = (row) => ({

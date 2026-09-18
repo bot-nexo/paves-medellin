@@ -6,7 +6,9 @@ import "aos/dist/aos.css";
 import "./css/estadoNegocio.css";
 
 import Hero from "./components/Hero";
+import Promociones from "./components/Promociones";
 import Menu from "./components/Menu";
+import Combos from "./components/Combos";
 import Footer from "./components/Footer";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
@@ -24,8 +26,8 @@ import {
 } from "./utils/price";
 
 const App = () => {
-  // Catálogo dinámico (Supabase ↔ local): productos, categorías y settings
-  const { categories, products, settings } = useCatalog();
+  // Catálogo dinámico (Supabase ↔ local): productos, categorías, settings y diseño
+  const { categories, products, settings, design } = useCatalog();
   const {
     cart,
     cartCount,
@@ -199,13 +201,26 @@ const App = () => {
       <Route
         path="/*"
         element={
-          <div className="app-wrapper">
+          <div
+            className="app-wrapper"
+            style={{
+              backgroundColor: design?.appBg || "#fdfbf7",
+              fontFamily: design?.fontFamily || "inherit",
+            }}
+          >
             {settings.isActive === false && (
               <div style={{ backgroundColor: "#d32f2f", color: "white", textAlign: "center", padding: "10px", fontWeight: "bold", fontSize: "0.9rem", zIndex: 1000, position: "relative" }}>
                 Estamos en mantenimiento o actualización. Pronto volveremos a recibir pedidos.
               </div>
             )}
-            <Hero cartCount={cartCount} onOpenCart={openCart} estadoNegocio={estadoNegocio} />
+            <Hero
+              cartCount={cartCount}
+              onOpenCart={openCart}
+              estadoNegocio={estadoNegocio}
+              design={design}
+            />
+
+            <Promociones design={design} />
 
             <Menu
               data={products}
@@ -213,9 +228,12 @@ const App = () => {
               selectedProduct={selectedProduct}
               setSelectedProduct={setSelectedProduct}
               addToCart={addToCart}
+              design={design}
             />
 
-            <Footer settings={settings} />
+            <Combos design={design} onAddToCart={addToCart} />
+
+            <Footer settings={settings} design={design} />
 
             <CartModal
               cart={cart}

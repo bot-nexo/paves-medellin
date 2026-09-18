@@ -17,6 +17,7 @@ import {
   Sparkles,
   ShieldCheck,
   AlertOctagon,
+  Palette,
 } from "lucide-react";
 import { logoutAdmin } from "./sessionStore";
 import { useAdminSession } from "./useAdminSession";
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { to: "/admin/categorias", label: "Categorías", icon: Tags },
   { to: "/admin/adiciones", label: "Adiciones & Salsas", icon: Sparkles },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
+  { to: "/admin/diseno", label: "Diseño Menú", icon: Palette },
   { to: "/admin/empresa", label: "Empresa", icon: Store },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];

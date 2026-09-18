@@ -5,14 +5,17 @@ import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { FaShoppingCart } from "react-icons/fa";
 import { StoreIcon } from "lucide-react";
+import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
 import "../css/Hero.css";
 
 const Hero = ({
   cartCount = 0,
   onOpenCart,
   estadoNegocio,
+  design = DEFAULT_CATALOG_DESIGN,
 }) => {
   const { products = [], settings } = useCatalog();
+  const d = design || DEFAULT_CATALOG_DESIGN;
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -177,15 +180,27 @@ const Hero = ({
   
   //************************************ */
   return (
-    <section className="hero-full">
+    <section
+      className="hero-full"
+      style={{
+        background: d.heroBg || "linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%)",
+        fontFamily: d.fontFamily || "inherit",
+      }}
+    >
       {/* Header */}
-      <header className="hero-full__header">
+      <header
+        className="hero-full__header"
+        style={{
+          background: d.heroHeaderBg || "rgba(255, 255, 255, 0.72)",
+          borderColor: d.borderColor || "rgba(61, 35, 20, 0.08)",
+        }}
+      >
         <div className="hero-full__brand">
           <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" onError={(e) => {
             e.target.style.display = 'none';
           }} className="hero-full__logo" />
           <div>
-            <h1 className="hero-full__name">
+            <h1 className="hero-full__name" style={{ color: d.textPrimary || "#3d2314" }}>
               Pavés <span>Medellín</span>
             </h1>
             <div className="hero-full__meta">
@@ -197,7 +212,14 @@ const Hero = ({
             </div>
           </div>
         </div>
-        <a href="#menu" className="hero-full__cta">
+        <a
+          href="#menu"
+          className="hero-full__cta"
+          style={{
+            background: d.heroCtaBg || "#d92b38",
+            color: d.heroCtaText || "#ffffff",
+          }}
+        >
           Ver Menú
         </a>
 
@@ -240,7 +262,14 @@ const Hero = ({
               initial="initial"
               animate="animate"
             >
-              <motion.div className="hero-full__badge" variants={itemVariants}>
+              <motion.div
+                className="hero-full__badge"
+                variants={itemVariants}
+                style={{
+                  background: d.heroBadgeBg || "rgba(255, 255, 255, 0.92)",
+                  color: d.heroBadgeText || "#d92b38",
+                }}
+              >
                 <Sparkles size={12} />
                 {activeProduct.tag || "Destacado"}
               </motion.div>
@@ -282,11 +311,23 @@ const Hero = ({
         className="hero-full__float-cart"
         onClick={onOpenCart}
         aria-label="Ver mi pedido"
+        style={{
+          background: d.heroFloatCartBg || "#3d2314",
+          color: d.heroFloatCartText || "#ffffff",
+        }}
       >
         <FaShoppingCart size={20} />
         <span>Mi Pedido</span>
         {cartCount > 0 && (
-          <span className="hero-full__float-badge">{cartCount}</span>
+          <span
+            className="hero-full__float-badge"
+            style={{
+              background: d.btnPrimaryBg || "#d92b38",
+              color: d.btnPrimaryText || "#ffffff",
+            }}
+          >
+            {cartCount}
+          </span>
         )}
       </button>
     </section>

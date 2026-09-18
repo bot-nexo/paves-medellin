@@ -188,6 +188,7 @@ const Empresa = () => {
     );
   }
 
+  //*********************************** */
   return (
     <div className="admin-page" style={{ position: "relative" }}>
       {guardando && <LoadingOverlay text="Sincronizando empresa" minTime={timeOut} />}

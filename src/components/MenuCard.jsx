@@ -2,7 +2,13 @@ import { Plus, Eye, Sparkles, X } from "lucide-react";
 import { formatCOP } from "../utils/price";
 import "../css/MenuCard.css";
 
-const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
+const MenuCard = ({
+  product,
+  isDetailsOpen,
+  onToggleDetails,
+  onAddToCart,
+  design,
+}) => {
   const formattedPrice = formatCOP(product.precio ?? 0);
 
   const imageSrc = product.imagen || "/images/placeholder.png";
@@ -11,10 +17,14 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
     product.descripcion ||
     "Delicioso postre artesanal preparado con crema y Leche Klim.";
 
+  const layoutClass =
+    design?.cardLayout === "horizontal" ? "menu-card--layout-horizontal" : "";
+  const shadowClass = `menu-card--shadow-${design?.cardShadow || "md"}`;
+
   //*************************************** */
   return (
     <article
-      className={`menu-card ${isDetailsOpen ? "menu-card--open" : ""}`}
+      className={`menu-card ${layoutClass} ${shadowClass} ${isDetailsOpen ? "menu-card--open" : ""}`}
       aria-expanded={isDetailsOpen}
     >
       <div className="menu-card__inner">
