@@ -51,14 +51,43 @@ export const calculateItemUnitPrice = (item) => {
 // ── Full order summary from a cart array ──────────────────────────────────
 // freeThreshold permite inyectar el umbral configurado en el panel admin
 // (settings.freeDeliveryThreshold). Por defecto usa la constante local.
+import { currentPromo } from "../config/promos";
+
 export const calculateOrderSummary = (cart, valDelivery, freeThreshold, esDomi) => {
   const subtotal = cart.reduce((total, item) => {
     return total + calculateItemUnitPrice(item) * item.quantity;
   }, 0);
 
-  const esGratis = esDomi ? subtotal >= freeThreshold : subtotal;
-  const totalNeto = esGratis ? subtotal : subtotal + valDelivery;
-  const faltanteGratis = Math.max(0, freeThreshold - subtotal);
+  let discount = 0;
 
-  return { subtotal, esGratis, totalNeto, faltanteGratis };
+  // Lógica de Promoción Dinámica
+  if (currentPromo && currentPromo.isActive && currentPromo.rules.type === "bundle") {
+    // 1. Contar la cantidad total de productos base en el carrito (excluye adiciones puras si las hubiera, pero aquí todo item en cart es producto)
+    const totalPromoQty = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+    // 2. Calcular precio base de todos los items en el carrito (solo precio base, sin customizaciones)
+    const basePricesTotal = cart.reduce((acc, item) => {
+      const basePrice = parsePrice(item.precio || item.price);
+      return acc + (basePrice * item.quantity);
+    }, 0);
+
+    // 3. Aplicar regla del bundle (ej. 3x25000 + remanentes a 10000)
+    const { bundleQty, bundlePrice, remainderPrice } = currentPromo.rules;
+    const bundles = Math.floor(totalPromoQty / bundleQty);
+    const remainders = totalPromoQty % bundleQty;
+
+    const promoBaseTotal = (bundles * bundlePrice) + (remainders * remainderPrice);
+
+    // 4. El descuento es la diferencia entre lo que costaban los items base originalmente y lo que cuestan con la promo
+    if (basePricesTotal > promoBaseTotal) {
+      discount = basePricesTotal - promoBaseTotal;
+    }
+  }
+
+  const subtotalWithDiscount = Math.max(0, subtotal - discount);
+  const esGratis = esDomi ? subtotalWithDiscount >= freeThreshold : subtotalWithDiscount;
+  const totalNeto = esGratis ? subtotalWithDiscount : subtotalWithDiscount + valDelivery;
+  const faltanteGratis = Math.max(0, freeThreshold - subtotalWithDiscount);
+
+  return { subtotal, discount, esGratis, totalNeto, faltanteGratis, totalItems: cart.reduce((a, b) => a + b.quantity, 0) };
 };

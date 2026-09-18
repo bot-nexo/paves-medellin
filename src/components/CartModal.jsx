@@ -15,6 +15,7 @@ import {
   calculateItemUnitPrice,
   calculateOrderSummary,
 } from "../utils/price";
+import { currentPromo } from "../config/promos";
 import "../css/CartModal.css";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
@@ -31,8 +32,20 @@ const CartModal = ({
 }) => {
   if (!isOpen) return null;
 
-  const { subtotal: totalPlatos, esGratis, totalNeto, faltanteGratis } =
+  const { subtotal: totalPlatos, discount, esGratis, totalNeto, faltanteGratis, totalItems } =
     calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, true);
+
+  // Logic for promo upselling
+  let promoUpsellMessage = null;
+  if (currentPromo && currentPromo.isActive && totalItems > 0) {
+    const remainder = totalItems % currentPromo.rules.bundleQty;
+    if (remainder > 0) {
+      const missing = currentPromo.rules.bundleQty - remainder;
+      promoUpsellMessage = `¡Estás a ${missing} producto${missing > 1 ? "s" : ""} de llevarte el combo ${currentPromo.name} por ${formatCOP(currentPromo.rules.bundlePrice)}! 💝`;
+    } else {
+      promoUpsellMessage = `¡Tienes activa la promo ${currentPromo.name}! 🎉`;
+    }
+  }
 
   //******************************************* */
   return (
@@ -77,6 +90,24 @@ const CartModal = ({
           </div>
         ) : (
           <>
+            {/* Promo Upselling Alert */}
+            {promoUpsellMessage && (
+              <div className="promo-upsell-alert" style={{
+                background: `linear-gradient(135deg, ${currentPromo.theme.primary}20, ${currentPromo.theme.secondary}15)`,
+                border: `1px solid ${currentPromo.theme.primary}50`,
+                padding: "0.8rem",
+                margin: "1rem 1.5rem 0",
+                borderRadius: "12px",
+                color: currentPromo.theme.primary,
+                fontWeight: "700",
+                fontSize: "0.85rem",
+                textAlign: "center",
+                boxShadow: `0 4px 15px ${currentPromo.theme.primary}20`
+              }}>
+                {promoUpsellMessage}
+              </div>
+            )}
+
             {/* Product List */}
             <div className="cart-items">
               {cart.map((item, index) => {
@@ -234,9 +265,20 @@ const CartModal = ({
               )}
 
               <div className="cart-breakdown">
-                <div className="breakdown-row total">
-                  <span>Subtotal carrito:</span>
+                <div className="breakdown-row">
+                  <span>Subtotal:</span>
                   <span>{formatCOP(totalPlatos)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="breakdown-row" style={{ color: currentPromo.theme.primary, fontWeight: '700' }}>
+                    <span>Descuento {currentPromo.name}:</span>
+                    <span>-{formatCOP(discount)}</span>
+                  </div>
+                )}
+                <div className="divider"></div>
+                <div className="breakdown-row total">
+                  <span>Total Neto:</span>
+                  <span>{formatCOP(totalPlatos - discount)}</span>
                 </div>
               </div>
 

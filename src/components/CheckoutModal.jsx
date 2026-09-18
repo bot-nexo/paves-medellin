@@ -39,9 +39,9 @@ const CheckoutModal = ({
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
-    tipoEntrega: settings.offersDelivery !== false ? "domicilio" 
-                 : settings.offersLocal !== false ? "local" 
-                 : "recogida",
+    tipoEntrega: settings.offersDelivery !== false ? "domicilio"
+      : settings.offersLocal !== false ? "local"
+        : "recogida",
     direccion: "",
     unidad: "",
     apto: "",
@@ -196,9 +196,9 @@ const CheckoutModal = ({
               <div className="form-group">
                 <label><CreditCard size={15} /> Medio de Pago *</label>
                 <select name="pago" value={formData.pago} onChange={handleChange}>
-                  <option value="Efectivo">Efectivo</option>
+                  {/* <option value="Efectivo">Efectivo</option> */}
                   <option value="Transferencia (Bancolombia/Nequi)">Transferencia (Bancolombia/Nequi)</option>
-                  <option value="Datáfono">Datáfono a domicilio</option>
+                  {/* <option value="Datáfono">Datáfono a domicilio</option> */}
                 </select>
               </div>
               {esDomicilio && (
