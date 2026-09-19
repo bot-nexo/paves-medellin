@@ -1,12 +1,11 @@
 import logoImg from "../assets/images/logo.png";
-import { info } from "../data/menu";
 import { MapPin, Clock, ExternalLink } from "lucide-react";
 import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
 import "../css/Footer.css";
 
 // settings viene del dataSource vía useCatalog (editable desde el panel admin).
-// Fallback a la info estática si no se pasa (robustez).
-const Footer = ({ settings = info }) => {
+// Fallback a {} si no se pasa.
+const Footer = ({ settings = {} }) => {
   const currentYear = new Date().getFullYear();
 
   return (

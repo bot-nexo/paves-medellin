@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import {
   X,
@@ -23,7 +23,6 @@ import {
   calculateItemUnitPrice,
   calculateOrderSummary,
 } from "../utils/price";
-import { info as infoLocal } from "../data/menu";
 import { LuClipboardList, LuHandPlatter } from "react-icons/lu";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
@@ -32,10 +31,11 @@ const CheckoutModal = ({
   onClose,
   onConfirm,
   cart = [],
-  settings = infoLocal,
+  settings = {},
   estadoNegocio = null,
 }) => {
   const [step, setStep] = useState(1);
+  const bodyRef = useRef(null);
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
@@ -57,8 +57,17 @@ const CheckoutModal = ({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setTimeout(() => {
+        if (bodyRef.current) bodyRef.current.scrollTop = 0;
+      }, 50);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step, formData.tipoEntrega]);
 
   if (!isOpen) return null;
 
@@ -175,40 +184,9 @@ const CheckoutModal = ({
             </span>
           </div>
         )}
-        {formData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0 && (
-          <div className="checkout-aviso-transferencia">
-            <div className="checkout-aviso-transferencia-header">
-              <CreditCard size={18} className="checkout-aviso-transferencia-icon" />
-              <span>Pago por Transferencia</span>
-            </div>
-            <ul className="checkout-aviso-transferencia-list">
-              {settings.bankAccounts.map((acc, i) => (
-                <li key={i}>
-                  <strong>{acc.bankName}</strong> N° {acc.accountNumber}
-                </li>
-              ))}
-            </ul>
-            <p>
-              Por favor, transfiere el total a alguna de estas cuentas y recuerda enviar el comprobante por WhatsApp para procesar tu pedido.
-            </p>
-          </div>
-        )}
-
-        {esDomicilio && (
-          <div className="checkout-aviso-amarillo">
-            <div className="checkout-aviso-transferencia-header">
-              <FaMotorcycle size={18} className="checkout-aviso-transferencia-icon" style={{ color: "#d97706" }} />
-              <span style={{ color: "#d97706" }}>Cotización de Domicilio</span>
-            </div>
-            <p className="checkout-aviso-transferencia-list" style={{ color: "#92400e", fontSize: "0.85rem", margin: 0, fontStyle: "normal" }} >
-              Te cotizaremos el valor exacto de tu domicilio y te avisaremos lo más pronto posible.
-            </p>
-            <strong style={{ color: "#823200ff", fontSize: "0.9rem", margin: 0, fontStyle: "italic" }}> El valor total que ves aquí no incluye el domicilio.</strong>
-          </div>
-        )}
 
         {step === 1 ? (
-          <form onSubmit={handleNext} className="checkout-body">
+          <form onSubmit={handleNext} className="checkout-body" ref={bodyRef}>
             <div className="form-grid">
               {/* Modo de entrega (según lo configurado en el panel) */}
               {(settings.offersDelivery !== false || settings.offersPickup !== false || settings.offersLocal !== false) && (
@@ -267,9 +245,22 @@ const CheckoutModal = ({
                   <option value="Transferencia">Transferencia</option>
                   {/* <option value="Datáfono">Datáfono a domicilio</option> */}
                 </select>
+                {formData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0 && (
+                  <span style={{ fontSize: "0.75rem", color: "#d92b38", marginTop: "2px", fontStyle: "italic", lineHeight: "1.2" }}>
+                    * Las cuentas bancarias se mostrarán en el siguiente paso.
+                  </span>
+                )}
               </div>
               {esDomicilio && (
                 <>
+                  <div className="form-group full-width" style={{ backgroundColor: "#fff9e6", padding: "0.6rem 0.8rem", borderRadius: "8px", border: "1px solid #ffd54f" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#d97706", fontWeight: "700", fontSize: "0.85rem", marginBottom: "0.2rem" }}>
+                      <FaMotorcycle size={14} /> Cotización de Domicilio
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.78rem", color: "#92400e", lineHeight: "1.3" }}>
+                      Te cotizaremos el valor de tu domicilio por WhatsApp. <strong style={{ fontStyle: "italic" }}>El total que ves aquí no lo incluye.</strong>
+                    </p>
+                  </div>
                   <div className="form-group full-width">
                     <label><MapPin size={15} /> Dirección Exacta *</label>
                     <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Carrera, Barrio..." required />
@@ -295,7 +286,7 @@ const CheckoutModal = ({
             </div>
           </form>
         ) : (
-          <div className="checkout-body summary-body">
+          <div className="checkout-body summary-body" ref={bodyRef}>
             <div className="summary-card">
               <div className="card-header">
                 <CheckCircle size={18} className="icon-success" />
@@ -319,8 +310,22 @@ const CheckoutModal = ({
                     </div>
                     <ul className="checkout-aviso-transferencia-list" style={{ marginBottom: "0.5rem" }}>
                       {settings.bankAccounts.map((acc, i) => (
-                        <li key={i} style={{ padding: "0.4rem 0.6rem" }}>
-                          <strong>{acc.bankName}</strong> N° {acc.accountNumber}
+                        <li key={i} style={{ 
+                          padding: "0.6rem 0.8rem", 
+                          display: "flex", 
+                          flexDirection: "column", 
+                          alignItems: "flex-start", 
+                          gap: "0.1rem",
+                          background: "#fff",
+                          border: "1px solid rgba(61, 35, 20, 0.1)",
+                          borderRadius: "8px"
+                        }}>
+                          <span style={{ fontSize: "0.75rem", color: "#6b5244", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.02em" }}>
+                            {acc.bankName}
+                          </span>
+                          <span style={{ fontSize: "1rem", fontWeight: "800", color: "#3d2314", letterSpacing: "0.05em", wordBreak: "break-all" }}>
+                            {acc.accountNumber}
+                          </span>
                         </li>
                       ))}
                     </ul>

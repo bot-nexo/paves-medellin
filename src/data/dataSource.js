@@ -1,21 +1,12 @@
-// ── Fuente de datos (adapter): Supabase ↔ Local ────────────────────────────
+// ── Fuente de datos (adapter): Supabase ────────────────────────────
 // Punto único de acceso al catálogo para TODA la app (tienda + panel admin).
 //
 // Prioridad:
-//   1. Supabase (si VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY están definidas)
-//   2. Fallback local (src/data/menu.js) si Supabase no está configurado,
-//      falla la red o devuelve vacío → la tienda NUNCA se rompe.
-//
-// El shape de los datos es idéntico al que ya consume la tienda
-// (ver src/data/menu.js), así no hay que tocar MenuCard/Menu/etc.
+//   1. Supabase (BD real de producción)
+//   2. Fallback local: Eliminado. El estado inicial ahora está manejado
+//      con variables isLoading para evitar renders erróneos.
 import { supabase, isSupabaseConfigured } from "../services/supabaseClient";
 import { deleteProductImage } from "../services/storage";
-import {
-  products as localProducts,
-  categories as localCategories,
-  info as localInfo,
-  localImagesByNombre,
-} from "./menu";
 import { calculateItemUnitPrice } from "../utils/price";
 
 // ── Cache en memoria + suscripción a cambios (realtime) ─────────────────────
@@ -49,7 +40,7 @@ const normalizeCategory = (row) => ({
 });
 
 const resolveImage = (row) =>
-  (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || PLACEHOLDER_IMG;
+  (row.imagen_url || "").trim() || PLACEHOLDER_IMG;
 
 const normalizeProduct = (row) => {
   const { categories: _cat, product_additions: _pa, product_sauces: _ps, ...rest } = row;
@@ -79,20 +70,20 @@ const normalizeSettings = (row) => {
   }
 
   return {
-    name: localInfo.name,
-    razon_social: row.razon_social || localInfo.name,
-    phone: row.phone || localInfo.phone,
-    address: row.address || localInfo.address,
-    mapsGoogle: row.maps_url || localInfo.mapsGoogle,
-    instagram: row.instagram || localInfo.instagram,
-    facebook: row.facebook || localInfo.facebook,
-    tiktok: row.tiktok || localInfo.tiktok,
-    closed: localInfo.closed || "",
-    day1: row.day1 || localInfo.day1,
-    hours1: row.hours1 || localInfo.hours1,
+    name: row.razon_social || "Pavés Medellín",
+    razon_social: row.razon_social || "Pavés Medellín",
+    phone: row.phone || "",
+    address: row.address || "",
+    mapsGoogle: row.maps_url || "",
+    instagram: row.instagram || "",
+    facebook: row.facebook || "",
+    tiktok: row.tiktok || "",
+    closed: "",
+    day1: row.day1 || "",
+    hours1: row.hours1 || "",
     logo_url: row.logo_url || "",
-    deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO,
-    freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS,
+    deliveryFee: row.delivery_fee ?? 0,
+    freeDeliveryThreshold: row.free_delivery_threshold ?? 0,
     offersDelivery,
     offersPickup,
     offersLocal,
@@ -103,41 +94,7 @@ const normalizeSettings = (row) => {
   };
 };
 
-// ── Fallbacks locales (datos actuales del catálogo) ──────────────────────────
-const buildLocalCategories = () =>
-  localCategories
-    .filter((c) => c.id !== "Todo")
-    .map((c, i) => ({
-      id: c.id,
-      nombre: c.id,
-      emoji: "",
-      label: c.label,
-      orden: i + 1,
-      visible: true,
-    }));
 
-const buildLocalProducts = () =>
-  localProducts.map((p, i) => ({
-    ...p,
-    category_id: null,
-    category: p.category,
-    orden: i + 1,
-    disponible: p.disponible !== false,
-    nota: p.nota || "",
-  }));
-
-const buildLocalSettings = () => ({
-  ...localInfo,
-  deliveryFee: VALOR_DOMICILIO,
-  freeDeliveryThreshold: MINIMO_ENVIO_GRATIS,
-  offersDelivery: true,
-  offersPickup: true,
-  offersLocal: true,
-  forceClosed: false,
-  bankAccounts: [],
-  isActive: true,
-  canChangePassword: true,
-});
 
 // ── Realtime: refresca el cache cuando el admin cambia algo ──────────────────
 let realtimeInitialized = false;
@@ -182,12 +139,11 @@ export const invalidateCatalog = () => {
 
 // ── API pública: getters (siempre async, shape uniforme) ─────────────────────
 
-/** Categorías visibles y ordenadas (para el filtro del menú). */
 export async function getCategories() {
   if (cache.categories) return cache.categories;
 
   if (!isSupabaseConfigured) {
-    cache.categories = buildLocalCategories();
+    cache.categories = [];
     return cache.categories;
   }
 
@@ -201,19 +157,18 @@ export async function getCategories() {
     // Resultado vacío VÁLIDO (todo oculto) se respeta; solo errores caen a local
     cache.categories = data.map(normalizeCategory);
   } catch (e) {
-    console.warn("[dataSource] categorías → fallback local:", e.message);
-    cache.categories = buildLocalCategories();
+    console.warn("[dataSource] error obteniendo categorías:", e.message);
+    cache.categories = [];
   }
   return cache.categories;
 }
 
-/** Productos con categoría e imagen resuelta (orden del menú). */
 export async function getProducts() {
   if (cache.products) return cache.products;
   initRealtime();
 
   if (!isSupabaseConfigured) {
-    cache.products = buildLocalProducts();
+    cache.products = [];
     return cache.products;
   }
 
@@ -232,18 +187,17 @@ export async function getProducts() {
     // Resultado vacío VÁLIDO (catálogo vaciado por el admin) se respeta
     cache.products = data.map(normalizeProduct);
   } catch (e) {
-    console.warn("[dataSource] productos → fallback local:", e.message);
-    cache.products = buildLocalProducts();
+    console.warn("[dataSource] error obteniendo productos:", e.message);
+    cache.products = [];
   }
   return cache.products;
 }
 
-/** Configuración del negocio (info de contacto + costos de domicilio). */
 export async function getSettings() {
   if (cache.settings) return cache.settings;
 
   if (!isSupabaseConfigured) {
-    cache.settings = buildLocalSettings();
+    cache.settings = {};
     return cache.settings;
   }
 
@@ -254,10 +208,10 @@ export async function getSettings() {
       .eq("id", 1)
       .maybeSingle();
     if (error) throw error;
-    cache.settings = data ? normalizeSettings(data) : buildLocalSettings();
+    cache.settings = data ? normalizeSettings(data) : {};
   } catch (e) {
-    console.warn("[dataSource] settings → fallback local:", e.message);
-    cache.settings = buildLocalSettings();
+    console.warn("[dataSource] error obteniendo settings:", e.message);
+    cache.settings = {};
   }
   return cache.settings;
 }

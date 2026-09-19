@@ -12,7 +12,6 @@ import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
 import { AdminRoutes } from "./admin/AppRoutes";
-import { info } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
@@ -25,7 +24,7 @@ import {
 
 const App = () => {
   // Catálogo dinámico (Supabase ↔ local): productos, categorías y settings
-  const { categories, products, settings } = useCatalog();
+  const { categories, products, settings, isLoading } = useCatalog();
   const {
     cart,
     cartCount,
@@ -51,8 +50,8 @@ const App = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
 
-  // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
-  const whatsappNumber = settings.phone || info.phone;
+  // WhatsApp y costos ahora vienen de settings (panel admin).
+  const whatsappNumber = settings.phone || "";
 
   // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
   const estadoNegocio = estaAbiertoSegunHorario(settings);
@@ -210,6 +209,16 @@ const App = () => {
   };
 
   //***************************** */
+  if (isLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#1e1008", color: "#f5c842", flexDirection: "column", gap: "1rem" }}>
+        <div className="spinner" style={{ width: "40px", height: "40px", border: "4px solid rgba(245,200,66,0.3)", borderTopColor: "#f5c842", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <p style={{ fontWeight: "700", letterSpacing: "0.05em" }}>Cargando nuestro menú...</p>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       {/* Panel de administración (privado) */}
