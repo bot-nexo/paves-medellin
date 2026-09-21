@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
 import {
@@ -21,14 +21,26 @@ import {
   Trash2,
   Edit3,
   CheckCircle2,
+  Focus,
+  Globe,
 } from "lucide-react";
 import {
   getCatalogDesign,
   updateCatalogDesign,
+  getProducts,
+  getCategories,
+  getSettings,
+  subscribeToCatalog,
   DEFAULT_CATALOG_DESIGN,
   DEFAULT_PROMOTIONS_ITEMS,
   DEFAULT_COMBOS_ITEMS,
 } from "../../data/dataSource";
+import { estaAbiertoSegunHorario } from "../../utils/horario";
+import Hero from "../../components/Hero";
+import Promociones from "../../components/Promociones";
+import Menu from "../../components/Menu";
+import Combos from "../../components/Combos";
+import Footer from "../../components/Footer";
 import { formatCOP } from "../../utils/price";
 import ColorPickerField from "../components/ColorPickerField";
 import GradientPickerField from "../components/GradientPickerField";
@@ -118,7 +130,7 @@ const PRESETS = [
       textMuted: "#d4c5b9",
       borderColor: "rgba(212, 175, 55, 0.25)",
       cardRadius: "16px",
-      cardShadow: "colored",
+      cardShadow: "md",
       btnPrimaryBg: "#d4af37",
       btnPrimaryText: "#1c1410",
       btnDetailsBg: "transparent",
@@ -313,30 +325,78 @@ const FONTS = [
 
 const Diseno = () => {
   const [form, setForm] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [settings, setSettings] = useState({});
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [previewDevice, setPreviewDevice] = useState("desktop"); // desktop | mobile
+  const [previewMode, setPreviewMode] = useState("section"); // section | full
   const [activeTab, setActiveTab] = useState("presets"); // presets | hero | promos | combos | menu | footer | typography
 
-  useEffect(() => {
-    const cargar = async () => {
-      setCargando(true);
-      try {
-        const d = await getCatalogDesign();
-        setForm(d || { ...DEFAULT_CATALOG_DESIGN });
-      } catch (e) {
-        Swal.fire({
-          title: "Error al cargar diseño",
-          text: e.message,
-          icon: "error",
-          confirmButtonColor: "#3D2314",
-        });
-      } finally {
-        setCargando(false);
-      }
-    };
-    cargar();
+  const heroRef = useRef(null);
+  const promosRef = useRef(null);
+  const menuRef = useRef(null);
+  const combosRef = useRef(null);
+  const footerRef = useRef(null);
+  const viewportRef = useRef(null);
+
+  // Carga de configuración de diseño y catálogo real de la Base de Datos
+  const cargarDatos = useCallback(async () => {
+    try {
+      const [d, prods, cats, sett] = await Promise.all([
+        getCatalogDesign(),
+        getProducts(),
+        getCategories(),
+        getSettings(),
+      ]);
+      setForm(d || { ...DEFAULT_CATALOG_DESIGN });
+      setProducts(prods || []);
+      setCategories(cats || []);
+      setSettings(sett || {});
+    } catch (e) {
+      Swal.fire({
+        title: "Error al cargar datos del catálogo",
+        text: e.message,
+        icon: "error",
+        confirmButtonColor: "#3D2314",
+      });
+    } finally {
+      setCargando(false);
+    }
   }, []);
+
+  useEffect(() => {
+    cargarDatos();
+
+    // Sincronización en tiempo real con Supabase
+    const unsubscribe = subscribeToCatalog(() => {
+      cargarDatos();
+    });
+
+    return () => unsubscribe();
+  }, [cargarDatos]);
+
+  // Desplazamiento automático suave a la sección en el simulador completo
+  useEffect(() => {
+    if (previewMode !== "full") return;
+    const timer = setTimeout(() => {
+      const refMap = {
+        hero: heroRef,
+        promos: promosRef,
+        menu: menuRef,
+        combos: combosRef,
+        footer: footerRef,
+      };
+      const target = refMap[activeTab];
+      if (target?.current) {
+        target.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [activeTab, previewMode]);
+
+  const estadoNegocio = useMemo(() => estaAbiertoSegunHorario(settings), [settings]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -1159,251 +1219,208 @@ const Diseno = () => {
           </div>
         </div>
 
-        {/* Columna Derecha: LIVE PREVIEW INTERACTIVO INTEGRAL */}
+        {/* Columna Derecha: LIVE PREVIEW INTERACTIVO INTEGRAL (CONECTADO A BD) */}
         <aside className="diseno-preview-panel">
           <div className="diseno-preview-header">
             <div className="diseno-preview-title">
               <Eye size={16} />
-              <span>Simulador de Catálogo Completo</span>
+              <span>Simulador en Vivo (Datos Reales BD)</span>
             </div>
 
-            <div className="diseno-device-toggle">
-              <button
-                type="button"
-                className={`diseno-device-btn ${previewDevice === "desktop" ? "diseno-device-btn--active" : ""}`}
-                onClick={() => setPreviewDevice("desktop")}
-                title="Vista Desktop"
-              >
-                <Monitor size={14} /> Desktop
-              </button>
-              <button
-                type="button"
-                className={`diseno-device-btn ${previewDevice === "mobile" ? "diseno-device-btn--active" : ""}`}
-                onClick={() => setPreviewDevice("mobile")}
-                title="Vista Móvil"
-              >
-                <Smartphone size={14} /> Móvil
-              </button>
+            <div className="diseno-preview-controls-row">
+              {/* Selector de Modo: Sección vs Catálogo Completo */}
+              <div className="diseno-mode-toggle">
+                <button
+                  type="button"
+                  className={`diseno-mode-btn ${previewMode === "section" ? "diseno-mode-btn--active" : ""}`}
+                  onClick={() => setPreviewMode("section")}
+                  title="Ver únicamente la sección activa que estás modificando"
+                >
+                  <Focus size={13} /> Sección Activa
+                </button>
+                <button
+                  type="button"
+                  className={`diseno-mode-btn ${previewMode === "full" ? "diseno-mode-btn--active" : ""}`}
+                  onClick={() => setPreviewMode("full")}
+                  title="Ver todo el catálogo secuencial con auto-scroll a la sección"
+                >
+                  <Globe size={13} /> Catálogo Completo
+                </button>
+              </div>
+
+              {/* Selector de Dispositivo: Desktop vs Móvil */}
+              <div className="diseno-device-toggle">
+                <button
+                  type="button"
+                  className={`diseno-device-btn ${previewDevice === "desktop" ? "diseno-device-btn--active" : ""}`}
+                  onClick={() => setPreviewDevice("desktop")}
+                  title="Vista Desktop"
+                >
+                  <Monitor size={14} /> Desktop
+                </button>
+                <button
+                  type="button"
+                  className={`diseno-device-btn ${previewDevice === "mobile" ? "diseno-device-btn--active" : ""}`}
+                  onClick={() => setPreviewDevice("mobile")}
+                  title="Vista Móvil"
+                >
+                  <Smartphone size={14} /> Móvil
+                </button>
+              </div>
             </div>
           </div>
 
           <div
+            ref={viewportRef}
             className={`diseno-preview-viewport ${previewDevice === "mobile" ? "diseno-preview-viewport--mobile" : ""}`}
             style={{
               backgroundColor: form.appBg || "#fdfbf7",
               fontFamily: form.fontFamily,
-              maxHeight: "680px",
-              overflowY: "auto",
             }}
           >
-            {/* 1. HERO PREVIEW */}
-            <div
-              style={{
-                background: form.heroBg,
-                padding: "1rem",
-                borderRadius: "12px",
-                marginBottom: "1rem",
-              }}
-            >
-              {/* Header glass */}
-              <div
-                style={{
-                  background: form.heroHeaderBg,
-                  padding: "0.5rem 0.8rem",
-                  borderRadius: "10px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "1rem",
-                }}
-              >
-                <strong style={{ fontSize: "0.85rem", color: form.textPrimary }}>Pavés Medellín</strong>
-                <span
-                  style={{
-                    background: form.heroCtaBg,
-                    color: form.heroCtaText,
-                    fontSize: "0.72rem",
-                    fontWeight: 700,
-                    padding: "0.25rem 0.6rem",
-                    borderRadius: "8px",
-                  }}
-                >
-                  Ver Menú
-                </span>
-              </div>
+            {/* MODO 1: SECCIÓN ACTIVA ESPECÍFICA */}
+            {previewMode === "section" && (
+              <div>
+                {activeTab === "hero" && (
+                  <div>
+                    <div className="diseno-section-badge">
+                      <Compass size={14} /> Vista de Sección: Hero & Header Principal
+                    </div>
+                    <Hero
+                      cartCount={2}
+                      onOpenCart={() => {}}
+                      estadoNegocio={estadoNegocio}
+                      design={form}
+                      products={products}
+                      settings={settings}
+                    />
+                  </div>
+                )}
 
-              {/* Hero Slide Box */}
-              <div
-                style={{
-                  background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)",
-                  borderRadius: "14px",
-                  padding: "1rem",
-                  color: "#fff",
-                  position: "relative",
-                }}
-              >
-                <span
-                  style={{
-                    background: form.heroBadgeBg,
-                    color: form.heroBadgeText,
-                    fontSize: "0.65rem",
-                    fontWeight: 800,
-                    padding: "0.2rem 0.5rem",
-                    borderRadius: "99px",
-                  }}
-                >
-                  ✨ Destacado
-                </span>
-                <h4 style={{ margin: "0.4rem 0 0.2rem", fontSize: "1.05rem" }}>Pavé de Leche Klim</h4>
-                <p style={{ margin: 0, fontSize: "0.72rem", opacity: 0.9 }}>Postre cremoso tradicional con galleta.</p>
-              </div>
-            </div>
+                {activeTab === "promos" && (
+                  <div>
+                    <div className="diseno-section-badge">
+                      <Tag size={14} /> Vista de Sección: Promociones & Ofertas
+                    </div>
+                    {form.showPromotions === false ? (
+                      <div style={{ textAlign: "center", padding: "2.5rem 1rem", background: "rgba(211, 47, 47, 0.08)", borderRadius: "14px", color: "#d32f2f", border: "1px dashed rgba(211, 47, 47, 0.3)" }}>
+                        <Tag size={32} style={{ margin: "0 auto 0.5rem" }} />
+                        <strong style={{ display: "block", fontSize: "0.95rem" }}>Sección de Promociones Oculta</strong>
+                        <span style={{ fontSize: "0.8rem", opacity: 0.85 }}>Activa el interruptor en la pestaña de la izquierda para mostrarla en la tienda.</span>
+                      </div>
+                    ) : (
+                      <Promociones design={form} />
+                    )}
+                  </div>
+                )}
 
-            {/* 2. PROMOCIONES PREVIEW (si está activo) */}
-            {form.showPromotions && (form.promotionsItems?.length || 0) > 0 && (
-              <div
-                style={{
-                  background: form.promotionsBg,
-                  padding: "1rem",
-                  borderRadius: "12px",
-                  marginBottom: "1rem",
-                }}
-              >
-                <div style={{ textAlign: "center", marginBottom: "0.6rem" }}>
-                  <span style={{ fontSize: "0.68rem", fontWeight: 800, color: form.promotionsAccent, textTransform: "uppercase" }}>
-                    🏷️ {form.promotionsTitle}
-                  </span>
-                </div>
-                <div style={{ background: form.promotionsCardBg, padding: "0.75rem", borderRadius: "10px", border: `1px solid ${form.borderColor}` }}>
-                  <span style={{ background: form.promotionsAccent, color: "#fff", fontSize: "0.65rem", fontWeight: 800, padding: "0.15rem 0.4rem", borderRadius: "6px" }}>
-                    {form.promotionsItems[0]?.descuento || "PROMO"}
-                  </span>
-                  <h5 style={{ margin: "0.3rem 0 0.1rem", fontSize: "0.85rem", color: form.textPrimary }}>
-                    {form.promotionsItems[0]?.titulo}
-                  </h5>
-                  <p style={{ margin: 0, fontSize: "0.72rem", color: form.textMuted }}>
-                    {form.promotionsItems[0]?.descripcion}
-                  </p>
-                </div>
+                {activeTab === "combos" && (
+                  <div>
+                    <div className="diseno-section-badge">
+                      <Gift size={14} /> Vista de Sección: Combos & Packs para Compartir
+                    </div>
+                    {form.showCombos === false ? (
+                      <div style={{ textAlign: "center", padding: "2.5rem 1rem", background: "rgba(211, 47, 47, 0.08)", borderRadius: "14px", color: "#d32f2f", border: "1px dashed rgba(211, 47, 47, 0.3)" }}>
+                        <Gift size={32} style={{ margin: "0 auto 0.5rem" }} />
+                        <strong style={{ display: "block", fontSize: "0.95rem" }}>Sección de Combos Oculta</strong>
+                        <span style={{ fontSize: "0.8rem", opacity: 0.85 }}>Activa el interruptor en la pestaña de la izquierda para mostrarla en la tienda.</span>
+                      </div>
+                    ) : (
+                      <Combos design={form} onAddToCart={() => {}} />
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "menu" && (
+                  <div>
+                    <div className="diseno-section-badge">
+                      <LayoutGrid size={14} /> Vista de Sección: Menú Digital & Tarjetas ({products.length} productos reales en BD)
+                    </div>
+                    <Menu
+                      data={products}
+                      categories={categories}
+                      selectedProduct={null}
+                      setSelectedProduct={() => {}}
+                      addToCart={() => {}}
+                      design={form}
+                    />
+                  </div>
+                )}
+
+                {activeTab === "footer" && (
+                  <div>
+                    <div className="diseno-section-badge">
+                      <Store size={14} /> Vista de Sección: Pie de Página (Footer)
+                    </div>
+                    <Footer settings={settings} design={form} />
+                  </div>
+                )}
+
+                {(activeTab === "presets" || activeTab === "typography") && (
+                  <div>
+                    <div className="diseno-section-badge">
+                      <Sparkles size={14} /> Vista de Conjunto: {activeTab === "presets" ? "Paleta Global Aplicada" : "Tipografía & Fondo"}
+                    </div>
+                    <Hero
+                      cartCount={1}
+                      onOpenCart={() => {}}
+                      estadoNegocio={estadoNegocio}
+                      design={form}
+                      products={products}
+                      settings={settings}
+                    />
+                    <Menu
+                      data={products.slice(0, 4)}
+                      categories={categories}
+                      selectedProduct={null}
+                      setSelectedProduct={() => {}}
+                      addToCart={() => {}}
+                      design={form}
+                    />
+                    <Footer settings={settings} design={form} />
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 3. MENÚ & PRODUCTO PREVIEW */}
-            <div
-              style={{
-                backgroundColor: form.bgColor,
-                padding: "1rem",
-                borderRadius: "12px",
-                marginBottom: "1rem",
-              }}
-            >
-              <div style={{ textAlign: "center", marginBottom: "0.8rem" }}>
-                <span
-                  style={{
-                    background: form.categoryActiveBg,
-                    color: form.categoryActiveText,
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    padding: "0.25rem 0.6rem",
-                    borderRadius: "99px",
-                  }}
-                >
-                  🍨 Pavés 8oz
-                </span>
-              </div>
-
-              {/* Sample Product Card */}
-              <div
-                style={{
-                  backgroundColor: form.cardBg,
-                  borderRadius: form.cardRadius,
-                  border: `1px solid ${form.borderColor}`,
-                  overflow: "hidden",
-                }}
-              >
-                <div style={{ position: "relative", height: "100px", background: "#eee" }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80"
-                    alt="Sample"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            {/* MODO 2: CATÁLOGO COMPLETO SECUENCIAL CON AUTO-SCROLL */}
+            {previewMode === "full" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div ref={heroRef} style={{ scrollMarginTop: "15px" }}>
+                  <Hero
+                    cartCount={1}
+                    onOpenCart={() => {}}
+                    estadoNegocio={estadoNegocio}
+                    design={form}
+                    products={products}
+                    settings={settings}
                   />
-                  <span
-                    style={{
-                      position: "absolute",
-                      bottom: "6px",
-                      right: "6px",
-                      background: form.priceTagBg,
-                      color: form.priceTagText,
-                      fontSize: "0.72rem",
-                      fontWeight: 800,
-                      padding: "0.2rem 0.5rem",
-                      borderRadius: "99px",
-                    }}
-                  >
-                    $18.000 COP
-                  </span>
                 </div>
-                <div style={{ padding: "0.75rem" }}>
-                  <h5 style={{ margin: "0 0 0.3rem", fontSize: "0.88rem", color: form.textPrimary }}>
-                    Pavé Tradicional 8oz
-                  </h5>
-                  <button
-                    type="button"
-                    style={{
-                      width: "100%",
-                      padding: "0.4rem",
-                      borderRadius: "8px",
-                      border: "none",
-                      background: form.btnPrimaryBg,
-                      color: form.btnPrimaryText,
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                    }}
-                  >
-                    + Agregar
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* 4. COMBOS PREVIEW (si está activo) */}
-            {form.showCombos && (form.combosItems?.length || 0) > 0 && (
-              <div
-                style={{
-                  background: form.combosBg,
-                  padding: "1rem",
-                  borderRadius: "12px",
-                  marginBottom: "1rem",
-                }}
-              >
-                <span style={{ fontSize: "0.68rem", fontWeight: 800, color: form.combosAccent, display: "block", textAlign: "center", marginBottom: "0.5rem" }}>
-                  🎁 {form.combosTitle}
-                </span>
-                <div style={{ background: form.combosCardBg, padding: "0.75rem", borderRadius: "10px", border: `1px solid ${form.borderColor}` }}>
-                  <strong style={{ fontSize: "0.85rem", color: form.textPrimary }}>{form.combosItems[0]?.nombre}</strong>
-                  <span style={{ display: "block", fontSize: "0.78rem", fontWeight: 800, color: form.combosAccent, marginTop: "0.2rem" }}>
-                    {formatCOP(form.combosItems[0]?.precio || 32000)}
-                  </span>
+                <div ref={promosRef} style={{ scrollMarginTop: "15px" }}>
+                  <Promociones design={form} />
+                </div>
+
+                <div ref={menuRef} style={{ scrollMarginTop: "15px" }}>
+                  <Menu
+                    data={products}
+                    categories={categories}
+                    selectedProduct={null}
+                    setSelectedProduct={() => {}}
+                    addToCart={() => {}}
+                    design={form}
+                  />
+                </div>
+
+                <div ref={combosRef} style={{ scrollMarginTop: "15px" }}>
+                  <Combos design={form} onAddToCart={() => {}} />
+                </div>
+
+                <div ref={footerRef} style={{ scrollMarginTop: "15px" }}>
+                  <Footer settings={settings} design={form} />
                 </div>
               </div>
             )}
-
-            {/* 5. FOOTER PREVIEW */}
-            <div
-              style={{
-                background: form.footerBg,
-                color: form.footerText,
-                padding: "1rem",
-                borderRadius: "12px",
-                textAlign: "center",
-                fontSize: "0.72rem",
-              }}
-            >
-              <strong style={{ color: "#fff", display: "block", marginBottom: "0.2rem" }}>
-                Pavés <span style={{ color: form.footerAccent }}>Medellín</span>
-              </strong>
-              <span>© Pavés Medellín. Todos los derechos reservados.</span>
-            </div>
           </div>
         </aside>
       </div>

@@ -116,7 +116,7 @@
 .entrega-option--activa {
   border-color: #d92b38;
   background: rgba(217, 43, 56, 0.05);
-  box-shadow: 0 4px 14px rgba(217, 43, 56, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .entrega-option svg {

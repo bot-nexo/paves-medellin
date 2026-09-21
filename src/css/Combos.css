@@ -204,13 +204,13 @@
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(217, 43, 56, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   transition: all 0.2s ease;
 }
 
 .combo-card__btn-add:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(217, 43, 56, 0.38);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 }
 
 @media (max-width: 640px) {

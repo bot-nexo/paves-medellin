@@ -1,110 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Sparkles, Sliders, Disc, Code, Check } from "lucide-react";
+import { Sliders, Disc } from "lucide-react";
 import ColorPickerField from "./ColorPickerField";
 
-// Galería de Gradientes Premium para Negocios Gastronómicos & Postres
-export const GRADIENT_PRESETS = [
-  {
-    name: "Fresa Clásico Pavé",
-    emoji: "🍓",
-    value: "linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%)",
-    category: "Dulce",
-  },
-  {
-    name: "Rosa Sweet Bakery",
-    emoji: "🌸",
-    value: "linear-gradient(180deg, #fff0f3 0%, #ffccd5 100%)",
-    category: "Dulce",
-  },
-  {
-    name: "Choco Noir & Caramelo",
-    emoji: "🍫",
-    value: "linear-gradient(180deg, #1c1410 0%, #2b1e17 100%)",
-    category: "Oscuro",
-  },
-  {
-    name: "Vainilla & Crema Real",
-    emoji: "🍦",
-    value: "linear-gradient(180deg, #fffdfa 0%, #faecd5 100%)",
-    category: "Claro",
-  },
-  {
-    name: "Menta & Matcha Fresco",
-    emoji: "🍃",
-    value: "linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)",
-    category: "Fresco",
-  },
-  {
-    name: "Oro Imperial Gourmet",
-    emoji: "✨",
-    value: "linear-gradient(180deg, #281c12 0%, #140d08 100%)",
-    category: "Oscuro",
-  },
-  {
-    name: "Sunset Melocotón & Fresa",
-    emoji: "🌅",
-    value: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
-    category: "Dulce",
-  },
-  {
-    name: "Arándano & Mora Berry",
-    emoji: "🫐",
-    value: "linear-gradient(180deg, #f5f3ff 0%, #ddd6fe 100%)",
-    category: "Fresco",
-  },
-  {
-    name: "Café Espresso & Cacao",
-    emoji: "☕",
-    value: "linear-gradient(180deg, #3d2314 0%, #1a0f08 100%)",
-    category: "Oscuro",
-  },
-  {
-    name: "Negro Carbón Footer",
-    emoji: "🖤",
-    value: "linear-gradient(180deg, #1a0f08 0%, #0d0705 100%)",
-    category: "Footer",
-  },
-  {
-    name: "Medianoche Pizarra",
-    emoji: "🌙",
-    value: "linear-gradient(180deg, #0f172a 0%, #020617 100%)",
-    category: "Oscuro",
-  },
-  {
-    name: "Blanco Seda Sutil",
-    emoji: "🤍",
-    value: "linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)",
-    category: "Claro",
-  },
-  {
-    name: "Algodón de Azúcar",
-    emoji: "🍬",
-    value: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
-    category: "Dulce",
-  },
-  {
-    name: "Maracuyá & Mango Pasión",
-    emoji: "🥭",
-    value: "linear-gradient(135deg, #ffe259 0%, #ffa751 100%)",
-    category: "Fresco",
-  },
-];
-
 const DIRECTIONS = [
-  { id: "180deg", label: "⬇️ Vertical (Arriba a Abajo)", prefix: "linear-gradient(180deg" },
-  { id: "90deg", label: "➡️ Horizontal (Izq a Der)", prefix: "linear-gradient(90deg" },
-  { id: "135deg", label: "↘️ Diagonal (Esquina a Esquina)", prefix: "linear-gradient(135deg" },
-  { id: "45deg", label: "↗️ Diagonal Inversa", prefix: "linear-gradient(45deg" },
-  { id: "radial", label: "◉ Radial (Centro a Bordes)", prefix: "radial-gradient(circle" },
+  { id: "180deg", label: "⬇️ Vertical (Arriba a Abajo)" },
+  { id: "90deg", label: "➡️ Horizontal (Izq a Der)" },
+  { id: "135deg", label: "↘️ Diagonal (Esquina a Esquina)" },
+  { id: "45deg", label: "↗️ Diagonal Inversa" },
+  { id: "radial", label: "◉ Radial (Centro a Bordes)" },
 ];
 
 /**
- * Extrae 2 colores aproximados de un string linear-gradient
+ * Extrae 2 colores aproximados de un string linear-gradient o color sólido
  */
 const parseGradientColors = (gradientStr) => {
   if (!gradientStr || typeof gradientStr !== "string") {
-    return { color1: "#fdf1f1", color2: "#fecdcd", dir: "180deg" };
+    return { color1: "#fdf1f1", color2: "#fecdcd", dir: "180deg", isGradient: false };
   }
+
+  const isGrad = gradientStr.includes("gradient");
 
   // Detectar dirección
   let dir = "180deg";
@@ -116,12 +30,12 @@ const parseGradientColors = (gradientStr) => {
   // Extraer hex o rgb
   const hexMatches = gradientStr.match(/#[0-9A-Fa-f]{3,8}/g);
   if (hexMatches && hexMatches.length >= 2) {
-    return { color1: hexMatches[0], color2: hexMatches[1], dir };
+    return { color1: hexMatches[0], color2: hexMatches[1], dir, isGradient: isGrad };
   } else if (hexMatches && hexMatches.length === 1) {
-    return { color1: hexMatches[0], color2: hexMatches[0], dir };
+    return { color1: hexMatches[0], color2: hexMatches[0], dir, isGradient: isGrad };
   }
 
-  return { color1: "#fdf1f1", color2: "#fecdcd", dir };
+  return { color1: "#fdf1f1", color2: "#fecdcd", dir, isGradient: isGrad };
 };
 
 const GradientPickerField = ({
@@ -131,54 +45,61 @@ const GradientPickerField = ({
   description,
   className = "",
 }) => {
-  // Modos: presets | builder | solid | manual
-  const [mode, setMode] = useState("presets");
-
-  // Estado para el Creador 2 Colores
   const initialParsed = parseGradientColors(value);
+  // Modos: "builder" (2 colores) | "solid" (color sólido)
+  const [mode, setMode] = useState(initialParsed.isGradient ? "builder" : "solid");
+
   const [customColor1, setCustomColor1] = useState(initialParsed.color1);
   const [customColor2, setCustomColor2] = useState(initialParsed.color2);
   const [customDir, setCustomDir] = useState(initialParsed.dir);
 
-  // Sincronizar creador cuando cambia el value externamente
+  // Sincronizar estado interno cuando cambia el valor desde afuera (ej. presets)
   useEffect(() => {
     const p = parseGradientColors(value);
     setCustomColor1(p.color1);
     setCustomColor2(p.color2);
     setCustomDir(p.dir);
+    if (p.isGradient && mode !== "builder") {
+      setMode("builder");
+    } else if (!p.isGradient && mode !== "solid") {
+      setMode("solid");
+    }
   }, [value]);
 
-  const handleApplyPreset = (presetValue) => {
-    onChange(presetValue);
+  const buildGradientString = (c1, c2, dir) => {
+    if (dir === "radial") {
+      return `radial-gradient(circle, ${c1} 0%, ${c2} 100%)`;
+    }
+    return `linear-gradient(${dir}, ${c1} 0%, ${c2} 100%)`;
   };
 
-  const handleBuilderChange = (c1, c2, dir) => {
-    let result = "";
-    if (dir === "radial") {
-      result = `radial-gradient(circle, ${c1} 0%, ${c2} 100%)`;
-    } else {
-      result = `linear-gradient(${dir}, ${c1} 0%, ${c2} 100%)`;
-    }
-    onChange(result);
+  const handleSwitchToBuilder = () => {
+    setMode("builder");
+    const newGradient = buildGradientString(customColor1, customColor2, customDir);
+    onChange(newGradient);
+  };
+
+  const handleSwitchToSolid = () => {
+    setMode("solid");
+    onChange(customColor1 || "#fdfbf7");
   };
 
   const handleColor1Change = (c1) => {
     setCustomColor1(c1);
-    handleBuilderChange(c1, customColor2, customDir);
+    const grad = buildGradientString(c1, customColor2, customDir);
+    onChange(grad);
   };
 
   const handleColor2Change = (c2) => {
     setCustomColor2(c2);
-    handleBuilderChange(customColor1, c2, customDir);
+    const grad = buildGradientString(customColor1, c2, customDir);
+    onChange(grad);
   };
 
   const handleDirChange = (dir) => {
     setCustomDir(dir);
-    handleBuilderChange(customColor1, customColor2, dir);
-  };
-
-  const isPresetActive = (presetVal) => {
-    return (value || "").trim().toLowerCase() === presetVal.trim().toLowerCase();
+    const grad = buildGradientString(customColor1, customColor2, dir);
+    onChange(grad);
   };
 
   return (
@@ -198,71 +119,27 @@ const GradientPickerField = ({
         />
       </div>
 
-      {/* Selector de Modos */}
+      {/* Selector de Modos Reducido (Solo 2 Opciones 100% Funcionales) */}
       <div className="gradient-field__mode-nav">
         <button
           type="button"
-          className={`gradient-field__mode-btn ${mode === "presets" ? "gradient-field__mode-btn--active" : ""}`}
-          onClick={() => setMode("presets")}
-        >
-          <Sparkles size={13} /> Galería de Gradientes
-        </button>
-        <button
-          type="button"
           className={`gradient-field__mode-btn ${mode === "builder" ? "gradient-field__mode-btn--active" : ""}`}
-          onClick={() => setMode("builder")}
+          onClick={handleSwitchToBuilder}
         >
           <Sliders size={13} /> Creador 2 Colores
         </button>
         <button
           type="button"
           className={`gradient-field__mode-btn ${mode === "solid" ? "gradient-field__mode-btn--active" : ""}`}
-          onClick={() => setMode("solid")}
+          onClick={handleSwitchToSolid}
         >
           <Disc size={13} /> Color Sólido
-        </button>
-        <button
-          type="button"
-          className={`gradient-field__mode-btn ${mode === "manual" ? "gradient-field__mode-btn--active" : ""}`}
-          onClick={() => setMode("manual")}
-        >
-          <Code size={13} /> Manual / CSS
         </button>
       </div>
 
       {/* CONTENIDO DEL MODO */}
       <div className="gradient-field__body">
-        {/* 1. MODO PRESETS */}
-        {mode === "presets" && (
-          <div className="gradient-field__presets-grid">
-            {GRADIENT_PRESETS.map((p) => {
-              const active = isPresetActive(p.value);
-              return (
-                <button
-                  key={p.name}
-                  type="button"
-                  className={`gradient-field__preset-item ${active ? "gradient-field__preset-item--active" : ""}`}
-                  onClick={() => handleApplyPreset(p.value)}
-                  title={`${p.name} - Clic para aplicar`}
-                >
-                  <div
-                    className="gradient-field__preset-swatch"
-                    style={{ background: p.value }}
-                  >
-                    {active && <Check size={14} className="gradient-field__preset-check" />}
-                  </div>
-                  <div className="gradient-field__preset-details">
-                    <span className="gradient-field__preset-name">
-                      {p.emoji} {p.name}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {/* 2. MODO CREADOR 2 COLORES */}
+        {/* MODO 1: CREADOR 2 COLORES */}
         {mode === "builder" && (
           <div className="gradient-field__builder">
             <div className="gradient-field__builder-row">
@@ -294,39 +171,23 @@ const GradientPickerField = ({
             </div>
 
             <div className="gradient-field__builder-preview" style={{ background: value }}>
-              <span className="gradient-field__builder-preview-label">Vista Previa del Gradiente Creado</span>
+              <span className="gradient-field__builder-preview-label">Muestra del Gradiente ({customDir})</span>
             </div>
           </div>
         )}
 
-        {/* 3. MODO COLOR SÓLIDO */}
+        {/* MODO 2: COLOR SÓLIDO */}
         {mode === "solid" && (
           <div className="gradient-field__solid-box">
             <ColorPickerField
-              label="Selecciona un color sólido para el fondo"
-              value={value && !value.includes("gradient") ? value : "#fdfbf7"}
-              onChange={(newColor) => onChange(newColor)}
-              description="Aplica un color plano y limpio en lugar de un gradiente."
+              label="Color Sólido del Fondo"
+              value={value && !value.includes("gradient") ? value : customColor1}
+              onChange={(newColor) => {
+                setCustomColor1(newColor);
+                onChange(newColor);
+              }}
+              description="Aplica un color plano, uniforme y limpio."
             />
-          </div>
-        )}
-
-        {/* 4. MODO MANUAL */}
-        {mode === "manual" && (
-          <div className="gradient-field__manual-box">
-            <label className="admin-field">
-              <span className="admin-field__label">Código CSS de Fondo (linear-gradient, radial-gradient o Color)</span>
-              <input
-                type="text"
-                value={value || ""}
-                onChange={(e) => onChange(e.target.value)}
-                className="admin-field__input"
-                placeholder="linear-gradient(180deg, #ffffff 0%, #fecdcd 100%)"
-              />
-            </label>
-            <span style={{ fontSize: "0.75rem", color: "var(--texto-dim)", display: "block", marginTop: "4px" }}>
-              💡 Puedes escribir cualquier propiedad válida de CSS para `background`.
-            </span>
           </div>
         )}
       </div>

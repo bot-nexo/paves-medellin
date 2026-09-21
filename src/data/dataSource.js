@@ -15,6 +15,8 @@ import {
   categories as localCategories,
   info as localInfo,
   localImagesByNombre,
+  VALOR_DOMICILIO_DEFAULT,
+  MINIMO_ENVIO_GRATIS_DEFAULT,
 } from "./menu";
 import { calculateItemUnitPrice } from "../utils/price";
 
@@ -90,8 +92,8 @@ const normalizeSettings = (row) => {
     day1: row.day1 || localInfo.day1,
     hours1: row.hours1 || localInfo.hours1,
     logo_url: row.logo_url || "",
-    deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO,
-    freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS,
+    deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO_DEFAULT,
+    freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS_DEFAULT,
     offersDelivery,
     offersPickup,
     offersLocal,
@@ -310,8 +312,8 @@ const buildLocalProducts = () =>
 
 const buildLocalSettings = () => ({
   ...localInfo,
-  deliveryFee: VALOR_DOMICILIO,
-  freeDeliveryThreshold: MINIMO_ENVIO_GRATIS,
+  deliveryFee: VALOR_DOMICILIO_DEFAULT,
+  freeDeliveryThreshold: MINIMO_ENVIO_GRATIS_DEFAULT,
   offersDelivery: true,
   offersPickup: true,
   offersLocal: true,

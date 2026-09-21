@@ -425,14 +425,14 @@
     font-weight: 700;
     font-size: 0.85rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(217, 43, 56, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transition: all 0.2s;
 }
 
 .btn-checkout:hover {
     background: linear-gradient(135deg, #b51f2a, #d92b38);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(217, 43, 56, 0.35);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 /* Adaptación Mobile (Menor a 600px) */

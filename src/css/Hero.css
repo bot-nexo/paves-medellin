@@ -30,7 +30,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: url("fondo.webp");
+  background-image: url("/fondo.webp");
   background-size: cover;
   background-position: center;
   opacity: 0.1;
@@ -149,14 +149,14 @@
   color: #ffffff;
   font-size: 0.82rem;
   font-weight: 700;
-  box-shadow: 0 6px 18px rgba(217, 43, 56, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .hero-full__cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 9px 24px rgba(217, 43, 56, 0.36);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
   color: #ffffff;
 }
 
@@ -468,7 +468,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(217, 43, 56, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Adaptaciones Responsive ── */

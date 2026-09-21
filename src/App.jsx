@@ -14,7 +14,7 @@ import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
 import { AdminRoutes } from "./admin/AppRoutes";
-import { info } from "./data/menu";
+import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
@@ -74,10 +74,12 @@ const App = () => {
 
     // 1) Persistir el pedido en la BD (no bloquea: si falla, seguimos a WhatsApp)
     const esDomicilio = deliveryData.tipoEntrega === "domicilio";
-    const summary = calculateOrderSummary(cart, settings.deliveryFee ?? VALOR_DOMICILIO, settings.freeDeliveryThreshold ?? 0, esDomicilio);
+    const feeBase = settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT;
+    const freeThreshold = settings.freeDeliveryThreshold ?? MINIMO_ENVIO_GRATIS_DEFAULT;
+    const summary = calculateOrderSummary(cart, feeBase, freeThreshold, esDomicilio);
     const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
-      : (settings.deliveryFee ?? VALOR_DOMICILIO);
+      : feeBase;
     const saved = await createOrder(deliveryData, cart, {
       subtotal: summary.subtotal,
       deliveryFee,
@@ -218,6 +220,8 @@ const App = () => {
               onOpenCart={openCart}
               estadoNegocio={estadoNegocio}
               design={design}
+              products={products}
+              settings={settings}
             />
 
             <Promociones design={design} />

@@ -139,7 +139,7 @@
 .option-card.active {
     border-color: #d92b38;
     background-color: #fcf1f2;
-    box-shadow: 0 4px 12px rgba(217, 43, 56, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .option-card input[type="radio"],
@@ -226,14 +226,14 @@
     font-weight: 700;
     font-size: 0.9rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(217, 43, 56, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     transition: all 0.2s;
 }
 
 .btn-confirm-add:hover {
     background: linear-gradient(135deg, #b51f2a, #d92b38);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(217, 43, 56, 0.35);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {

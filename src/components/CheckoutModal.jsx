@@ -23,7 +23,7 @@ import {
   calculateItemUnitPrice,
   calculateOrderSummary,
 } from "../utils/price";
-import { info as infoLocal } from "../data/menu";
+import { info as infoLocal, VALOR_DOMICILIO_DEFAULT } from "../data/menu";
 import { LuClipboardList, LuHandPlatter } from "react-icons/lu";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
@@ -293,7 +293,7 @@ const CheckoutModal = ({
                 {!esDomicilio ? (
                   <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica</span></div>
                 ) : (
-                  <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO)}</span></div>
+                  <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT)}</span></div>
                 )}
                 <div className="divider" />
                 <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>

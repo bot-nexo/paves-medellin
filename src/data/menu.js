@@ -225,3 +225,6 @@ export const info = {
   day1: "Todos los días",
   hours1: "12:00 M - 08:00 PM",
 };
+
+export const VALOR_DOMICILIO_DEFAULT = 5000;
+export const MINIMO_ENVIO_GRATIS_DEFAULT = 45000;

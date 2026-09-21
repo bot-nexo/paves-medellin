@@ -121,7 +121,7 @@
 .navbar__cart-btn:hover {
   background: linear-gradient(135deg, #d92b38, #e8475a);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(217, 43, 56, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .navbar__cart-icon-wrapper {

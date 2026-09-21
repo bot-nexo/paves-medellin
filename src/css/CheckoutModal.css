@@ -161,9 +161,9 @@
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: #d92b38;
+    border-color: #3d2314;
     background-color: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(217, 43, 56, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
 }
 
 /* Tarjetas de Resumen Paso 2 */

@@ -13,8 +13,12 @@ const Hero = ({
   onOpenCart,
   estadoNegocio,
   design = DEFAULT_CATALOG_DESIGN,
+  products: propProducts,
+  settings: propSettings,
 }) => {
-  const { products = [], settings } = useCatalog();
+  const catalog = useCatalog();
+  const products = propProducts !== undefined ? propProducts : catalog.products || [];
+  const settings = propSettings !== undefined ? propSettings : catalog.settings || {};
   const d = design || DEFAULT_CATALOG_DESIGN;
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
