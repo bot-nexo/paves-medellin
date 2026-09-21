@@ -4,8 +4,7 @@ import { Star, Sparkles } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { FaShoppingCart } from "react-icons/fa";
-import { StoreIcon, HeartPulse } from "lucide-react";
-import { currentPromo } from "../config/promos";
+import { StoreIcon } from "lucide-react";
 import "../css/Hero.css";
 
 const Hero = ({
@@ -100,10 +99,10 @@ const Hero = ({
       </span>
     );
   };
-  
+
   // En tu JSX principal:
   { renderEstadoNegocio() }
-  
+
   // ─────────────────────────────────────────────
   // Animaciones avanzadas (Opción 1)
   // ─────────────────────────────────────────────
@@ -175,7 +174,7 @@ const Hero = ({
 
   const activeProduct = featured[current];
   const activeCount = products.length;
-  
+
   //************************************ */
   return (
     <section className="hero-full">
@@ -199,37 +198,12 @@ const Hero = ({
           </div>
         </div>
         <a href="#menu" className="hero-full__cta">
-            Ver Menú
-          </a>
+          Ver Menú
+        </a>
 
         {renderEstadoNegocio()}
 
       </header>
-
-      {/* Promo Banner Global */}
-      {currentPromo && currentPromo.isActive && (
-        <div className="promo-global-banner" style={{
-          background: `linear-gradient(135deg, ${currentPromo.theme.primary}, ${currentPromo.theme.secondary})`,
-          color: currentPromo.theme.text,
-          padding: '0.8rem 1rem',
-          textAlign: 'center',
-          fontWeight: 'bold',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          boxShadow: `0 4px 15px ${currentPromo.theme.primary}40`,
-          position: 'relative',
-          zIndex: 10,
-          margin: '0 1rem 1rem',
-          borderRadius: '12px',
-          animation: 'pulseGlow 2s infinite'
-        }}>
-          <HeartPulse size={20} />
-          <span>{currentPromo.tagline} {currentPromo.description}</span>
-          <HeartPulse size={20} />
-        </div>
-      )}
 
       {/* Stage */}
 

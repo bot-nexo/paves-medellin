@@ -1,6 +1,5 @@
-import { Plus, Eye, Sparkles, X, HeartPulse } from "lucide-react";
+import { Plus, Eye, Sparkles, X } from "lucide-react";
 import { formatCOP } from "../utils/price";
-import { currentPromo } from "../config/promos";
 import "../css/MenuCard.css";
 
 const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
@@ -29,15 +28,7 @@ const MenuCard = ({ product, isDetailsOpen, onToggleDetails, onAddToCart }) => {
           />
           <div className="menu-card__media-overlay" aria-hidden="true" />
 
-          {currentPromo && currentPromo.isActive ? (
-            <span className="menu-card__badge" style={{
-              background: `linear-gradient(135deg, ${currentPromo.theme.primary}, ${currentPromo.theme.secondary})`,
-              boxShadow: `0 2px 8px ${currentPromo.theme.primary}80`,
-            }}>
-              <HeartPulse size={12} />
-              {currentPromo.badgeText}
-            </span>
-          ) : product.destacado && (
+          {product.destacado && (
             <span className="menu-card__badge">
               <Sparkles size={12} />
               Popular

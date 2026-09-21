@@ -77,18 +77,12 @@ const App = () => {
 
     // 1) Persistir el pedido en la BD (no bloquea: si falla, seguimos a WhatsApp)
     const esDomicilio = deliveryData.tipoEntrega === "domicilio";
-    const summary = calculateOrderSummary(cart, settings.deliveryFee ?? VALOR_DOMICILIO, settings.freeDeliveryThreshold ?? 0, esDomicilio);
+    const summary = calculateOrderSummary(cart, settings.deliveryFee ?? 0, settings.freeDeliveryThreshold ?? 0, esDomicilio);
     const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
-      : (settings.deliveryFee ?? VALOR_DOMICILIO);
+      : (settings.deliveryFee ?? 0);
 
-    let obsParaBD = deliveryData.observaciones || "";
-    if (summary.discount > 0) {
-      const msjDescuento = `Descuento Amor y Amistad aplicado: -$${(summary.discount / 1000).toLocaleString()} K`;
-      obsParaBD = obsParaBD ? `${obsParaBD} | ${msjDescuento}` : msjDescuento;
-    }
-
-    const saved = await createOrder({ ...deliveryData, observaciones: obsParaBD }, cart, {
+    const saved = await createOrder(deliveryData, cart, {
       subtotal: summary.subtotal,
       deliveryFee,
       total: summary.totalNeto,
@@ -180,15 +174,12 @@ const App = () => {
 
     message += "--------------------------------\n";
     message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
-    if (summary.discount > 0) {
-      message += "   Descuento Amor y Amistad: -$" + (summary.discount / 1000).toLocaleString() + " K\n";
-    }
     message +=
       "   Domicilio: " +
       (!esDomicilio ? "No aplica" : "Por cotizar") +
       "\n";
     message += "--------------------------------\n";
-    message += "*TOTAL A PAGAR: $" + (totalPagar / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
+    message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
     message += "\n_Pedido generado desde la web_";
 
     window.open(
