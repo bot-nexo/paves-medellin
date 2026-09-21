@@ -56,7 +56,6 @@
   background: #e07a5f;
 }
 
-/* ── Aviso de cerrado en el checkout ───────────────────────────────────── */
 .checkout-aviso-cerrado {
   display: flex;
   align-items: flex-start;
@@ -71,9 +70,15 @@
   line-height: 1.45;
 }
 
+.checkout-aviso-cerrado--eventualidad {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #b45309;
+}
+
 .checkout-aviso-cerrado svg {
   flex-shrink: 0;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 /* ── Selector de modalidad de entrega (checkout paso 1) ────────────────── */

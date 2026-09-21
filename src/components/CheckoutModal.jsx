@@ -15,6 +15,7 @@ import {
   Send,
   Clock,
   Store,
+  AlertTriangle,
 } from "lucide-react";
 import { FaMotorcycle } from "react-icons/fa";
 import "../css/CheckoutModal.css";
@@ -106,6 +107,28 @@ const CheckoutModal = ({
   const handleSubmit = () => {
     let alertHtml = "";
 
+    if (estadoNegocio && !estadoNegocio.abierto) {
+      if (estadoNegocio.fuerzaCierre) {
+        alertHtml += `<div style="text-align: left; margin-bottom: 15px; background: #fffbeb; padding: 10px 12px; border-radius: 8px; border: 1px solid #fde68a;">
+          <h4 style="color: #b45309; margin-bottom: 4px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+            ⚠️ Cerrado temporalmente por eventualidad
+          </h4>
+          <p style="margin: 0; font-size: 0.9rem; color: #78350f; line-height: 1.4;">
+            El negocio se encuentra pausado temporalmente por una eventualidad. Tu pedido se enviará agendado y se preparará con prioridad tan pronto reanudemos el servicio.
+          </p>
+        </div>`;
+      } else {
+        alertHtml += `<div style="text-align: left; margin-bottom: 15px; background: #fff5f5; padding: 10px 12px; border-radius: 8px; border: 1px solid #fed7d7;">
+          <h4 style="color: #c53030; margin-bottom: 4px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+            ⏰ Fuera de horario de atención
+          </h4>
+          <p style="margin: 0; font-size: 0.9rem; color: #742a2a; line-height: 1.4;">
+            Nos encontramos fuera del horario habitual${estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se enviará agendado y se preparará al abrir en orden de llegada.
+          </p>
+        </div>`;
+      }
+    }
+
     if (esDomicilio) {
       alertHtml += `<div style="text-align: left; margin-bottom: 15px;">
         <h4 style="color: #3d2314; margin-bottom: 5px; font-weight: 800;">🛵 Sobre tu Domicilio</h4>
@@ -173,15 +196,35 @@ const CheckoutModal = ({
           <div className={`progress-step ${step >= 2 ? "active" : ""}`} />
         </div>
 
-        {/* Aviso: negocio cerrado → el pedido se agenda para la apertura */}
+        {/* Aviso dinámico según el estado del negocio */}
         {estadoNegocio && !estadoNegocio.abierto && (
-          <div className="checkout-aviso-cerrado">
-            <Clock size={16} />
-            <span>
-              <strong>Estamos cerrados ahora</strong>
-              {estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se
-              agenda y se prepará al abrir, en orden de llegada.
-            </span>
+          <div className={`checkout-aviso-cerrado ${estadoNegocio.fuerzaCierre ? "checkout-aviso-cerrado--eventualidad" : ""}`}>
+            {estadoNegocio.fuerzaCierre ? (
+              <>
+                <AlertTriangle size={18} />
+                <div>
+                  <strong style={{ display: "block", marginBottom: "2px" }}>
+                    Cerrado temporalmente por eventualidad
+                  </strong>
+                  <span>
+                    El servicio está pausado temporalmente por una eventualidad. Tu pedido quedará agendado y se preparará con prioridad tan pronto reanudemos la atención.
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <Clock size={18} />
+                <div>
+                  <strong style={{ display: "block", marginBottom: "2px" }}>
+                    Estamos cerrados ahora (Fuera de horario)
+                  </strong>
+                  <span>
+                    {estadoNegocio.horarioTexto ? `Horario: ${estadoNegocio.horarioTexto}. ` : ""}
+                    Tu pedido se agenda y se preparará en orden de llegada al abrir{estadoNegocio.openHour ? ` (${estadoNegocio.openHour})` : ""}.
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
 

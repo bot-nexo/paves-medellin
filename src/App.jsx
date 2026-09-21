@@ -94,13 +94,18 @@ const App = () => {
     message += "\n";
 
     // Fuera de horario o cierre de emergencia: el pedido queda AGENDADO y se
-    // prepara al abrir, en orden de llegada (el cliente lo debe saber)
+    // prepara al abrir/reanudar, en orden de llegada (el cliente lo debe saber)
     if (!estadoNegocio.abierto) {
-      message += "⚠️ *PEDIDO AGENDADO* (negocio cerrado ahora)\n";
-      if (estadoNegocio.horarioTexto) {
-        message += "Horario: " + estadoNegocio.horarioTexto + "\n";
+      if (estadoNegocio.fuerzaCierre) {
+        message += "⚠️ *PEDIDO AGENDADO* (Cerrado temporalmente por eventualidad)\n";
+        message += "Servicio pausado temporalmente. Se preparará con prioridad tan pronto reanudemos la atención.\n\n";
+      } else {
+        message += "⚠️ *PEDIDO AGENDADO* (Fuera de horario de atención)\n";
+        if (estadoNegocio.horarioTexto) {
+          message += "Horario habitual: " + estadoNegocio.horarioTexto + "\n";
+        }
+        message += "Se preparará al abrir, en orden de llegada.\n\n";
       }
-      message += "Se preparará al abrir, en orden de llegada.\n\n";
     }
     if (deliveryData.tipoEntrega === "recogida") {
       message += "🏪 *MODALIDAD: RECOGER EN TIENDA*\n\n";
