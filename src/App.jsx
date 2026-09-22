@@ -6,10 +6,9 @@ import "aos/dist/aos.css";
 import "./css/estadoNegocio.css";
 
 import Hero from "./components/Hero";
-import Promociones from "./components/Promociones";
 import Menu from "./components/Menu";
-import Combos from "./components/Combos";
 import Footer from "./components/Footer";
+import BottomNavigation from "./components/BottomNavigation";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
@@ -51,6 +50,7 @@ const App = () => {
   } = useCart();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
 
   // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
@@ -61,6 +61,7 @@ const App = () => {
 
   //***************************** */
   useEffect(() => {
+    window.scrollTo(0, 0);
     AOS.init({ duration: 1600, once: true, offset: 100 });
   }, []);
 
@@ -204,9 +205,9 @@ const App = () => {
         path="/*"
         element={
           <div
-            className="app-wrapper"
+            className="app-wrapper has-bottom-nav"
             style={{
-              backgroundColor: design?.appBg || "#fdfbf7",
+              backgroundColor: design?.appBg && !design.appBg.includes("fff") && !design.appBg.includes("fdf") ? design.appBg : "#0d0805",
               fontFamily: design?.fontFamily || "inherit",
             }}
           >
@@ -222,9 +223,10 @@ const App = () => {
               design={design}
               products={products}
               settings={settings}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onAddToCart={addToCart}
             />
-
-            <Promociones design={design} />
 
             <Menu
               data={products}
@@ -233,11 +235,17 @@ const App = () => {
               setSelectedProduct={setSelectedProduct}
               addToCart={addToCart}
               design={design}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
             />
 
-            <Combos design={design} onAddToCart={addToCart} />
-
             <Footer settings={settings} design={design} />
+
+            <BottomNavigation
+              cartCount={cartCount}
+              onOpenCart={openCart}
+              whatsappNumber={whatsappNumber}
+            />
 
             <CartModal
               cart={cart}

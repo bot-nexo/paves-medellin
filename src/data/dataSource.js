@@ -149,80 +149,97 @@ export const DEFAULT_COMBOS_ITEMS = [
 // ── Diseño del Menú / Catálogo por Defecto (Fallback idéntico al actual) ────
 export const DEFAULT_CATALOG_DESIGN = {
   // Global
-  appBg: "#fdfbf7",
+  appBg: "#0d0805",
   fontFamily: "Montserrat",
 
   // Hero
-  heroBg: "linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%)",
-  heroHeaderBg: "rgba(255, 255, 255, 0.72)",
-  heroCtaBg: "#d92b38",
-  heroCtaText: "#ffffff",
-  heroBadgeBg: "rgba(255, 255, 255, 0.92)",
-  heroBadgeText: "#d92b38",
-  heroFloatCartBg: "#3d2314",
-  heroFloatCartText: "#ffffff",
+  heroBg: "linear-gradient(180deg, #0d0805 0%, #140c08 100%)",
+  heroHeaderBg: "rgba(13, 8, 5, 0.85)",
+  heroCtaBg: "#ffcc00",
+  heroCtaText: "#120a06",
+  heroBadgeBg: "rgba(255, 204, 0, 0.15)",
+  heroBadgeText: "#ffcc00",
+  heroFloatCartBg: "#ffcc00",
+  heroFloatCartText: "#120a06",
 
   // Promociones
   showPromotions: true,
   promotionsTitle: "Promociones & Especiales",
   promotionsSubtitle: "Aprovecha nuestras ofertas por tiempo limitado en tus postres favoritos",
-  promotionsBg: "#fff5f5",
-  promotionsCardBg: "#ffffff",
-  promotionsAccent: "#d92b38",
+  promotionsBg: "#120a06",
+  promotionsCardBg: "#180e09",
+  promotionsAccent: "#ffcc00",
   promotionsItems: DEFAULT_PROMOTIONS_ITEMS,
 
   // Combos
   showCombos: true,
   combosTitle: "Combos & Packs para Compartir",
   combosSubtitle: "Las combinaciones perfectas al mejor precio para tus momentos dulces",
-  combosBg: "#fbf8f3",
-  combosCardBg: "#ffffff",
+  combosBg: "#0f0906",
+  combosCardBg: "#180e09",
   combosAccent: "#d92b38",
   combosItems: DEFAULT_COMBOS_ITEMS,
 
   // Menú
-  bgColor: "#fecdcd",
-  cardBg: "#fdfbf7",
-  headerBadgeBg: "rgba(255, 255, 255, 0.75)",
-  headerBadgeText: "#b4232e",
-  textPrimary: "#3d2314",
-  textMuted: "#7a6353",
-  borderColor: "rgba(61, 35, 20, 0.08)",
-  cardRadius: "20px",
+  bgColor: "#0d0805",
+  cardBg: "#160e0a",
+  headerBadgeBg: "rgba(255, 204, 0, 0.12)",
+  headerBadgeText: "#ffcc00",
+  textPrimary: "#fdfbf7",
+  textMuted: "#bda899",
+  borderColor: "rgba(255, 255, 255, 0.08)",
+  cardRadius: "22px",
   cardShadow: "md",
-  btnPrimaryBg: "#d92b38",
-  btnPrimaryText: "#ffffff",
-  btnDetailsBg: "transparent",
-  btnDetailsText: "#3d2314",
-  btnDetailsBorder: "rgba(61, 35, 20, 0.12)",
-  priceTagBg: "#3d2314",
-  priceTagText: "#ffffff",
-  badgePopularBg: "#d92b38",
-  badgePopularText: "#ffffff",
-  categoryBarBg: "rgba(255, 255, 255, 0.7)",
-  categoryActiveBg: "#d92b38",
-  categoryActiveText: "#ffffff",
+  btnPrimaryBg: "#ffcc00",
+  btnPrimaryText: "#120a06",
+  btnDetailsBg: "rgba(255, 255, 255, 0.05)",
+  btnDetailsText: "#e2d5cc",
+  btnDetailsBorder: "rgba(255, 255, 255, 0.12)",
+  priceTagBg: "#ffcc00",
+  priceTagText: "#120a06",
+  badgePopularBg: "#ffcc00",
+  badgePopularText: "#120a06",
+  categoryBarBg: "rgba(20, 12, 8, 0.9)",
+  categoryActiveBg: "#ffcc00",
+  categoryActiveText: "#120a06",
   categoryInactiveBg: "transparent",
-  categoryInactiveText: "#7a6353",
+  categoryInactiveText: "#bda899",
   columnsDesktop: "auto",
   columnsMobile: "1",
   cardLayout: "vertical",
-  imageAspectRatio: "4/3",
+  imageAspectRatio: "16/11",
 
   // Footer
-  footerBg: "linear-gradient(180deg, #1a0f08 0%, #0d0705 100%)",
-  footerText: "rgba(255, 255, 255, 0.7)",
-  footerAccent: "#d92b38",
+  footerBg: "linear-gradient(180deg, #0d0805 0%, #060402 100%)",
+  footerText: "rgba(253, 251, 247, 0.7)",
+  footerAccent: "#ffcc00",
+};
+
+const isLegacyLightColor = (color) => {
+  if (!color) return true;
+  const c = color.trim().toLowerCase();
+  return (
+    c === "#fdfbf7" ||
+    c === "#fecdcd" ||
+    c === "#fff5f5" ||
+    c === "#fff8f8" ||
+    c === "#fbf8f3" ||
+    c === "#ffffff" ||
+    c === "#fdf1f1" ||
+    c.includes("255, 255, 255") ||
+    c.includes("fdf1f1") ||
+    c.includes("fecdcd")
+  );
 };
 
 const normalizeCatalogDesign = (row) => ({
   // Global
-  appBg: row.app_bg || DEFAULT_CATALOG_DESIGN.appBg,
+  appBg: !isLegacyLightColor(row.app_bg) ? row.app_bg : DEFAULT_CATALOG_DESIGN.appBg,
   fontFamily: row.font_family || DEFAULT_CATALOG_DESIGN.fontFamily,
 
   // Hero
-  heroBg: row.hero_bg || DEFAULT_CATALOG_DESIGN.heroBg,
-  heroHeaderBg: row.hero_header_bg || DEFAULT_CATALOG_DESIGN.heroHeaderBg,
+  heroBg: !isLegacyLightColor(row.hero_bg) ? row.hero_bg : DEFAULT_CATALOG_DESIGN.heroBg,
+  heroHeaderBg: !isLegacyLightColor(row.hero_header_bg) ? row.hero_header_bg : DEFAULT_CATALOG_DESIGN.heroHeaderBg,
   heroCtaBg: row.hero_cta_bg || DEFAULT_CATALOG_DESIGN.heroCtaBg,
   heroCtaText: row.hero_cta_text || DEFAULT_CATALOG_DESIGN.heroCtaText,
   heroBadgeBg: row.hero_badge_bg || DEFAULT_CATALOG_DESIGN.heroBadgeBg,
@@ -234,8 +251,8 @@ const normalizeCatalogDesign = (row) => ({
   showPromotions: row.show_promotions !== false,
   promotionsTitle: row.promotions_title || DEFAULT_CATALOG_DESIGN.promotionsTitle,
   promotionsSubtitle: row.promotions_subtitle || DEFAULT_CATALOG_DESIGN.promotionsSubtitle,
-  promotionsBg: row.promotions_bg || DEFAULT_CATALOG_DESIGN.promotionsBg,
-  promotionsCardBg: row.promotions_card_bg || DEFAULT_CATALOG_DESIGN.promotionsCardBg,
+  promotionsBg: !isLegacyLightColor(row.promotions_bg) ? row.promotions_bg : DEFAULT_CATALOG_DESIGN.promotionsBg,
+  promotionsCardBg: !isLegacyLightColor(row.promotions_card_bg) ? row.promotions_card_bg : DEFAULT_CATALOG_DESIGN.promotionsCardBg,
   promotionsAccent: row.promotions_accent || DEFAULT_CATALOG_DESIGN.promotionsAccent,
   promotionsItems: Array.isArray(row.promotions_items) && row.promotions_items.length > 0
     ? row.promotions_items
@@ -245,20 +262,20 @@ const normalizeCatalogDesign = (row) => ({
   showCombos: row.show_combos !== false,
   combosTitle: row.combos_title || DEFAULT_CATALOG_DESIGN.combosTitle,
   combosSubtitle: row.combos_subtitle || DEFAULT_CATALOG_DESIGN.combosSubtitle,
-  combosBg: row.combos_bg || DEFAULT_CATALOG_DESIGN.combosBg,
-  combosCardBg: row.combos_card_bg || DEFAULT_CATALOG_DESIGN.combosCardBg,
+  combosBg: !isLegacyLightColor(row.combos_bg) ? row.combos_bg : DEFAULT_CATALOG_DESIGN.combosBg,
+  combosCardBg: !isLegacyLightColor(row.combos_card_bg) ? row.combos_card_bg : DEFAULT_CATALOG_DESIGN.combosCardBg,
   combosAccent: row.combos_accent || DEFAULT_CATALOG_DESIGN.combosAccent,
   combosItems: Array.isArray(row.combos_items) && row.combos_items.length > 0
     ? row.combos_items
     : DEFAULT_COMBOS_ITEMS,
 
   // Menú
-  bgColor: row.bg_color || DEFAULT_CATALOG_DESIGN.bgColor,
-  cardBg: row.card_bg || DEFAULT_CATALOG_DESIGN.cardBg,
+  bgColor: !isLegacyLightColor(row.bg_color) ? row.bg_color : DEFAULT_CATALOG_DESIGN.bgColor,
+  cardBg: !isLegacyLightColor(row.card_bg) ? row.card_bg : DEFAULT_CATALOG_DESIGN.cardBg,
   headerBadgeBg: row.header_badge_bg || DEFAULT_CATALOG_DESIGN.headerBadgeBg,
   headerBadgeText: row.header_badge_text || DEFAULT_CATALOG_DESIGN.headerBadgeText,
-  textPrimary: row.text_primary || DEFAULT_CATALOG_DESIGN.textPrimary,
-  textMuted: row.text_muted || DEFAULT_CATALOG_DESIGN.textMuted,
+  textPrimary: row.text_primary && row.text_primary !== "#3d2314" ? row.text_primary : DEFAULT_CATALOG_DESIGN.textPrimary,
+  textMuted: row.text_muted && row.text_muted !== "#7a6353" ? row.text_muted : DEFAULT_CATALOG_DESIGN.textMuted,
   borderColor: row.border_color || DEFAULT_CATALOG_DESIGN.borderColor,
   cardRadius: row.card_radius || DEFAULT_CATALOG_DESIGN.cardRadius,
   cardShadow: row.card_shadow || DEFAULT_CATALOG_DESIGN.cardShadow,
@@ -267,7 +284,7 @@ const normalizeCatalogDesign = (row) => ({
   btnDetailsBg: row.btn_details_bg || DEFAULT_CATALOG_DESIGN.btnDetailsBg,
   btnDetailsText: row.btn_details_text || DEFAULT_CATALOG_DESIGN.btnDetailsText,
   btnDetailsBorder: row.btn_details_border || DEFAULT_CATALOG_DESIGN.btnDetailsBorder,
-  priceTagBg: row.price_tag_bg || DEFAULT_CATALOG_DESIGN.priceTagBg,
+  priceTagBg: row.price_tag_bg && row.price_tag_bg !== "#3d2314" ? row.price_tag_bg : DEFAULT_CATALOG_DESIGN.priceTagBg,
   priceTagText: row.price_tag_text || DEFAULT_CATALOG_DESIGN.priceTagText,
   badgePopularBg: row.badge_popular_bg || DEFAULT_CATALOG_DESIGN.badgePopularBg,
   badgePopularText: row.badge_popular_text || DEFAULT_CATALOG_DESIGN.badgePopularText,

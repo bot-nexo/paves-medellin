@@ -1,276 +1,292 @@
-/* ═══════════════════════════════════════════════════
-   HERO FULL — Elegante pastelero (crema, chocolate, fresa)
-   Header glass, carrusel con slides redondeados y
-   botón flotante del carrito. Compatible móvil/desktop.
-═══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════
+   HERO SABORIO & FOODVIBE — Estética Gourmet Móvil Nativa de Alta Gama
+   Paleta Oficial Pavés Medellín: Chocolate profundo, Crema, Rojo Fresa & Oro
+   ══════════════════════════════════════════════════════════════════════════ */
 
-.hero-full {
-  --cream: #fdfbf7;
-  --cream-soft: #f7f0e6;
-  --choco: #3d2314;
-  --choco-soft: #5c4335;
-  --berry: #d92b38;
-  --berry-soft: #e8475a;
-  --ink: #3d2314;
-  --muted: #8a7365;
-
-  background: linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%);
+.saborio-hero-section {
   position: relative;
-  overflow-x: hidden;
-  font-family: "Poppins", system-ui, -apple-system, sans-serif;
-  color: var(--ink);
-
-  padding-bottom: 2.5rem;
+  background-color: var(--app-bg, #0d0805);
+  padding: 0.75rem 0 1.5rem;
+  overflow: hidden;
 }
 
-/* Textura de fondo (misma imagen, sutil sobre crema) */
-.hero-full::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: url("/fondo.webp");
-  background-size: cover;
-  background-position: center;
-  opacity: 0.1;
-  mix-blend-mode: multiply;
-}
+/* ── Top Bar: Logo + Marca + Estado ─────────────────────────────────────── */
 
-/* Difuminado de color: manchas suaves de fresa, durazno y crema */
-.hero-full::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 55% 45% at 12% 8%, rgba(232, 71, 90, 0.2), transparent 65%),
-    radial-gradient(ellipse 50% 40% at 88% 12%, rgba(255, 170, 190, 0.3), transparent 65%),
-    radial-gradient(ellipse 60% 45% at 80% 85%, rgba(255, 214, 165, 0.28), transparent 70%),
-    radial-gradient(ellipse 70% 50% at 15% 92%, rgba(255, 244, 230, 0.55), transparent 75%),
-    linear-gradient(180deg, rgba(253, 241, 241, 0.5) 0%, rgba(254, 205, 205, 0.25) 100%);
-}
-
-/* Capas superiores */
-.hero-full__header,
-.hero-full__stage,
-.hero-full__float-cart {
-  position: relative;
-  z-index: 1;
-}
-
-/* ── Header con Glassmorphism Flotante ── */
-.hero-full__header {
+.saborio-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  max-width: 1040px;
-  margin: 1rem auto 1.25rem;
-  position: relative;
-  z-index: 20;
-
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(61, 35, 20, 0.08);
-  border-radius: 18px;
-  box-shadow: 0 8px 28px rgba(61, 35, 20, 0.1);
-  width: calc(100% - 2rem);
+  padding: 0.5rem 0.25rem 0.85rem;
 }
 
-.hero-full__brand {
+.saborio-logo-wrap {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.hero-full__logo {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
+.saborio-logo-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   object-fit: cover;
-  box-shadow: 0 4px 12px rgba(61, 35, 20, 0.18);
-  border: 1px solid rgba(61, 35, 20, 0.08);
+  border: 1.5px solid rgba(255, 204, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
-.hero-full__name {
-  font-size: 1.28rem;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: var(--choco);
+.saborio-brand-info {
+  display: flex;
+  flex-direction: column;
 }
 
-/* "Medellín" con degradado fresa */
-.hero-full__name span {
-  font-weight: 800;
-  color: var(--berry);
-  background: linear-gradient(135deg, #d92b38, #e8475a);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.hero-full__meta {
+.saborio-brand-title {
   display: flex;
   align-items: center;
+  gap: 0.35rem;
+}
+
+.saborio-brand-name {
+  font-family: var(--menu-font, "Outfit", "Montserrat", sans-serif);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #fdfbf7;
+  letter-spacing: -0.02em;
+}
+
+.saborio-brand-city {
+  font-family: var(--menu-font, "Outfit", "Montserrat", sans-serif);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #ffcc00;
+  letter-spacing: -0.02em;
+}
+
+.saborio-brand-icon {
+  color: #ffcc00;
+}
+
+.saborio-brand-tagline {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #ffcc00;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  opacity: 0.9;
+}
+
+.saborio-top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.saborio-status-badge {
+  display: inline-flex;
+  align-items: center;
   gap: 0.4rem;
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 0.2rem;
-}
-
-.hero-full__rating {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.22rem;
-  color: #a8871f;
-  font-weight: 700;
-  background: rgba(201, 162, 39, 0.12);
-  padding: 0.12rem 0.5rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 999px;
-}
-
-.hero-full__dot {
-  opacity: 0.5;
-}
-
-/* CTA "Ver Menú" en el header */
-.hero-full__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--berry), var(--berry-soft));
-  color: #ffffff;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.hero-full__cta:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-  color: #ffffff;
+.saborio-status-badge--open {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
 }
 
-.hero-full__cta svg {
-  animation: cta-bounce 2s ease-in-out infinite;
+.saborio-status-badge--closed {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
 }
 
-@keyframes cta-bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(3px);
-  }
+.saborio-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
 }
 
-/* ── Stage / Carrusel Principal ── */
-.hero-full__stage {
-  position: relative;
-  width: calc(100% - 2rem);
-  max-width: 1040px;
-  height: 68vw;
-  max-height: 480px;
-  min-height: 360px;
-  overflow: hidden;
-  background: var(--cream-soft);
-  margin: 0 auto 2.5rem;
-  border-radius: 24px;
-  border: 1px solid rgba(61, 35, 20, 0.08);
-  box-shadow:
-    0 20px 45px -12px rgba(61, 35, 20, 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.5);
+.saborio-status-dot--closed {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
 }
 
-/* Estado de carga (sin productos aún) */
-.hero-full__stage--loading {
+.saborio-avatar-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
 }
 
-.hero-full__loading {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--muted);
+.saborio-avatar-btn:hover {
+  transform: scale(1.06);
+  border-color: #ffcc00;
 }
 
-/* Transición de Slides */
-.hero-full__slide {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  opacity: 0;
-  transition: opacity 0.6s ease, visibility 0.6s ease;
-}
-
-.hero-full__slide--active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.hero-full__media {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-full__img {
+.saborio-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
 }
 
-/* Degradado suave para legibilidad del texto */
-.hero-full__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top,
-      rgba(40, 22, 12, 0.82) 0%,
-      rgba(40, 22, 12, 0.45) 32%,
-      rgba(40, 22, 12, 0.08) 60%,
-      rgba(40, 22, 12, 0) 100%);
+/* ── Barra de Búsqueda Integrada Estilo Saborio ─────────────────────────── */
+
+.saborio-search-container {
+  padding: 0.25rem 0 1rem;
 }
 
-/* Contenido de cada Slide */
-.hero-full__content {
+.saborio-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.65rem 0.85rem 0.65rem 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: all 0.25s ease;
+}
+
+.saborio-search-box:focus-within {
+  border-color: rgba(255, 204, 0, 0.45);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(255, 204, 0, 0.15);
+}
+
+.saborio-search-icon {
+  color: rgba(253, 251, 247, 0.5);
+  flex-shrink: 0;
+}
+
+.saborio-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #fdfbf7;
+  font-size: 0.92rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.saborio-search-input::placeholder {
+  color: rgba(253, 251, 247, 0.45);
+  font-weight: 500;
+}
+
+.saborio-filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fdfbf7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saborio-filter-btn:hover {
+  background: #ffcc00;
+  color: #120a06;
+  border-color: #ffcc00;
+}
+
+/* ── Hero Card: Banner Curvo Flotante de Gran Impacto ───────────────────── */
+
+.saborio-card-banner {
   position: relative;
-  z-index: 5;
-  padding: 1.5rem 1.35rem 1.7rem;
-  color: #ffffff;
-  max-width: 560px;
+  width: 100%;
+  border-radius: 28px;
+  background: radial-gradient(
+    ellipse at 75% 50%,
+    rgba(217, 43, 56, 0.28) 0%,
+    rgba(28, 17, 11, 0.95) 55%,
+    #140c08 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  padding: 1.6rem 1.6rem 2rem;
 }
 
-.hero-full__title {
-  font-size: clamp(1.4rem, 5.5vw, 2.1rem);
-  color: #ffffff;
+.saborio-card-banner__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-height: 240px;
+}
+
+/* Contenido Izquierdo */
+.saborio-card-banner__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  z-index: 2;
+  max-width: 55%;
+}
+
+.saborio-card-banner__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  border: 1.5px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  margin: 0 0 0.4rem;
-  line-height: 1.18;
-  text-shadow: 0 2px 12px rgba(40, 22, 12, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  width: fit-content;
+  box-shadow: 0 2px 10px rgba(255, 204, 0, 0.15);
 }
 
-.hero-full__desc {
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.94);
-  margin: 0 0 1.25rem;
-  text-shadow: 0 1px 8px rgba(40, 22, 12, 0.5);
+.saborio-card-banner__headline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  line-height: 1.05;
+  font-family: var(--menu-font, "Outfit", "Montserrat", sans-serif);
+}
+
+.headline-light {
+  font-size: 2.1rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.headline-yellow {
+  font-size: 2.3rem;
+  font-weight: 900;
+  color: #ffcc00;
+  letter-spacing: -0.01em;
+  text-shadow: 0 4px 18px rgba(255, 204, 0, 0.3);
+}
+
+.saborio-card-banner__subtitle {
+  font-size: 0.86rem;
+  color: #d8c8bd;
+  line-height: 1.45;
+  margin: 0.2rem 0 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -278,300 +294,200 @@
   overflow: hidden;
 }
 
-/* Badge "Destacado" estilo pastelero */
-.hero-full__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: var(--berry);
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0.32rem 0.8rem;
-  border-radius: 999px;
-  margin-bottom: 0.7rem;
-  box-shadow: 0 4px 14px rgba(40, 22, 12, 0.18);
-}
-
-.hero-full__badge {
+.saborio-cta-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  padding: 0.4rem 0.85rem;
+  padding: 0.7rem 1.45rem;
   border-radius: 999px;
-  margin-bottom: 0.7rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease;
-}
-
-/* Modificadores de Estado */
-.hero-full__badge--open {
-  color: #15803d;
-  /* Verde éxito */
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.hero-full__badge--closed {
-  color: #b91c1c;
-  /* Rojo suave */
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.hero-full__badge--closed-forced {
-  color: #c2410c;
-  /* Naranja/Ámbar alerta */
-  background: #fff7ed;
-  border: 1px solid rgba(249, 115, 22, 0.3);
-}
-
-/* Elementos Internos */
-.badge__status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-}
-
-.statuts-open {
-  background-color: #22c55e;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
-}
-
-.statuts-closed {
-  background-color: #9a5801;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-}
-
-.statuts-closed1 {
-  background-color: #ef4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-}
-
-.badge__text-group {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.badge__title {
-  text-transform: uppercase;
+  background: #ffcc00;
+  color: #120a06;
   font-weight: 800;
-}
-
-.badge__subtitle {
-  color: rgba(96, 96, 96, 0.99);
-  font-weight: 600;
-  text-transform: none;
-}
-
-.hero-full__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.hero-full__price-block {
-  display: flex;
-  flex-direction: column;
-}
-
-.hero-full__price {
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(40, 22, 12, 0.5);
-}
-
-.hero-full__rating-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-/* Barra de progreso */
-.hero-full__progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.25);
-  z-index: 10;
-}
-
-.hero-full__progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--berry), var(--berry-soft));
-  transition: width 0.04s linear;
-}
-
-/* ── Botón flotante del carrito ── */
-.hero-full__float-cart {
-  position: fixed;
-  bottom: 1.4rem;
-  right: 1.25rem;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, var(--choco), var(--choco-soft));
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  padding: 0.85rem 1.25rem 0.85rem 1.05rem;
-  font-size: 0.9rem;
-  font-weight: 650;
-  font-family: inherit;
+  font-size: 0.92rem;
+  border: none;
   cursor: pointer;
-  box-shadow: 0 10px 28px rgba(61, 35, 20, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 6px 18px rgba(255, 204, 0, 0.35);
+  transition: all 0.25s ease;
+  width: fit-content;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.hero-full__float-cart:hover {
+.saborio-cta-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(61, 35, 20, 0.4);
+  background: #ffd633;
+  box-shadow: 0 8px 24px rgba(255, 204, 0, 0.5);
 }
 
-.hero-full__float-cart:active {
-  transform: scale(0.96);
+.saborio-cta-btn:active {
+  transform: translateY(0);
 }
 
-.hero-full__float-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: linear-gradient(135deg, var(--berry), var(--berry-soft));
-  color: #ffffff;
-  font-size: 0.68rem;
-  font-weight: 800;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 50%;
+/* Visual Derecho: Imagen Gastronómica + Badge Circular */
+.saborio-card-banner__visual {
+  position: relative;
+  flex: 0 0 45%;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* ── Adaptaciones Responsive ── */
-@media (min-width: 900px) {
-  .hero-full__header {
-    margin: 1.25rem auto 1.5rem;
-    padding: 0.85rem 1.5rem;
+.saborio-banner-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: transform 0.5s ease;
+}
+
+.saborio-card-banner:hover .saborio-banner-product-img {
+  transform: scale(1.05);
+}
+
+.saborio-banner-glow {
+  position: absolute;
+  inset: -15px;
+  background: radial-gradient(circle, rgba(255, 204, 0, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Badge Circular Flotante (-20% OFF) */
+.saborio-discount-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #ffcc00;
+  color: #120a06;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  border: 2px solid #140c08;
+  z-index: 3;
+  animation: floatBadge 3.5s ease-in-out infinite;
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(3deg); }
+}
+
+.discount-top {
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.discount-main {
+  font-size: 1.15rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.discount-bottom {
+  font-size: 0.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+/* Dots de Paginación */
+.saborio-dots-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.saborio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saborio-dot--active {
+  width: 22px;
+  border-radius: 99px;
+  background: #ffcc00;
+  box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+}
+
+/* Barra de Progreso Continua */
+.saborio-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.saborio-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffcc00, #d92b38);
+  transition: width 0.05s linear;
+}
+
+/* ── Responsive Móvil ──────────────────────────────────────────────────── */
+
+@media (max-width: 680px) {
+  .saborio-card-banner {
+    padding: 1.25rem 1.15rem 1.5rem;
+    border-radius: 22px;
+  }
+
+  .saborio-card-banner__inner {
+    flex-direction: column-reverse;
+    gap: 1rem;
+    min-height: auto;
+  }
+
+  .saborio-card-banner__content {
+    max-width: 100%;
+    align-items: flex-start;
+  }
+
+  .headline-light {
+    font-size: 1.65rem;
+  }
+
+  .headline-yellow {
+    font-size: 1.85rem;
+  }
+
+  .saborio-card-banner__visual {
     width: 100%;
+    height: 180px;
+    flex: none;
   }
 
-  .hero-full__stage {
-    width: 100%;
-    height: 500px;
-    max-height: none;
-    border-radius: 28px;
-    margin-bottom: 3.5rem;
-    box-shadow:
-      0 25px 55px -12px rgba(61, 35, 20, 0.32),
-      0 0 0 1px rgba(255, 255, 255, 0.5);
-  }
-}
-
-@media (min-width: 1200px) {
-  .hero-full__stage {
-    max-width: 1040px;
-    height: 520px;
-  }
-}
-
-@media (max-width: 640px) {
-  .hero-full__float-cart {
-    bottom: 1.25rem;
-    right: 1.35rem;
-    padding: 0.5rem 0.8rem 0.5rem 0.6rem;
-    font-size: 0.65rem;
+  .saborio-discount-badge {
+    width: 60px;
+    height: 60px;
+    top: -4px;
+    right: -4px;
   }
 
-  .hero-full__name {
-    font-size: 1.2rem;
+  .discount-main {
+    font-size: 1rem;
   }
 
-  .hero-full__prodNum {
-    font-size: 0.7rem;
-  }
-
-  .hero-full__header {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    /* Columna 1: Marca | Columna 2: Botón Ver Menú */
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.75rem 0.85rem;
-  }
-
-  .hero-full__brand {
-    grid-column: 1 / 2;
-  }
-
-  .hero-full__cta {
-    margin-top: -20px;
-    padding: 0.4rem 0.6rem;
-    font-size: 0.65rem;
-  }
-
-  /* Badge Estado (Cerrado/Abierto) en Móvil */
-  .hero-full__header>*:nth-child(2):not(.hero-full__brand):not(.hero-full__cta),
-  .hero-full__badge {
-    grid-column: 1 / -1;
-    /* Pasa a una nueva fila completa abajo */
-    justify-self: center;
-    width: 100%;
-    text-align: center;
-    position: static !important;
-    /* Desactiva posiciones absolutas que lo montaban */
-    transform: none !important;
-    margin-top: 0.1rem;
-    box-sizing: border-box;
-  }
-
-  .hero-full__badge.hero-full__badge--open {
-    margin-left: 6px;
-  }
-
-  .hero-full__badge {
-    margin-right: 6px;
-    margin-left: 6px;
-    font-size: 0.65rem;
-  }
-
-
-
-  .hero-full__badge--closed1 {
-    margin-top: -6px;
-    margin-left: 120px;
-    margin-right: 120px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-  .hero-full__float-cart,
-  .hero-full__slide,
-  .hero-full__progress-bar {
-    transition: none;
+  .saborio-brand-name,
+  .saborio-brand-city {
+    font-size: 1.15rem;
   }
 }

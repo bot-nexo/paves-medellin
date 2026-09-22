@@ -1,4 +1,5 @@
-import { Plus, Eye, Sparkles, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Eye, Sparkles, X, Star, Flame, Heart } from "lucide-react";
 import { formatCOP } from "../utils/price";
 import "../css/MenuCard.css";
 
@@ -9,7 +10,42 @@ const MenuCard = ({
   onAddToCart,
   design,
 }) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    try {
+      const favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
+      setIsFavorite(favs.includes(product.id));
+    } catch {
+      /* noop */
+    }
+  }, [product.id]);
+
+  const toggleFavorite = (e) => {
+    e.stopPropagation();
+    try {
+      const favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
+      let updated;
+      if (favs.includes(product.id)) {
+        updated = favs.filter((id) => id !== product.id);
+        setIsFavorite(false);
+      } else {
+        updated = [...favs, product.id];
+        setIsFavorite(true);
+      }
+      localStorage.setItem("paves_favorites", JSON.stringify(updated));
+    } catch {
+      setIsFavorite(!isFavorite);
+    }
+  };
+
   const formattedPrice = formatCOP(product.precio ?? 0);
+  // Precio de referencia original tachado si tiene descuento o calculado sugerido
+  const originalPrice = product.precioOriginal
+    ? formatCOP(product.precioOriginal)
+    : product.descuento
+      ? formatCOP(Math.round((product.precio ?? 0) * 1.25))
+      : null;
 
   const imageSrc = product.imagen || "/images/placeholder.png";
   const titleText = product.nombre || "Postre";
@@ -21,14 +57,13 @@ const MenuCard = ({
     design?.cardLayout === "horizontal" ? "menu-card--layout-horizontal" : "";
   const shadowClass = `menu-card--shadow-${design?.cardShadow || "md"}`;
 
-  //*************************************** */
   return (
     <article
       className={`menu-card ${layoutClass} ${shadowClass} ${isDetailsOpen ? "menu-card--open" : ""}`}
       aria-expanded={isDetailsOpen}
     >
       <div className="menu-card__inner">
-        {/* Imagen */}
+        {/* Imagen Gourmet con Badges y Botón de Favorito */}
         <div className="menu-card__media">
           <img
             src={imageSrc}
@@ -38,17 +73,42 @@ const MenuCard = ({
           />
           <div className="menu-card__media-overlay" aria-hidden="true" />
 
-          {product.destacado && (
-            <span className="menu-card__badge">
-              <Sparkles size={12} />
-              Popular
-            </span>
-          )}
+          {/* Badges Flotantes Estilo Saborio */}
+          <div className="menu-card__badges-wrap">
+            {product.descuento ? (
+              <span className="saborio-badge-discount">
+                {product.descuento}
+              </span>
+            ) : product.destacado ? (
+              <span className="saborio-badge-popular">
+                <Flame size={12} className="saborio-badge-icon" />
+                Más popular
+              </span>
+            ) : (
+              <span className="saborio-badge-rating">
+                <Star size={11} fill="currentColor" />
+                {product.rating || "4.9"}
+              </span>
+            )}
 
-          <span className="menu-card__price-tag">{formattedPrice}</span>
+            {/* Botón de Favoritos (Corazón) Estilo Saborio */}
+            <button
+              type="button"
+              className={`saborio-fav-btn ${isFavorite ? "saborio-fav-btn--active" : ""}`}
+              onClick={toggleFavorite}
+              aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+              title="Guardar en favoritos"
+            >
+              <Heart
+                size={16}
+                fill={isFavorite ? "#ff4757" : "rgba(255, 255, 255, 0.4)"}
+                color={isFavorite ? "#ff4757" : "#ffffff"}
+              />
+            </button>
+          </div>
         </div>
 
-        {/* Contenido (Alineado con Flexbox) */}
+        {/* Contenido de la Tarjeta */}
         <div className="menu-card__content">
           <div className="menu-card__body">
             <h3 className="menu-card__title">{titleText}</h3>
@@ -56,40 +116,49 @@ const MenuCard = ({
 
             {product.nota && (
               <span className="menu-card__nota">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+                <Sparkles size={12} />
                 {product.nota}
               </span>
             )}
           </div>
 
-          <div className="menu-card__actions">
-            <button
-              type="button"
-              className="menu-card__btn-details"
-              onClick={onToggleDetails}
-              aria-expanded={isDetailsOpen}
-              aria-controls={`menu-card-details-${product.id}`}
-            >
-              <Eye size={16} />
-              <span>{isDetailsOpen ? "Cerrar" : "Detalles"}</span>
-            </button>
-            <button
-              type="button"
-              className="menu-card__btn-add"
-              onClick={() => onAddToCart(product)}
-              aria-label={`Agregar ${titleText} al carrito`}
-            >
-              <Plus size={17} />
-              <span>Agregar</span>
-            </button>
+          {/* Pie de Tarjeta Estilo Saborio: Precio Dorado + Botón Circular (+) */}
+          <div className="menu-card__footer">
+            <div className="menu-card__price-box">
+              {originalPrice && (
+                <span className="menu-card__price-old">{originalPrice}</span>
+              )}
+              <span className="menu-card__price">{formattedPrice}</span>
+            </div>
+
+            <div className="menu-card__actions">
+              <button
+                type="button"
+                className="menu-card__btn-details"
+                onClick={onToggleDetails}
+                aria-expanded={isDetailsOpen}
+                aria-controls={`menu-card-details-${product.id}`}
+                title="Ver ingredientes y detalles"
+              >
+                <Eye size={15} />
+                <span>Info</span>
+              </button>
+
+              {/* Botón Circular Rápido (+) Estilo Saborio */}
+              <button
+                type="button"
+                className="saborio-quick-add-btn"
+                onClick={() => onAddToCart(product)}
+                aria-label={`Agregar ${titleText} al carrito`}
+                title="Añadir al pedido"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Panel deslizante de detalles */}
+        {/* Panel Deslizante de Detalles */}
         <div
           className="menu-card__panel"
           id={`menu-card-details-${product.id}`}
@@ -97,7 +166,7 @@ const MenuCard = ({
         >
           <div className="menu-card__panel-header">
             <div className="menu-card__panel-title-wrap">
-              <h4 className="menu-card__panel-title">Detalles</h4>
+              <h4 className="menu-card__panel-title">Detalles del Postre</h4>
               {((product.adiciones?.length > 0) || (product.salsas?.length > 0)) && (
                 <span className="menu-card__badge-tag">
                   ✨ Personalizable
@@ -118,28 +187,17 @@ const MenuCard = ({
             <p className="menu-card__panel-description">{descriptionText}</p>
 
             {product.toppings?.length > 0 && (
-              <div className="menu-card__toppings-section">
+              <div className="menu-card__toppings">
                 <span className="menu-card__toppings-title">Toppings incluidos:</span>
-                <ul className="menu-card__toppings-list">
-                  {product.toppings.map((top, idx) => (
-                    <li key={idx} className="menu-card__topping-chip">
+                <div className="menu-card__toppings-list">
+                  {product.toppings.map((top, i) => (
+                    <span key={i} className="menu-card__topping-pill">
                       {top}
-                    </li>
+                    </span>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
-          </div>
-
-          <div className="menu-card__panel-footer">
-            <button
-              type="button"
-              className="menu-card__btn-add-full"
-              onClick={() => onAddToCart(product)}
-            >
-              <Plus size={17} />
-              <span>Agregar &middot; {formattedPrice}</span>
-            </button>
           </div>
         </div>
       </div>

@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Sparkles } from "lucide-react";
+import { Star, Sparkles, ArrowRight, StoreIcon, Flame, Search, SlidersHorizontal, Heart } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
-import { FaShoppingCart } from "react-icons/fa";
-import { StoreIcon } from "lucide-react";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
+import { products as localProducts } from "../data/menu";
 import "../css/Hero.css";
 
 const Hero = ({
@@ -15,6 +14,9 @@ const Hero = ({
   design = DEFAULT_CATALOG_DESIGN,
   products: propProducts,
   settings: propSettings,
+  onAddToCart,
+  searchQuery = "",
+  onSearchChange,
 }) => {
   const catalog = useCatalog();
   const products = propProducts !== undefined ? propProducts : catalog.products || [];
@@ -26,16 +28,15 @@ const Hero = ({
   const intervalRef = useRef(null);
   const progressRef = useRef(null);
 
-  const AUTOPLAY_DURATION = 7000;
-  const featured = products.length > 0 ? products : [];
+  const AUTOPLAY_DURATION = 6500;
+  const featured = (products && products.length > 0) ? products : localProducts;
 
-  //********************************* */
   const formatCOP = (val) => {
     if (!val) return "$0";
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
       currency: "COP",
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(val);
   };
 
@@ -45,6 +46,10 @@ const Hero = ({
     setProgress(0);
   }, [featured.length]);
 
+  const goToSlide = (idx) => {
+    setCurrent(idx);
+    setProgress(0);
+  };
 
   useEffect(() => {
     if (isPaused || featured.length === 0) {
@@ -57,7 +62,7 @@ const Hero = ({
     progressRef.current = setInterval(() => {
       const elapsed = Date.now() - start;
       setProgress(Math.min((elapsed / AUTOPLAY_DURATION) * 100, 100));
-    }, 30);
+    }, 35);
 
     intervalRef.current = setTimeout(() => {
       next();
@@ -67,273 +72,219 @@ const Hero = ({
       clearTimeout(intervalRef.current);
       clearInterval(progressRef.current);
     };
-  }, [current, isPaused, next, featured.length]);
+  }, [current, isPaused, featured.length, next]);
 
-  const renderEstadoNegocio = () => {
-    // 1. Estado Abierto
-    if (estadoNegocio.abierto) {
-      return (
-        <span className="hero-full__badge hero-full__badge--open">
-          <StoreIcon className="ico-hero" />
-          <span className="badge__status-dot statuts-open" />
-          Abierto ahora
-        </span>
-      );
-    }
-
-    // 2. Cierre Manual / Eventualidad (fuerzaCierre)
-    if (estadoNegocio.fuerzaCierre) {
-      return (
-        <span className="hero-full__badge hero-full__badge--closed-forced">
-          <StoreIcon className="ico-hero" />
-          <span className="badge__status-dot statuts-closed" />
-          Cerrado temporalmente por eventualidad
-        </span>
-      );
-    }
-
-    // 3. Cerrado por Horario Habitual
-    return (
-      <span className="hero-full__badge hero-full__badge--closed">
-        <StoreIcon className="ico-hero" />
-        <div className="badge__text-group">
-          <span className="badge__status-dot statuts-closed1" />
-          <span className="badge__title">Cerrado</span>
-          <span className="badge__subtitle">
-            Abre a las {estadoNegocio.openHour}
-          </span>
-        </div>
-      </span>
-    );
-  };
-  
-  // En tu JSX principal:
-  { renderEstadoNegocio() }
-  
-  // ─────────────────────────────────────────────
-  // Animaciones avanzadas (Opción 1)
-  // ─────────────────────────────────────────────
   const slideVariants = {
-    initial: {
-      opacity: 0,
-      scale: 1.07
-    },
+    initial: { opacity: 0, scale: 0.98 },
     animate: {
       opacity: 1,
       scale: 1,
-      transition: {
-        duration: 1.05,
-        ease: [0.22, 1, 0.36, 1]
-      }
+      transition: { duration: 0.45, ease: "easeOut" },
     },
     exit: {
       opacity: 0,
-      scale: 0.97,
-      transition: {
-        duration: 0.65,
-        ease: [0.4, 0, 0.2, 1]
-      }
-    }
+      scale: 1.02,
+      transition: { duration: 0.3, ease: "easeIn" },
+    },
   };
 
-  const contentVariants = {
-    initial: { opacity: 0 },
-    animate: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.28
-      }
-    }
-  };
+  const renderEstadoNegocio = () => {
+    if (!estadoNegocio) return null;
 
-  const itemVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.55,
-        ease: [0.22, 1, 0.36, 1]
-      }
+    if (estadoNegocio.abierto) {
+      return (
+        <div className="saborio-status-badge saborio-status-badge--open">
+          <span className="saborio-status-dot" />
+          <span>Abierto ahora</span>
+        </div>
+      );
     }
-  };
 
-  if (featured.length === 0) {
+    if (estadoNegocio.fuerzaCierre) {
+      return (
+        <div className="saborio-status-badge saborio-status-badge--closed">
+          <span className="saborio-status-dot saborio-status-dot--closed" />
+          <span>Cerrado temporal</span>
+        </div>
+      );
+    }
+
     return (
-      <section className="hero-full">
-        <header className="hero-full__header">
-          <div className="hero-full__brand">
-            <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="hero-full__logo" />
-            <div>
-              <h1 className="hero-full__name">
-                Pavés <span>Medellín</span>
-              </h1>
+      <div className="saborio-status-badge saborio-status-badge--closed">
+        <span className="saborio-status-dot saborio-status-dot--closed" />
+        <span>Cerrado {estadoNegocio.openHour ? `· Abre ${estadoNegocio.openHour}` : ""}</span>
+      </div>
+    );
+  };
+
+  const activeProduct = featured[current] || {};
+
+  const handleCtaClick = () => {
+    if (onAddToCart && activeProduct?.id) {
+      onAddToCart(activeProduct);
+    } else {
+      const menuEl = document.getElementById("menu");
+      if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleSearchInput = (e) => {
+    if (onSearchChange) {
+      onSearchChange(e.target.value);
+    }
+    const menuEl = document.getElementById("menu");
+    if (menuEl && window.scrollY < 200) {
+      menuEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  return (
+    <section className="saborio-hero-section">
+      <div className="container">
+        {/* ── Top Bar: Logo Oficial + Estado + Avatar ───────────────────────── */}
+        <header className="saborio-top-bar">
+          <div className="saborio-top-bar__left">
+            <div className="saborio-logo-wrap">
+              <img
+                src={settings?.logo_url || logoImg}
+                alt="Pavés Medellín"
+                className="saborio-logo-img"
+              />
+              <div className="saborio-brand-info">
+                <div className="saborio-brand-title">
+                  <span className="saborio-brand-name">Pavés</span>
+                  <span className="saborio-brand-city">Medellín</span>
+                  <Flame size={16} className="saborio-brand-icon" />
+                </div>
+                <span className="saborio-brand-tagline">
+                  EL VERDADERO SABOR BRASILEÑO
+                </span>
+              </div>
             </div>
+          </div>
+
+          <div className="saborio-top-bar__right">
+            {renderEstadoNegocio()}
           </div>
         </header>
-        <div className="hero-full__stage hero-full__stage--loading">
-          <div className="hero-full__loading">Cargando productos...</div>
-        </div>
-      </section>
-    );
-  }
 
-  const activeProduct = featured[current];
-  const activeCount = products.length;
-  
-  //************************************ */
-  return (
-    <section
-      className="hero-full"
-      style={{
-        background: d.heroBg || "linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%)",
-        fontFamily: d.fontFamily || "inherit",
-      }}
-    >
-      {/* Header */}
-      <header
-        className="hero-full__header"
-        style={{
-          background: d.heroHeaderBg || "rgba(255, 255, 255, 0.72)",
-          borderColor: d.borderColor || "rgba(61, 35, 20, 0.08)",
-        }}
-      >
-        <div className="hero-full__brand">
-          <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" onError={(e) => {
-            e.target.style.display = 'none';
-          }} className="hero-full__logo" />
-          <div>
-            <h1 className="hero-full__name" style={{ color: d.textPrimary || "#3d2314" }}>
-              Pavés <span>Medellín</span>
-            </h1>
-            <div className="hero-full__meta">
-              <span className="hero-full__rating">
-                <Star size={11} fill="currentColor" /> 4.9
-              </span>
-              <span className="hero-full__dot">·</span>
-              <span className="hero-full__prodNum">{activeCount} productos</span>
-            </div>
+        {/* ── Barra de Búsqueda Flotante Estilo Saborio ─────────────────────── */}
+        <div className="saborio-search-container">
+          <div className="saborio-search-box">
+            <Search size={18} className="saborio-search-icon" />
+            <input
+              type="text"
+              className="saborio-search-input"
+              placeholder="¿Qué antojo tienes hoy?"
+              value={searchQuery}
+              onChange={handleSearchInput}
+              aria-label="Buscar postres"
+            />
+            <button
+              type="button"
+              className="saborio-filter-btn"
+              onClick={() => {
+                const menuEl = document.getElementById("menu");
+                if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
+              }}
+              title="Filtrar por categoría"
+            >
+              <SlidersHorizontal size={16} />
+            </button>
           </div>
         </div>
-        <a
-          href="#menu"
-          className="hero-full__cta"
-          style={{
-            background: d.heroCtaBg || "#d92b38",
-            color: d.heroCtaText || "#ffffff",
-          }}
-        >
-          Ver Menú
-        </a>
 
-        {renderEstadoNegocio()}
-
-      </header>
-
-      {/* Stage */}
-
-      <div
-        className="hero-full__stage"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeProduct.id}
-            className="hero-full__slide"
-            variants={slideVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+        {/* ── Hero Card: Banner Principal de Impacto Estilo Saborio ─────────── */}
+        {featured.length > 0 && (
+          <div
+            className="saborio-card-banner"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onTouchStart={() => setIsPaused(true)}
+            onTouchEnd={() => setIsPaused(false)}
           >
-            <div className="hero-full__media">
-              <img
-                src={activeProduct.imagen || activeProduct.image}
-                alt={activeProduct.nombre || activeProduct.name}
-                className="hero-full__img"
-              />
-              {/* Overlay mejorado para legibilidad */}
-              <div className="hero-full__overlay" />
-            </div>
-
-            {/* Contenido con stagger */}
-            <motion.div
-              className="hero-full__content"
-              variants={contentVariants}
-              initial="initial"
-              animate="animate"
-            >
+            <AnimatePresence mode="wait">
               <motion.div
-                className="hero-full__badge"
-                variants={itemVariants}
-                style={{
-                  background: d.heroBadgeBg || "rgba(255, 255, 255, 0.92)",
-                  color: d.heroBadgeText || "#d92b38",
-                }}
+                key={activeProduct.id || current}
+                className="saborio-card-banner__inner"
+                variants={slideVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
               >
-                <Sparkles size={12} />
-                {activeProduct.tag || "Destacado"}
-              </motion.div>
+                {/* Lado Izquierdo: Contenido Tipográfico de Gran Impacto */}
+                <div className="saborio-card-banner__content">
+                  <div className="saborio-card-banner__badge">
+                    <span>PROMO EXCLUSIVA</span>
+                  </div>
 
-              <motion.h2 className="hero-full__title" variants={itemVariants}>
-                {activeProduct.nombre || activeProduct.name}
-              </motion.h2>
+                  <h2 className="saborio-card-banner__headline">
+                    <span className="headline-light">SABORES</span>
+                    <span className="headline-yellow">SIN LÍMITES</span>
+                  </h2>
 
-              <motion.p className="hero-full__desc" variants={itemVariants}>
-                {activeProduct.descripcion || activeProduct.description}
-              </motion.p>
+                  <p className="saborio-card-banner__subtitle">
+                    {activeProduct.nombre
+                      ? `Disfruta nuestro ${activeProduct.nombre} preparado artesanalmente con Leche Klim.`
+                      : "Descubre combinaciones únicas, creadas para los que se atreven a más."}
+                  </p>
 
-              <motion.div className="hero-full__actions" variants={itemVariants}>
-                <div className="hero-full__price-block">
-                  <span className="hero-full__price">
-                    {formatCOP(activeProduct.precio || activeProduct.price)}
-                  </span>
-                  <div className="hero-full__rating-inline">
-                    <Star size={15} fill="#c9a227" color="#c9a227" />
-                    <span>{activeProduct.rating || 4.8}</span>
+                  <div className="saborio-card-banner__action">
+                    <button
+                      type="button"
+                      className="saborio-cta-btn"
+                      onClick={handleCtaClick}
+                    >
+                      <span>Ver la promo</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lado Derecho: Imagen Gastronómica + Badge Flotante */}
+                <div className="saborio-card-banner__visual">
+                  <img
+                    src={activeProduct.imagen || activeProduct.image}
+                    alt={activeProduct.nombre || "Postre destacado"}
+                    className="saborio-banner-product-img"
+                  />
+                  <div className="saborio-banner-glow" />
+
+                  {/* Badge Flotante Circular Estilo Saborio */}
+                  <div className="saborio-discount-badge">
+                    <span className="discount-top">HASTA</span>
+                    <span className="discount-main">20%</span>
+                    <span className="discount-bottom">OFF</span>
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
-          </motion.div>
-        </AnimatePresence>
+            </AnimatePresence>
 
-        {/* Progress */}
-        <div className="hero-full__progress">
-          <div
-            className="hero-full__progress-bar"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+            {/* Dots de Navegación Estilo Saborio / FoodVibe */}
+            {featured.length > 1 && (
+              <div className="saborio-dots-nav">
+                {featured.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`saborio-dot ${current === idx ? "saborio-dot--active" : ""}`}
+                    onClick={() => goToSlide(idx)}
+                    aria-label={`Ir a destacado ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
 
-      {/* Floating Cart */}
-      <button
-        className="hero-full__float-cart"
-        onClick={onOpenCart}
-        aria-label="Ver mi pedido"
-        style={{
-          background: d.heroFloatCartBg || "#3d2314",
-          color: d.heroFloatCartText || "#ffffff",
-        }}
-      >
-        <FaShoppingCart size={20} />
-        <span>Mi Pedido</span>
-        {cartCount > 0 && (
-          <span
-            className="hero-full__float-badge"
-            style={{
-              background: d.btnPrimaryBg || "#d92b38",
-              color: d.btnPrimaryText || "#ffffff",
-            }}
-          >
-            {cartCount}
-          </span>
+            {/* Barra de progreso de autoplay continuo */}
+            <div className="saborio-progress-track">
+              <div
+                className="saborio-progress-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
         )}
-      </button>
+      </div>
     </section>
   );
 };
