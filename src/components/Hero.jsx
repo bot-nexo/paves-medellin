@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Sparkles, ArrowRight, StoreIcon, Flame, Search, SlidersHorizontal, Heart } from "lucide-react";
+import { Star, Sparkles, ArrowRight, StoreIcon, Flame, Search, SlidersHorizontal, Heart, User } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
@@ -17,6 +17,8 @@ const Hero = ({
   onAddToCart,
   searchQuery = "",
   onSearchChange,
+  customer = null,
+  onOpenCustomerModal,
 }) => {
   const catalog = useCatalog();
   const products = propProducts !== undefined ? propProducts : catalog.products || [];
@@ -165,6 +167,28 @@ const Hero = ({
 
           <div className="saborio-top-bar__right">
             {renderEstadoNegocio()}
+            {customer && customer.nombre ? (
+              <button
+                type="button"
+                onClick={onOpenCustomerModal}
+                className="saborio-user-badge-btn"
+                title="Perfil y datos de cliente"
+              >
+                <User size={13} className="text-[#ffcc00]" />
+                <span className="saborio-user-badge-name">Hola, {customer.nombre.split(" ")[0]}</span>
+                <span className="saborio-user-badge-tag">⭐ VIP</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenCustomerModal}
+                className="saborio-user-badge-btn"
+                title="Ingresar mis datos"
+              >
+                <User size={13} className="text-[#ffcc00]" />
+                <span className="saborio-user-badge-name">Ingresar</span>
+              </button>
+            )}
           </div>
         </header>
 

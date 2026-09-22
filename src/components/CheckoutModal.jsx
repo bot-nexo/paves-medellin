@@ -57,6 +57,19 @@ const CheckoutModal = ({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      try {
+        const savedCust = localStorage.getItem("paves_customer_info");
+        if (savedCust) {
+          const cust = JSON.parse(savedCust);
+          setFormData((prev) => ({
+            ...prev,
+            nombre: prev.nombre || cust.nombre || "",
+            telefono: prev.telefono || cust.telefono || "",
+          }));
+        }
+      } catch {
+        /* noop */
+      }
     }
   }, [isOpen]);
 

@@ -113,8 +113,45 @@
 }
 
 .saborio-status-dot--closed {
-  background-color: #ef4444;
-  box-shadow: 0 0 8px #ef4444;
+  background: #ff4d4d;
+  box-shadow: 0 0 8px rgba(255, 77, 77, 0.6);
+}
+
+.saborio-user-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 204, 0, 0.12);
+  border: 1px solid rgba(255, 204, 0, 0.35);
+  color: #fdfbf7;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.saborio-user-badge-btn:hover {
+  background: rgba(255, 204, 0, 0.22);
+  border-color: #ffcc00;
+  transform: translateY(-1px);
+}
+
+.saborio-user-badge-name {
+  font-family: var(--menu-font, "Outfit", sans-serif);
+  color: #fdfbf7;
+  white-space: nowrap;
+}
+
+.saborio-user-badge-tag {
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #ffcc00;
+  color: #120a06;
 }
 
 .saborio-avatar-btn {

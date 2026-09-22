@@ -310,3 +310,40 @@ do $$ begin
   alter publication supabase_realtime add table public.catalog_design;
 exception when duplicate_object then null; end $$;
 
+-- ── Clientes (sincronizados por número de WhatsApp) ────────────────────────
+create table if not exists public.clientes (
+  id                       uuid primary key default gen_random_uuid(),
+  telefono                 text not null unique,           -- WhatsApp / Teléfono único por cliente
+  nombre                   text not null,                  -- Nombre del cliente
+  pedidos_count            int not null default 0,         -- Cantidad de pedidos concretados
+  cant_pedidos_concretados int not null default 0,         -- Alias para compatibilidad
+  fecha_cumple             date default null,              -- Fecha de cumpleaños (opcional)
+  notas                    text default '',                -- Observaciones / notas
+  created_at               timestamptz not null default now(),
+  updated_at               timestamptz not null default now()
+);
+
+create index if not exists clientes_telefono_idx on public.clientes (telefono);
+
+drop trigger if exists clientes_updated_at on public.clientes;
+create trigger clientes_updated_at before update on public.clientes
+for each row execute function public.set_updated_at();
+
+alter table public.clientes enable row level security;
+
+drop policy if exists "clientes_lectura_publica" on public.clientes;
+create policy "clientes_lectura_publica" on public.clientes for select to anon, authenticated using (true);
+
+drop policy if exists "clientes_insercion_publica" on public.clientes;
+create policy "clientes_insercion_publica" on public.clientes for insert to anon, authenticated with check (true);
+
+drop policy if exists "clientes_actualizacion_publica" on public.clientes;
+create policy "clientes_actualizacion_publica" on public.clientes for update to anon, authenticated using (true) with check (true);
+
+grant select, insert, update on public.clientes to anon, authenticated;
+
+do $$ begin
+  alter publication supabase_realtime add table public.clientes;
+exception when duplicate_object then null; end $$;
+
+

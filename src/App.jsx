@@ -12,12 +12,13 @@ import BottomNavigation from "./components/BottomNavigation";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
+import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
 import { AdminRoutes } from "./admin/AppRoutes";
 import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
-import { createOrder } from "./data/dataSource";
+import { createOrder, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
@@ -52,6 +53,46 @@ const App = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Estado del cliente (identificación por nombre y teléfono cel)
+  const [customer, setCustomer] = useState(() => {
+    try {
+      const saved = localStorage.getItem("paves_customer_info");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Si al ingresar a la tienda el cliente aún no se ha identificado, abrir el modal automáticamente
+    if (!customer || !customer.telefono) {
+      setIsCustomerModalOpen(true);
+    }
+  }, []);
+
+  const handleSaveCustomer = async (customerData) => {
+    try {
+      // Validar o registrar cliente en la BD de Supabase real
+      const dbCust = await getOrCreateCustomer(
+        customerData.nombre,
+        customerData.telefono,
+        customerData.fecha_cumple
+      );
+
+      const mergedCustomer = {
+        ...customerData,
+        pedidos_count: dbCust?.pedidos_count ?? 0,
+        fecha_cumple: dbCust?.fecha_cumple || customerData.fecha_cumple || null
+      };
+
+      localStorage.setItem("paves_customer_info", JSON.stringify(mergedCustomer));
+      setCustomer(mergedCustomer);
+      setIsCustomerModalOpen(false);
+    } catch (e) {
+      console.warn("Error al guardar cliente en BD real:", e);
+    }
+  };
 
   // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
   const whatsappNumber = settings.phone || info.phone;
@@ -86,6 +127,11 @@ const App = () => {
       deliveryFee,
       total: summary.subtotal + deliveryFee,
     });
+
+    // Incrementa el contador de compras concretadas del cliente en la BD real de Supabase
+    if (deliveryData.telefono) {
+      incrementCustomerOrderCount(deliveryData.telefono, deliveryData.nombre);
+    }
 
     // 2) Armar el mensaje de WhatsApp (idéntico al actual + nº de pedido si existe)
     let message = "*NUEVO PEDIDO *";
@@ -178,6 +224,7 @@ const App = () => {
     window.open(
       "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(message),
       "_blank",
+      "noopener,noreferrer"
     );
 
     Swal.fire({
@@ -226,6 +273,8 @@ const App = () => {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onAddToCart={addToCart}
+              customer={customer}
+              onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
             />
 
             <Menu
@@ -273,6 +322,13 @@ const App = () => {
               cart={cart}
               settings={settings}
               estadoNegocio={estadoNegocio}
+            />
+
+            <CustomerIdentifyModal
+              isOpen={isCustomerModalOpen}
+              onClose={() => setIsCustomerModalOpen(false)}
+              onSaveCustomer={handleSaveCustomer}
+              currentCustomer={customer}
             />
           </div>
         }

@@ -936,3 +936,121 @@ export function subscribeToOrders(fn) {
     .subscribe();
   return () => supabase.removeChannel(channel);
 }
+
+/**
+ * Valida o registra un cliente por su número de WhatsApp (único) en Supabase DB.
+ * Soporta los campos: nombre, telefono, pedidos_count (o cant_pedidos_concretados), fecha_cumple (opcional).
+ */
+export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) {
+  if (!telefono) return null;
+  const cleanPhone = String(telefono).replace(/\D/g, "");
+  const cleanNombre = (nombre || "").trim();
+  const cleanCumple = fechaCumple ? String(fechaCumple).trim() : null;
+
+  if (!isSupabaseConfigured) {
+    return { nombre: cleanNombre, telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
+  }
+
+  try {
+    // 1. Consultar si el cliente ya existe en la tabla 'clientes' de Supabase DB
+    const { data: custData, error: custErr } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("telefono", cleanPhone)
+      .maybeSingle();
+
+    if (!custErr && custData) {
+      const currentCount = custData.pedidos_count ?? custData.cant_pedidos_concretados ?? 0;
+      const updates = {};
+      if (cleanNombre && custData.nombre !== cleanNombre) updates.nombre = cleanNombre;
+      if (cleanCumple && custData.fecha_cumple !== cleanCumple) updates.fecha_cumple = cleanCumple;
+
+      if (Object.keys(updates).length > 0) {
+        await supabase
+          .from("clientes")
+          .update({ ...updates, updated_at: new Date() })
+          .eq("telefono", cleanPhone);
+      }
+
+      return {
+        ...custData,
+        nombre: cleanNombre || custData.nombre,
+        telefono: cleanPhone,
+        pedidos_count: currentCount,
+        fecha_cumple: cleanCumple || custData.fecha_cumple || null,
+      };
+    }
+
+    // 2. Si no existe en 'clientes', contar cuántos pedidos previos ha registrado en la tabla 'orders'
+    const { data: pastOrders } = await supabase
+      .from("orders")
+      .select("id, nombre")
+      .or(`telefono.eq.${cleanPhone},telefono.like.%${cleanPhone}%`);
+
+    const initialCount = pastOrders ? pastOrders.length : 0;
+    const pastName = (pastOrders && pastOrders[0] && pastOrders[0].nombre) ? pastOrders[0].nombre : cleanNombre;
+    const finalNombre = cleanNombre || pastName;
+
+    // 3. Ejecutar QUERY explícito de INSERCIÓN en la tabla 'clientes' de Supabase DB
+    if (finalNombre) {
+      const payload = {
+        nombre: finalNombre,
+        telefono: cleanPhone,
+        pedidos_count: initialCount,
+        cant_pedidos_concretados: initialCount,
+        fecha_cumple: cleanCumple || null,
+        created_at: new Date()
+      };
+
+      const { data: newCust, error: insertErr } = await supabase
+        .from("clientes")
+        .insert([payload])
+        .select()
+        .maybeSingle();
+
+      if (!insertErr && newCust) {
+        return {
+          ...newCust,
+          pedidos_count: newCust.pedidos_count ?? newCust.cant_pedidos_concretados ?? initialCount
+        };
+      }
+    }
+
+    return {
+      nombre: finalNombre,
+      telefono: cleanPhone,
+      pedidos_count: initialCount,
+      fecha_cumple: cleanCumple || null,
+      hasOrders: initialCount > 0
+    };
+  } catch (err) {
+    console.warn("Error en getOrCreateCustomer Supabase query:", err);
+  }
+
+  return { nombre: cleanNombre, telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
+}
+
+/**
+ * Incrementa el contador de pedidos concretados en la tabla 'clientes' de Supabase DB al realizar una compra.
+ */
+export async function incrementCustomerOrderCount(telefono, nombre = "") {
+  if (!telefono || !isSupabaseConfigured) return;
+  const cleanPhone = String(telefono).replace(/\D/g, "");
+
+  try {
+    const cust = await getOrCreateCustomer(nombre, cleanPhone);
+    const newCount = (cust?.pedidos_count ?? 0) + 1;
+
+    await supabase
+      .from("clientes")
+      .update({
+        pedidos_count: newCount,
+        cant_pedidos_concretados: newCount,
+        updated_at: new Date()
+      })
+      .eq("telefono", cleanPhone);
+  } catch (err) {
+    console.warn("Error incrementando compras en Supabase DB:", err);
+  }
+}
+

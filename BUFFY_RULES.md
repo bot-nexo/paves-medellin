@@ -25,8 +25,8 @@
   personalizaciones, checkout). Toda prueba de regresión es obligatoria al terminar.
 - Usar el stack existente: React 18 + Vite, sin agregar dependencias pesadas sin
   justificarlas primero con el usuario.
-- Los datos del catálogo viven en `src/data/menu.js` (fuente única de verdad).
-  Cualquier migración de datos debe ser 100% compatible con la estructura actual.
+- **Uso obligatorio de datos reales de la BD (Supabase):** Todo desarrollo nuevo o actualización de componentes DEBE funcionar con la base de datos real de Supabase (`productos`, `categorias`, `promociones`, `clientes`, `orders`). Queda prohibido el uso de datos ficticios o mocks.
+- **Sincronización de clientes y compras:** La tabla `clientes` debe mantener sincronizado el número de WhatsApp (único), `nombre`, `pedidos_count` (incrementado automáticamente con cada pedido concretado) y `fecha_cumple` (opcional).
 - Estilo visual del panel admin: profesional y limpio, pero coherente con la
   identidad del catálogo (tonos café/crema, `#3D2314` como color primario).
 - Commits y mensajes en español, descriptivos.
