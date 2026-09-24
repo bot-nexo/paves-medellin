@@ -46,15 +46,9 @@ const Menu = ({
     };
   }, [flashPromotions.length]);
 
-  // Escuchar evento personalizado para abrir favoritos desde la barra de navegación inferior
+  // Escuchar evento personalizado para abrir promociones u otra categoria desde navbar
   useEffect(() => {
-    const handleShowFavorites = () => {
-      setActiveCategory("Mis Favoritos");
-      const el = document.getElementById("menu");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
-    window.addEventListener("show-favorites", handleShowFavorites);
-    return () => window.removeEventListener("show-favorites", handleShowFavorites);
+    // Ya no se usa "Mis Favoritos", si hay algo viejo aquí lo limpiamos.
   }, []);
 
   // Inyección de variables CSS dinámicas para modo oscuro permanente
@@ -182,13 +176,6 @@ const Menu = ({
     } else if (activeCategory === "Promociones especiales") {
       // Mostrar ÚNICAMENTE las promociones creadas en el panel de control
       pool = [...dynamicPromoProducts];
-    } else if (activeCategory === "Mis Favoritos") {
-      // Filtrar usando el localStorage
-      let favs = [];
-      try {
-        favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
-      } catch (e) {}
-      pool = data.filter((p) => favs.includes(p.id));
     } else {
       // Filtro estándar por categoría
       pool = data.filter((item) => {

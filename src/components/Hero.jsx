@@ -223,7 +223,7 @@ const Hero = ({
             <div className="saborio-logo-wrap">
               <img
                 src={settings?.logo_url || logoImg}
-                alt="Pavés Medellín"
+                alt={settings?.razonSocial || "Logo del negocio"}
                 className="saborio-logo-img"
               />
               <div className="saborio-brand-info">

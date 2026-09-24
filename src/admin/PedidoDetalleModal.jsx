@@ -12,7 +12,7 @@ const labelEstado = (estado) =>
 }[estado] || estado);
 
 //--------------------------
-const PedidoDetalleModal = ({ pedido, onClose }) => {
+const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
   const items = pedido.items || [];
   const fecha = new Date(pedido.created_at).toLocaleString("es-CO", {
     dateStyle: "long",
@@ -25,7 +25,7 @@ const PedidoDetalleModal = ({ pedido, onClose }) => {
     const tel = pedido.telefono.replace(/\D/g, "");
     const conIndicativo = tel.startsWith("57") ? tel : `57${tel}`;
     const msg = encodeURIComponent(
-      `Hola ${pedido.nombre}! 🍨 Te contactamos de Pavés Medellín sobre tu pedido #${pedido.numero}.`,
+      `Hola ${pedido.nombre}! 🍨 Te contactamos sobre tu pedido #${pedido.numero}.`,
     );
     window.open(`https://wa.me/${conIndicativo}?text=${msg}`, "_blank");
   };
@@ -127,8 +127,20 @@ const PedidoDetalleModal = ({ pedido, onClose }) => {
 
         <footer className="adm-det__pie">
           <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
-            <MessageCircle size={15} /> WhatsApp al cliente
+            <MessageCircle size={15} /> WhatsApp
           </button>
+          
+          {pedido.estado !== "cancelado" && pedido.estado !== "entregado" && onCancel && (
+            <button 
+              type="button" 
+              className="admin-btn-ghost" 
+              style={{ color: "#ef4444", borderColor: "transparent" }} 
+              onClick={() => onCancel(pedido)}
+            >
+              Cancelar
+            </button>
+          )}
+
           <button type="button" className="admin-btn-ghost" onClick={onClose}>
             Cerrar
           </button>

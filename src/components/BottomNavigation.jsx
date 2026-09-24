@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Compass, UtensilsCrossed, Heart, MessageCircle } from "lucide-react";
+import { Home, Compass, UtensilsCrossed, MessageCircle, Star } from "lucide-react";
 import Swal from "sweetalert2";
 import "../css/BottomNavigation.css";
 
@@ -11,27 +11,7 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
     }
   };
 
-  const handleFavoritesClick = () => {
-    try {
-      const favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
-      if (favs.length === 0) {
-        Swal.fire({
-          title: "Tus Favoritos",
-          text: "Aún no has guardado postres favoritos. Toca el corazón en cualquier postre para guardarlo aquí.",
-          icon: "info",
-          confirmButtonColor: "#ffcc00",
-          confirmButtonText: "Ver Menú",
-          customClass: { popup: "saborio-swal-dark" }
-        }).then((res) => {
-          if (res.isConfirmed) handleScrollTo("menu");
-        });
-      } else {
-        window.dispatchEvent(new CustomEvent("show-favorites"));
-      }
-    } catch {
-      handleScrollTo("menu");
-    }
-  };
+
 
   return (
     <nav className="saborio-bottom-nav" aria-label="Navegación fija de la app">
@@ -74,17 +54,17 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
           <span className="saborio-fab-label">Mi pedido</span>
         </div>
 
-        {/* 4. Favoritos */}
+
+        {/* 4. Calificar */}
         <button
           type="button"
           className="saborio-nav-item"
-          onClick={handleFavoritesClick}
+          onClick={() => window.dispatchEvent(new CustomEvent("open-rating"))}
         >
-          <Heart size={21} className="saborio-nav-icon" />
-          <span className="saborio-nav-label">Favoritos</span>
+          <Star size={21} className="saborio-nav-icon" />
+          <span className="saborio-nav-label">Calificar</span>
         </button>
-
-        {/* 5. Contacto (Único botón del carrito es Mi Pedido al centro) */}
+        {/* 5. Contacto */}
         <button
           type="button"
           className="saborio-nav-item"

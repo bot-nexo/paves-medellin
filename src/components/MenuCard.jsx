@@ -8,37 +8,8 @@ const MenuCard = ({
   isDetailsOpen,
   onToggleDetails,
   onAddToCart,
-  design,
+  design
 }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    try {
-      const favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
-      setIsFavorite(favs.includes(product.id));
-    } catch {
-      /* noop */
-    }
-  }, [product.id]);
-
-  const toggleFavorite = (e) => {
-    e.stopPropagation();
-    try {
-      const favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
-      let updated;
-      if (favs.includes(product.id)) {
-        updated = favs.filter((id) => id !== product.id);
-        setIsFavorite(false);
-      } else {
-        updated = [...favs, product.id];
-        setIsFavorite(true);
-      }
-      localStorage.setItem("paves_favorites", JSON.stringify(updated));
-    } catch {
-      setIsFavorite(!isFavorite);
-    }
-  };
-
   const formattedPrice = formatCOP(product.precio ?? 0);
   // Precio de referencia original tachado si tiene descuento o calculado sugerido
   const originalPrice = product.precioOriginal
@@ -90,21 +61,6 @@ const MenuCard = ({
                 {product.rating || "4.9"}
               </span>
             )}
-
-            {/* Botón de Favoritos (Corazón) Estilo Saborio */}
-            <button
-              type="button"
-              className={`saborio-fav-btn ${isFavorite ? "saborio-fav-btn--active" : ""}`}
-              onClick={toggleFavorite}
-              aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
-              title="Guardar en favoritos"
-            >
-              <Heart
-                size={16}
-                fill={isFavorite ? "#ff4757" : "rgba(255, 255, 255, 0.4)"}
-                color={isFavorite ? "#ff4757" : "#ffffff"}
-              />
-            </button>
           </div>
         </div>
 

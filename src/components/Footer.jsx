@@ -34,17 +34,16 @@ const Footer = ({ settings = info, design = DEFAULT_CATALOG_DESIGN }) => {
           {/* Brand Column */}
           <div className="footer-brand">
             <a href="#" className="footer-logo-link">
-              <img src={settings?.logo_url || logoImg} alt="Pavés Medellín" className="footer-logo-img" />
+              <img src={settings?.logo_url || logoImg} alt={settings?.razonSocial || "Empresa"} className="footer-logo-img" />
               <div className="footer-logo-text">
                 <span className="footer-brand-name">
-                  Pavés <span className="footer-brand-accent" style={{ color: d.footerAccent || "#d92b38" }}>Medellín</span>
+                  {settings?.razonSocial?.split(' ')[0] || "Mi"} <span className="footer-brand-accent" style={{ color: d.footerAccent || "#d92b38" }}>{settings?.razonSocial?.split(' ').slice(1).join(' ') || "Empresa"}</span>
                 </span>
-                <span className="footer-brand-tagline">Postres Artesanales</span>
+                <span className="footer-brand-tagline">{settings?.slogan || "Postres Artesanales"}</span>
               </div>
             </a>
             <p className="footer-brand-desc">
-              El verdadero sabor brasileño en formato personal. Postres cremosos hechos
-              con Leche Klim y los mejores ingredientes artesanales.
+              {settings?.description || "El verdadero sabor brasileño en formato personal. Postres cremosos hechos con Leche Klim y los mejores ingredientes artesanales."}
             </p>
             <div className="footer-social">
               <a href={settings.instagram} title="Siguenos en Instagram" target="_blank" rel="noopener noreferrer" className="footer-social-link" aria-label="Instagram">
@@ -97,7 +96,7 @@ const Footer = ({ settings = info, design = DEFAULT_CATALOG_DESIGN }) => {
         {/* Bottom Bar */}
         <div className="footer-bottom">
           <div className="footer-bottom__left">
-            <span>© {currentYear} Pavés Medellín. Todos los derechos reservados.</span>
+            <span>© {currentYear} {settings?.razonSocial || "Empresa"}. Todos los derechos reservados.</span>
           </div>
           <div className="footer-bottom__right">
             <span className="footer-dev-tag">

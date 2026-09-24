@@ -341,6 +341,12 @@ const Pedidos = () => {
           pedido={detalle}
           onClose={() => setDetalle(null)}
           onEstado={cambiarEstado}
+          onCancel={(p) => {
+            if (window.confirm("¿Seguro que deseas cancelar este pedido?")) {
+              cambiarEstado(p, "cancelado");
+              setDetalle(null);
+            }
+          }}
         />
       )}
     </div>

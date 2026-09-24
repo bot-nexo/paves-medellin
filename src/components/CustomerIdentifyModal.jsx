@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { User, Phone, Sparkles, Calendar, ArrowRight, ArrowLeft, X, CheckCircle2, Loader2 } from "lucide-react";
+import { User, Phone, Sparkles, Calendar, ArrowRight, ArrowLeft, X, CheckCircle2, Loader2, Award } from "lucide-react";
 import "../css/CustomerIdentifyModal.css";
 import { findCustomerByPhone } from "../data/dataSource";
+import { getCustomerBadge } from "../utils/badges";
 
-const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustomer = null }) => {
+const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustomer = null, settings }) => {
   const [step, setStep] = useState(1);
   const [telefono, setTelefono] = useState(currentCustomer?.telefono || "");
   const [nombre, setNombre] = useState(currentCustomer?.nombre || "");
   const [fechaCumple, setFechaCumple] = useState(currentCustomer?.fecha_cumple || "");
   const [isChecking, setIsChecking] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
+  const [customerBadge, setCustomerBadge] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -17,6 +19,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
       setStep(1);
       setErrorMsg("");
       setWelcomeName("");
+      setCustomerBadge(null);
       setIsChecking(false);
       setTelefono(currentCustomer?.telefono || "");
       setNombre(currentCustomer?.nombre || "");
@@ -45,17 +48,20 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
       if (dbCust) {
         // EL CLIENTE YA EXISTE EN LA BD -> Ingresa derecho automáticamente
         setWelcomeName(dbCust.nombre || "Cliente");
+        const count = dbCust.pedidos_count ?? dbCust.cant_pedidos_concretados ?? 0;
+        setCustomerBadge(getCustomerBadge(count));
+        
         const fullCust = {
           nombre: dbCust.nombre,
           telefono: dbCust.telefono || cleanPhone,
           fecha_cumple: dbCust.fecha_cumple || null,
-          pedidos_count: dbCust.pedidos_count ?? dbCust.cant_pedidos_concretados ?? 0,
+          pedidos_count: count,
         };
 
         // Guardar cliente e ingresar al menú sin pedir más datos
         setTimeout(() => {
           onSaveCustomer(fullCust);
-        }, 500);
+        }, 1500); // 1.5s delay to show the badge nicely
       } else {
         // EL CLIENTE NO EXISTE -> Pasar a Paso 2 para solicitar Nombre y Cumpleaños
         setStep(2);
@@ -107,7 +113,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
             <Sparkles size={24} className="text-[#ffcc00]" />
           </div>
           <h2 className="customer-modal-title">
-            {step === 1 ? "¡Bienvenido a Pavés Medellín! 🍰" : "¡Es tu primera vez con nosotros! 🎉"}
+            {step === 1 ? `¡Bienvenido a ${settings?.razonSocial || "nuestro menú"}! 🍰` : "¡Es tu primera vez con nosotros! 🎉"}
           </h2>
           <p className="customer-modal-subtitle">
             {step === 1
@@ -117,12 +123,22 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
         </div>
 
         {welcomeName ? (
-          <div className="customer-welcome-banner">
-            <CheckCircle2 size={24} color="#10b981" />
+          <div className="customer-welcome-banner" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "2rem 1rem" }}>
+            <CheckCircle2 size={48} color="#10b981" style={{ marginBottom: "1rem" }} />
             <div>
-              <h4>¡Hola, {welcomeName}!</h4>
-              <p>Te identificamos con éxito. Ingresando al menú...</p>
+              <h4 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>¡Hola, {welcomeName}!</h4>
+              <p style={{ color: "#aaa", marginBottom: "1rem" }}>Te identificamos con éxito. Ingresando al menú...</p>
             </div>
+            
+            {customerBadge && (
+              <div className="customer-badge-display" style={{ marginTop: "1rem", padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "10px", textAlign: "center", width: "100%" }}>
+                <Award size={48} color={customerBadge.color} style={{ margin: "0 auto", display: "block", marginBottom: "0.5rem" }} />
+                <strong style={{ color: customerBadge.color, fontSize: "1.2rem", display: "block", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  Nivel {customerBadge.name}
+                </strong>
+                <span style={{ fontSize: "0.9rem", color: "#aaa" }}>{customerBadge.description}</span>
+              </div>
+            )}
           </div>
         ) : step === 1 ? (
           /* ── PASO 1: SOLICITAR SOLO TELÉFONO ───────────────────────────── */

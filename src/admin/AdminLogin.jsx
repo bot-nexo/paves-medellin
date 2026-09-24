@@ -76,7 +76,7 @@ const AdminLogin = () => {
           )}
         </div>
         <h1 className="admin-login__titulo">Panel de Administración</h1>
-        <p className="admin-login__subtitulo">Pavés Medellín — acceso exclusivo del negocio</p>
+        <p className="admin-login__subtitulo">Acceso exclusivo del negocio</p>
 
         {error && (
           <div className="admin-login__error" role="alert">

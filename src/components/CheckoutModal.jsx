@@ -25,6 +25,7 @@ import {
   calculateOrderSummary,
 } from "../utils/price";
 import { info as infoLocal, VALOR_DOMICILIO_DEFAULT } from "../data/menu";
+import { getPaymentMethods } from "../data/dataSource";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CheckoutModal = ({
@@ -33,9 +34,12 @@ const CheckoutModal = ({
   onConfirm,
   cart = [],
   settings = infoLocal,
+  design = {},
   estadoNegocio = null,
 }) => {
   const [step, setStep] = useState(1);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
@@ -45,9 +49,22 @@ const CheckoutModal = ({
     direccion: "",
     unidad: "",
     apto: "",
-    pago: "Efectivo",
+    pago: "",
     observaciones: "",
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      getPaymentMethods().then(methods => {
+        setPaymentMethods(methods);
+        if (methods.length > 0 && !methods.find(m => m.nombre === formData.pago)) {
+          setFormData(prev => ({ ...prev, pago: methods[0].nombre }));
+        } else if (methods.length === 0) {
+          setFormData(prev => ({ ...prev, pago: "" }));
+        }
+      });
+    }
+  }, [isOpen]);
 
   const esDomicilio = formData.tipoEntrega === "domicilio";
   const esLocal = formData.tipoEntrega === "local";
@@ -87,6 +104,17 @@ const CheckoutModal = ({
 
   const handleNext = (e) => {
     e.preventDefault();
+    if (paymentMethods.length === 0) {
+      Swal.fire({
+        title: "Sin métodos de pago",
+        text: "No se puede continuar con la compra porque no hay métodos de pago configurados. Por favor intenta más tarde o contacta al negocio.",
+        icon: "warning",
+        confirmButtonColor: "#ffcc00",
+        customClass: { popup: "saborio-swal-dark" }
+      });
+      return;
+    }
+
     const faltantes =
       !formData.nombre.trim() ||
       !formData.telefono.trim() ||
@@ -122,7 +150,11 @@ const CheckoutModal = ({
   };
 
   return (
-    <div className="checkout-overlay" onClick={onClose}>
+    <div className="checkout-overlay" onClick={onClose} style={{ 
+      "--color-primario": design?.color_primario || "#ffcc00",
+      "--color-fondo": design?.color_fondo || "#171717",
+      "--color-texto": design?.color_texto || "#f5f5f5"
+    }}>
       <div className="checkout-container" onClick={(e) => e.stopPropagation()}>
         
         {/* -- ENCABEZADO -- */}
@@ -270,29 +302,23 @@ const CheckoutModal = ({
                 </div>
 
                 <div className="payment-options">
-                  <label className={`payment-card ${formData.pago === "Efectivo" ? "selected" : ""}`}>
-                    <input type="radio" name="pago" value="Efectivo" checked={formData.pago === "Efectivo"} onChange={handleChange} />
-                    <div className="payment-icon-bg"><CreditCard size={20} /></div>
-                    <strong>Efectivo</strong>
-                    <span>Pagas al recibir</span>
-                    {formData.pago === "Efectivo" && <CheckCircle size={16} className="check-icon" />}
-                  </label>
-                  
-                  <label className={`payment-card ${formData.pago === "Transferencia" ? "selected" : ""}`}>
-                    <input type="radio" name="pago" value="Transferencia" checked={formData.pago === "Transferencia"} onChange={handleChange} />
-                    <div className="payment-icon-bg"><Phone size={20} /></div>
-                    <strong>Transferencia</strong>
-                    <span>Nequi / Bancolombia</span>
-                    {formData.pago === "Transferencia" && <CheckCircle size={16} className="check-icon" />}
-                  </label>
-
-                  <label className={`payment-card ${formData.pago === "Datáfono" ? "selected" : ""}`}>
-                    <input type="radio" name="pago" value="Datáfono" checked={formData.pago === "Datáfono"} onChange={handleChange} />
-                    <div className="payment-icon-bg"><CreditCard size={20} /></div>
-                    <strong>Datáfono</strong>
-                    <span>Tarjeta débito/crédito</span>
-                    {formData.pago === "Datáfono" && <CheckCircle size={16} className="check-icon" />}
-                  </label>
+                  {paymentMethods.length > 0 ? (
+                    paymentMethods.map(method => (
+                      <label key={method.id} className={`payment-card ${formData.pago === method.nombre ? "selected" : ""}`}>
+                        <input type="radio" name="pago" value={method.nombre} checked={formData.pago === method.nombre} onChange={handleChange} required />
+                        <div className="payment-icon-bg">
+                          {method.icono === "Phone" ? <Phone size={20} /> : <CreditCard size={20} />}
+                        </div>
+                        <strong>{method.nombre}</strong>
+                        {method.descripcion && <span>{method.descripcion}</span>}
+                        {formData.pago === method.nombre && <CheckCircle size={16} className="check-icon" />}
+                      </label>
+                    ))
+                  ) : (
+                    <div className="checkout-aviso-cerrado" style={{ backgroundColor: "rgba(255, 60, 60, 0.1)", color: "#ff4d4d", margin: 0 }}>
+                      <span>Actualmente no hay métodos de pago configurados.</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="checkout-footer form-actions">

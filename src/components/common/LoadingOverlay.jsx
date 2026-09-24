@@ -8,7 +8,8 @@ import "./LoadingOverlay.css";
  */
 const LoadingOverlay = ({
   text = "Cargando...",
-  minTime = 1000
+  minTime = 1000,
+  settings = null
 }) => {
   const logoSrc = "/favicon.ico";
   const [mostrar, setMostrar] = useState(true);
@@ -47,7 +48,7 @@ const LoadingOverlay = ({
         </div>
 
         <div className="pm-brand-info">
-          <h1 className="pm-title">PAVÉS MEDELLÍN</h1>
+          <h1 className="pm-title">{settings?.razonSocial?.toUpperCase() || "BIENVENIDO"}</h1>
         </div>
 
         <div className="pm-progress-container">

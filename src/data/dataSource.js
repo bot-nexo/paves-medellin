@@ -35,10 +35,33 @@ export const subscribeToCatalog = (fn) => {
 /** ¿La app está leyendo de Supabase? (útil para badges de estado en el panel) */
 export const isUsingSupabase = () => isSupabaseConfigured;
 
+export async function getPaymentMethods() {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase.from("payment_methods").select("*").eq("activo", true);
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.error("Error fetching payment methods:", e);
+    return [];
+  }
+}
+
 // Placeholder SVG (data URI) para productos sin foto (creados desde el panel
 // antes de subir imagen) — evita <img> rotos en tienda y panel.
 const PLACEHOLDER_IMG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23241a15'/%3E%3Ctext x='50%25' y='50%25' font-size='120' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%8D%A8%3C/text%3E%3C/svg%3E";
+
+// ── Calificaciones ─────────────────────────────────────────────────────────────
+export async function saveRating(telefono, rating, comment) {
+  if (!isSupabaseConfigured) return;
+  try {
+    const cleanPhone = telefono ? String(telefono).replace(/\D/g, "") : null;
+    await supabase.from("store_ratings").insert({ telefono: cleanPhone, rating, comment });
+  } catch (e) {
+    console.error("Error saving rating:", e);
+  }
+}
 
 // ── Normalizadores: fila BD → shape de la tienda ────────────────────────────
 const normalizeCategory = (row) => ({

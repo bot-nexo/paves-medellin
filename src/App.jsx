@@ -14,6 +14,7 @@ import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
 import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
 import ArmaTuPaveModal from "./components/ArmaTuPaveModal";
+import RatingModal from "./components/RatingModal";
 import { AdminRoutes } from "./admin/AppRoutes";
 import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./data/menu";
 
@@ -68,6 +69,7 @@ const App = () => {
     }
   });
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
 
   // Al cerrar o salir de la página del menú, eliminar la info del cliente de storage para garantizar la seguridad de los datos
   useEffect(() => {
@@ -79,13 +81,16 @@ const App = () => {
         /* noop */
       }
     };
+    const handleOpenRating = () => setIsRatingOpen(true);
 
     window.addEventListener("beforeunload", handleClearCustomerStorage);
     window.addEventListener("pagehide", handleClearCustomerStorage);
+    window.addEventListener("open-rating", handleOpenRating);
 
     return () => {
       window.removeEventListener("beforeunload", handleClearCustomerStorage);
       window.removeEventListener("pagehide", handleClearCustomerStorage);
+      window.removeEventListener("open-rating", handleOpenRating);
     };
   }, []);
 
@@ -392,6 +397,14 @@ const App = () => {
               onClose={() => setIsCustomerModalOpen(false)}
               onSaveCustomer={handleSaveCustomer}
               currentCustomer={customer}
+              settings={settings}
+            />
+
+            <RatingModal
+              isOpen={isRatingOpen}
+              onClose={() => setIsRatingOpen(false)}
+              currentCustomer={customer}
+              settings={settings}
             />
           </div>
         }
