@@ -13,6 +13,9 @@ const useCart = () => {
   const [productToCustomize, setProductToCustomize] = useState(null);
   const [editingItemKey, setEditingItemKey] = useState(null);
 
+  const [isArmaModalOpen, setIsArmaModalOpen] = useState(false);
+  const [armaEditItem, setArmaEditItem] = useState(null);
+
   // ── Open / close helpers ──────────────────────────────────────────────
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
@@ -31,6 +34,12 @@ const useCart = () => {
   };
 
   const editCartItem = (item) => {
+    if (item.isCustom) {
+      setArmaEditItem(item);
+      setIsArmaModalOpen(true);
+      setIsCartOpen(false);
+      return;
+    }
     setProductToCustomize(item);
     setEditingItemKey(item.customizationKey);
     setIsCustomizing(true);
@@ -155,6 +164,13 @@ const useCart = () => {
     editCartItem,
     addOneMore,
     confirmCustomization,
+    
+    // Arma Tu Pave
+    isArmaModalOpen,
+    setIsArmaModalOpen,
+    armaEditItem,
+    setArmaEditItem,
+    
     removeItemByStoreKey,
     updateQuantity,
     setCart,

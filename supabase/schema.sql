@@ -408,4 +408,43 @@ end $$;
 grant execute on function public.registrar_cliente_si_no_existe(text, text, date) to anon, authenticated;
 
 
+-- //////////**********************//////////////////
+-- 1. Tabla para Calificaciones del Negocio
+CREATE TABLE store_ratings (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    telefono TEXT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2. Tabla para Bases de "Arma tu Pavé"
+CREATE TABLE bases (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    precio NUMERIC DEFAULT 0,
+    disponible BOOLEAN DEFAULT true,
+    orden INT DEFAULT 0
+);
+
+-- 3. Tabla para Tamaños de "Arma tu Pavé"
+CREATE TABLE sizes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    precio NUMERIC DEFAULT 0,
+    disponible BOOLEAN DEFAULT true,
+    orden INT DEFAULT 0
+);
+
+-- Permitir lectura pública de bases y tamaños
+ALTER TABLE bases ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Bases public read" ON bases FOR SELECT USING (true);
+
+ALTER TABLE sizes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Sizes public read" ON sizes FOR SELECT USING (true);
+
+-- Permitir crear y leer calificaciones
+ALTER TABLE store_ratings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Ratings public insert" ON store_ratings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Ratings public read" ON store_ratings FOR SELECT USING (true);
 

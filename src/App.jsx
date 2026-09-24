@@ -13,6 +13,7 @@ import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CheckoutModal from "./components/CheckoutModal";
 import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
+import ArmaTuPaveModal from "./components/ArmaTuPaveModal";
 import { AdminRoutes } from "./admin/AppRoutes";
 import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./data/menu";
 
@@ -48,6 +49,10 @@ const App = () => {
     updateQuantity,
     setCart,
     setIsCheckoutOpen,
+    isArmaModalOpen,
+    setIsArmaModalOpen,
+    armaEditItem,
+    setArmaEditItem,
   } = useCart();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -309,6 +314,7 @@ const App = () => {
               design={design}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
+              onOpenArmaModal={() => { setArmaEditItem(null); setIsArmaModalOpen(true); }}
             />
 
             <Footer settings={settings} design={design} />
@@ -337,6 +343,40 @@ const App = () => {
               onClose={closeCustomizationModal}
               onConfirm={confirmCustomization}
             />
+
+            <ArmaTuPaveModal
+              isOpen={isArmaModalOpen}
+              onClose={() => { setIsArmaModalOpen(false); setArmaEditItem(null); }}
+              onAddToCart={(customProduct, isEdit, oldKey) => {
+                if (isEdit) {
+                  setCart((prev) => prev.filter(c => c.customizationKey !== oldKey));
+                }
+                
+                // Generar nueva key para el customProduct
+                const adicionesIds = Object.keys(customProduct.customizations.adiciones || {}).sort();
+                const salsasIds    = Object.keys(customProduct.customizations.salsas    || {}).sort();
+                
+                const newKey = JSON.stringify({
+                  productId: customProduct.id,
+                  baseId: customProduct.customizations.base.id,
+                  adiciones: adicionesIds,
+                  salsas: salsasIds,
+                });
+                
+                customProduct.customizationKey = newKey;
+                
+                setCart((prev) => {
+                  const existing = prev.find(c => c.customizationKey === newKey);
+                  if (existing) {
+                    return prev.map(c => c.customizationKey === newKey ? { ...c, quantity: c.quantity + (isEdit ? armaEditItem.quantity : 1) } : c);
+                  } else {
+                    return [...prev, { ...customProduct, quantity: isEdit ? armaEditItem.quantity : 1 }];
+                  }
+                });
+              }}
+              editItem={armaEditItem}
+            />
+
 
             <CheckoutModal
               isOpen={isCheckoutOpen}

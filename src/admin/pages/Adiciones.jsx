@@ -7,6 +7,8 @@ import Swal from "sweetalert2";
 import {
   getAdditions, createAddition, updateAddition, deleteAddition,
   getSauces, createSauce, updateSauce, deleteSauce,
+  getBases, createBase, updateBase, deleteBase,
+  getSizes, createSize, updateSize, deleteSize,
 } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
 import { Plus, Pencil, Trash2, RefreshCw, Flame, Sparkles, Search } from "lucide-react";
@@ -21,10 +23,16 @@ const TabContent = ({
   items, setItems,
   onCreate, onUpdate, onDelete,
 }) => {
-  const label = tipo === "sauce" ? "salsa" : "adición";
-  const labelPlur = tipo === "sauce" ? "salsas" : "adiciones";
-  const labelCap = tipo === "sauce" ? "Salsa" : "Adición";
-  const Icon = tipo === "sauce" ? Flame : Sparkles;
+  let label, labelPlur, labelCap, Icon;
+  if (tipo === "sauce") {
+    label = "salsa"; labelPlur = "salsas"; labelCap = "Salsa"; Icon = Flame;
+  } else if (tipo === "base") {
+    label = "base"; labelPlur = "bases"; labelCap = "Base"; Icon = Plus;
+  } else if (tipo === "size") {
+    label = "tamaño"; labelPlur = "tamaños"; labelCap = "Tamaño"; Icon = Plus;
+  } else {
+    label = "adición"; labelPlur = "adiciones"; labelCap = "Adición"; Icon = Sparkles;
+  }
 
   const [modal, setModal] = useState({ abierto: false, item: null });
   const [procesandoId, setProcId] = useState(null);
@@ -205,8 +213,11 @@ const TabContent = ({
           onClose={() => setModal({ abierto: false, item: null })}
           onSaved={async () => {
             setModal({ abierto: false, item: null });
-            // Refresca solo este tab
-            const data = tipo === "sauce" ? await getSauces() : await getAdditions();
+            let data = [];
+            if (tipo === "sauce") data = await getSauces();
+            else if (tipo === "base") data = await getBases();
+            else if (tipo === "size") data = await getSizes();
+            else data = await getAdditions();
             setItems(data);
           }}
         />
@@ -219,26 +230,31 @@ const TabContent = ({
 const Adiciones = () => {
   const [adiciones, setAdiciones] = useState(null);
   const [salsas, setSalsas] = useState(null);
+  const [bases, setBases] = useState(null);
+  const [sizes, setSizes] = useState(null);
   const [tabActivo, setTabActivo] = useState("adiciones");
   const [cargando, setCargando] = useState(false);
 
   const cargar = useCallback(async () => {
     setCargando(true);
     try {
-      const [adds, sauces] = await Promise.all([getAdditions(), getSauces(), esperar(timeOut)]);
+      const [adds, sauces, b, s] = await Promise.all([
+        getAdditions(), getSauces(), getBases(), getSizes(), esperar(timeOut)
+      ]);
       setAdiciones(adds);
       setSalsas(sauces);
+      setBases(b);
+      setSizes(s);
     } catch (e) {
       Swal.fire({ title: "Error al cargar", text: e.message, icon: "error", confirmButtonColor: "#3D2314" });
-      setAdiciones([]);
-      setSalsas([]);
+      setAdiciones([]); setSalsas([]); setBases([]); setSizes([]);
     } finally { setCargando(false); }
   }, []);
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  if (adiciones === null || salsas === null) {
-    return <LoadingOverlay fullScreen text="Cargando adiciones y salsas" minTime={timeOut} />;
+  if (adiciones === null || salsas === null || bases === null || sizes === null) {
+    return <LoadingOverlay fullScreen text="Cargando extras de Arma tu Pavé" minTime={timeOut} />;
   }
 
   return (
@@ -247,9 +263,9 @@ const Adiciones = () => {
 
       <header className="admin-page__header admin-page__header--row">
         <div>
-          <h1 className="admin-page__titulo">Adiciones & Salsas</h1>
+          <h1 className="admin-page__titulo">Arma tu Pavé & Extras</h1>
           <p className="admin-page__sub">
-            Gestiona el catálogo de extras que puedes asociar a cada producto.
+            Gestiona los extras de los productos y los elementos para "Arma tu Pavé".
           </p>
         </div>
         <div className="admin-page__acciones">
@@ -260,42 +276,25 @@ const Adiciones = () => {
       </header>
 
       {/* Tabs */}
-      <div className="adm-extras__tabs">
-        <button
-          type="button"
-          className={`adm-extras__tab ${tabActivo === "adiciones" ? "adm-extras__tab--active" : ""}`}
-          onClick={() => setTabActivo("adiciones")}
-        >
+      <div className="adm-extras__tabs" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '10px' }}>
+        <button type="button" className={`adm-extras__tab ${tabActivo === "adiciones" ? "adm-extras__tab--active" : ""}`} onClick={() => setTabActivo("adiciones")}>
           <Sparkles size={15} /> Adiciones ({adiciones.length})
         </button>
-        <button
-          type="button"
-          className={`adm-extras__tab ${tabActivo === "salsas" ? "adm-extras__tab--active" : ""}`}
-          onClick={() => setTabActivo("salsas")}
-        >
+        <button type="button" className={`adm-extras__tab ${tabActivo === "salsas" ? "adm-extras__tab--active" : ""}`} onClick={() => setTabActivo("salsas")}>
           <Flame size={15} /> Salsas ({salsas.length})
+        </button>
+        <button type="button" className={`adm-extras__tab ${tabActivo === "bases" ? "adm-extras__tab--active" : ""}`} onClick={() => setTabActivo("bases")}>
+          <Plus size={15} /> Bases ({bases.length})
+        </button>
+        <button type="button" className={`adm-extras__tab ${tabActivo === "sizes" ? "adm-extras__tab--active" : ""}`} onClick={() => setTabActivo("sizes")}>
+          <Plus size={15} /> Tamaños ({sizes.length})
         </button>
       </div>
 
-      {tabActivo === "adiciones" ? (
-        <TabContent
-          tipo="addition"
-          items={adiciones}
-          setItems={setAdiciones}
-          onCreate={createAddition}
-          onUpdate={updateAddition}
-          onDelete={deleteAddition}
-        />
-      ) : (
-        <TabContent
-          tipo="sauce"
-          items={salsas}
-          setItems={setSalsas}
-          onCreate={createSauce}
-          onUpdate={updateSauce}
-          onDelete={deleteSauce}
-        />
-      )}
+      {tabActivo === "adiciones" && <TabContent tipo="addition" items={adiciones} setItems={setAdiciones} onCreate={createAddition} onUpdate={updateAddition} onDelete={deleteAddition} />}
+      {tabActivo === "salsas" && <TabContent tipo="sauce" items={salsas} setItems={setSalsas} onCreate={createSauce} onUpdate={updateSauce} onDelete={deleteSauce} />}
+      {tabActivo === "bases" && <TabContent tipo="base" items={bases} setItems={setBases} onCreate={createBase} onUpdate={updateBase} onDelete={deleteBase} />}
+      {tabActivo === "sizes" && <TabContent tipo="size" items={sizes} setItems={setSizes} onCreate={createSize} onUpdate={updateSize} onDelete={deleteSize} />}
     </div>
   );
 };

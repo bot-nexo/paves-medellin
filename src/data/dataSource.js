@@ -741,6 +741,62 @@ export async function deleteSauce(id) {
   invalidateCatalog();
 }
 
+// ── Bases (panel admin) ─────────────────────────────────────────────────────
+
+export async function getBases() {
+  const { data, error } = await supabase
+    .from("bases")
+    .select("*")
+    .order("orden", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createBase(data) {
+  const { data: row, error } = await supabase.from("bases").insert(data).select().single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateBase(id, cambios) {
+  const { error } = await supabase.from("bases").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteBase(id) {
+  const { error } = await supabase.from("bases").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ── Tamaños (panel admin) ───────────────────────────────────────────────────
+
+export async function getSizes() {
+  const { data, error } = await supabase
+    .from("sizes")
+    .select("*")
+    .order("orden", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createSize(data) {
+  const { data: row, error } = await supabase.from("sizes").insert(data).select().single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateSize(id, cambios) {
+  const { error } = await supabase.from("sizes").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteSize(id) {
+  const { error } = await supabase.from("sizes").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ── Asociaciones Producto ↔ Adiciones / Salsas ──────────────────────────────
 
 /**
@@ -929,6 +985,33 @@ export async function getOrders(limite = 200) {
 export async function updateOrderStatus(id, estado) {
   const { error } = await supabase.from("orders").update({ estado }).eq("id", id);
   if (error) throw error;
+}
+
+// ── Calificaciones del Negocio ──────────────────────────────────────────────
+
+export async function getStoreRatingStats() {
+  const { data, error } = await supabase
+    .from("store_ratings")
+    .select("rating");
+  
+  if (error) return { average: 5, total: 0 };
+  
+  if (!data || data.length === 0) return { average: 5, total: 0 };
+  
+  const total = data.length;
+  const sum = data.reduce((acc, curr) => acc + curr.rating, 0);
+  const average = Number((sum / total).toFixed(1));
+  
+  return { average, total };
+}
+
+export async function submitStoreRating(telefono, rating, comment = "") {
+  const { error } = await supabase
+    .from("store_ratings")
+    .insert([{ telefono, rating, comment }]);
+    
+  if (error) throw error;
+  return true;
 }
 
 /**

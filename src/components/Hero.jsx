@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Flame, Search, SlidersHorizontal, User } from "lucide-react";
+import { ArrowRight, Flame, Search, SlidersHorizontal, User, Star } from "lucide-react";
+import Swal from "sweetalert2";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
-import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
+import { DEFAULT_CATALOG_DESIGN, getStoreRatingStats, submitStoreRating } from "../data/dataSource";
 import { products as localProducts } from "../data/menu";
 import "../css/Hero.css";
 
@@ -25,8 +26,69 @@ const Hero = ({
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [ratingStats, setRatingStats] = useState({ average: 5, total: 0 });
   const intervalRef = useRef(null);
   const progressRef = useRef(null);
+
+  useEffect(() => {
+    getStoreRatingStats().then((stats) => {
+      setRatingStats(stats);
+    });
+  }, []);
+
+  const handleRateBusiness = () => {
+    if (!customer || !customer.telefono) {
+      return onOpenCustomerModal(); // Require user to be logged in to rate
+    }
+
+    Swal.fire({
+      title: '¡Califica nuestra Tienda!',
+      html: `
+        <div style="font-size: 1.5rem; color: #ffcc00; margin-bottom: 10px;">
+          <input type="number" id="rating-input" min="1" max="5" value="5" style="width: 60px; text-align: center; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; padding: 5px;">
+          / 5 Estrellas
+        </div>
+        <textarea id="rating-comment" placeholder="Déjanos un comentario (opcional)" style="width: 100%; height: 80px; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; padding: 10px; resize: none; margin-top: 10px;"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Enviar Calificación',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ffcc00',
+      cancelButtonColor: '#444',
+      customClass: { popup: 'saborio-swal-dark' },
+      preConfirm: () => {
+        const rating = parseInt(document.getElementById('rating-input').value);
+        const comment = document.getElementById('rating-comment').value;
+        if (rating < 1 || rating > 5) {
+          Swal.showValidationMessage('La calificación debe ser entre 1 y 5');
+          return false;
+        }
+        return { rating, comment };
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await submitStoreRating(customer.telefono, result.value.rating, result.value.comment);
+          const newStats = await getStoreRatingStats();
+          setRatingStats(newStats);
+          Swal.fire({
+            icon: 'success',
+            title: '¡Gracias por calificar!',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ya has enviado una calificación recientemente o hubo un problema.'
+          });
+        }
+      }
+    });
+  };
 
   const AUTOPLAY_DURATION = 6500;
 
@@ -167,7 +229,10 @@ const Hero = ({
               <div className="saborio-brand-info">
                 <div className="saborio-brand-title">
                   <span className="saborio-brand-name">{settings?.razonSocial}</span>
-                  <Flame size={16} className="saborio-brand-icon" />
+                  <button type="button" onClick={handleRateBusiness} className="saborio-brand-rating-btn" style={{ background: "rgba(255, 204, 0, 0.15)", border: "1px solid rgba(255, 204, 0, 0.3)", borderRadius: "12px", padding: "2px 8px", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer", marginLeft: "6px" }}>
+                    <Star size={12} color="#ffcc00" fill="#ffcc00" />
+                    <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#ffcc00" }}>{ratingStats.average}</span>
+                  </button>
                 </div>
                 <span className="saborio-brand-tagline">
                   {settings?.slogan || "EL VERDADERO SABOR DEL PAVÉ"}

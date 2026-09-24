@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import MenuCard from "./MenuCard";
-import { Flame, ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, Search, X, Sparkles } from "lucide-react";
 import Promociones from "./Promociones";
 import Combos from "./Combos";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
-import { formatCOP } from "../utils/price";
 import "../css/Menu.css";
 
 const Menu = ({
@@ -16,6 +15,7 @@ const Menu = ({
   design = DEFAULT_CATALOG_DESIGN,
   searchQuery = "",
   setSearchQuery,
+  onOpenArmaModal,
 }) => {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
@@ -45,6 +45,17 @@ const Menu = ({
       if (promoTimerRef.current) clearInterval(promoTimerRef.current);
     };
   }, [flashPromotions.length]);
+
+  // Escuchar evento personalizado para abrir favoritos desde la barra de navegación inferior
+  useEffect(() => {
+    const handleShowFavorites = () => {
+      setActiveCategory("Mis Favoritos");
+      const el = document.getElementById("menu");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    window.addEventListener("show-favorites", handleShowFavorites);
+    return () => window.removeEventListener("show-favorites", handleShowFavorites);
+  }, []);
 
   // Inyección de variables CSS dinámicas para modo oscuro permanente
   const cssVariables = useMemo(() => {
@@ -171,6 +182,13 @@ const Menu = ({
     } else if (activeCategory === "Promociones especiales") {
       // Mostrar ÚNICAMENTE las promociones creadas en el panel de control
       pool = [...dynamicPromoProducts];
+    } else if (activeCategory === "Mis Favoritos") {
+      // Filtrar usando el localStorage
+      let favs = [];
+      try {
+        favs = JSON.parse(localStorage.getItem("paves_favorites") || "[]");
+      } catch (e) {}
+      pool = data.filter((p) => favs.includes(p.id));
     } else {
       // Filtro estándar por categoría
       pool = data.filter((item) => {
@@ -211,9 +229,10 @@ const Menu = ({
           className="menu-search-wrapper"
           style={{ top: d.specialEvent?.active ? '75px' : '0' }}
         >
-          <div className="menu-search-box">
-            <Search size={17} className="menu-search-icon" />
-            <input
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            <div className="menu-search-box" style={{ flex: 1 }}>
+              <Search size={17} className="menu-search-icon" />
+              <input
               id="menu-search-input"
               type="text"
               className="menu-search-input"
@@ -234,6 +253,14 @@ const Menu = ({
                 <X size={15} />
               </button>
             )}
+            </div>
+            <button 
+              type="button" 
+              style={{ background: "#ffcc00", color: "#120a06", padding: '0 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '0.85rem' }}
+              onClick={onOpenArmaModal}
+            >
+              <Sparkles size={14} /> Arma tu Pavé
+            </button>
           </div>
           {searchQuery && (
             <p className="menu-search-results-hint">

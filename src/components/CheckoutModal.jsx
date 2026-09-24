@@ -15,8 +15,9 @@ import {
   Send,
   Clock,
   Store,
+  Check
 } from "lucide-react";
-import { FaMotorcycle } from "react-icons/fa";
+import { FaMotorcycle, FaWhatsapp } from "react-icons/fa";
 import "../css/CheckoutModal.css";
 import {
   formatCOP,
@@ -24,7 +25,6 @@ import {
   calculateOrderSummary,
 } from "../utils/price";
 import { info as infoLocal, VALOR_DOMICILIO_DEFAULT } from "../data/menu";
-import { LuClipboardList, LuHandPlatter } from "react-icons/lu";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CheckoutModal = ({
@@ -53,7 +53,6 @@ const CheckoutModal = ({
   const esLocal = formData.tipoEntrega === "local";
   const textoModalidad = esDomicilio ? 'Domicilio' : esLocal ? 'Local' : 'Recoger en tienda';
 
-  //**************************************** */
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -108,7 +107,6 @@ const CheckoutModal = ({
   };
 
   const handleSubmit = () => {
-    // tipoEntrega y observaciones viajan con los datos (quedan en la BD del pedido)
     onConfirm({ ...formData, observaciones: formData.observaciones || "" });
     setStep(1);
     setFormData((prev) => ({
@@ -123,202 +121,320 @@ const CheckoutModal = ({
     }));
   };
 
-  //******************************** */
   return (
     <div className="checkout-overlay" onClick={onClose}>
       <div className="checkout-container" onClick={(e) => e.stopPropagation()}>
-        <div className="checkout-header">
-          <div>
-            <h3>{step === 1 ? "Datos de Entrega" : "Confirmar Pedido"}</h3>
-            <p className="checkout-subtitle">Paso {step} de 2</p>
+        
+        {/* -- ENCABEZADO -- */}
+        <div className="checkout-top-bar">
+          <div className="checkout-top-title">
+            <span className="brand-name">PAVÉS</span>
+            <h3>Finalizar Pedido</h3>
           </div>
+          
+          <div className="checkout-stepper">
+            <div className={`step ${step >= 1 ? "active" : ""}`}>
+              <span className="step-num">{step > 1 ? <Check size={12} /> : "1"}</span> 
+              <span className="step-text">Datos & Pago</span>
+            </div>
+            <div className="step-divider"></div>
+            <div className={`step ${step >= 2 ? "active" : ""}`}>
+              <span className="step-num">2</span> 
+              <span className="step-text">Confirmación</span>
+            </div>
+          </div>
+
           <button className="btn-close-checkout" onClick={onClose} type="button">
             <X size={20} />
           </button>
         </div>
 
-        <div className="checkout-progress-bar">
-          <div className={`progress-step ${step >= 1 ? "active" : ""}`} />
-          <div className={`progress-step ${step >= 2 ? "active" : ""}`} />
-        </div>
+        {/* -- CONTENIDO DIVIDIDO -- */}
+        <div className="checkout-layout">
+          
+          {/* COLUMNA IZQUIERDA: Formularios / Confirmación */}
+          <div className="checkout-left-panel">
+            {estadoNegocio && !estadoNegocio.abierto && (
+              <div className="checkout-aviso-cerrado">
+                <Clock size={16} />
+                <span>
+                  <strong>Estamos cerrados ahora</strong>
+                  {estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se agendará.
+                </span>
+              </div>
+            )}
 
-        {/* Aviso: negocio cerrado → el pedido se agenda para la apertura */}
-        {estadoNegocio && !estadoNegocio.abierto && (
-          <div className="checkout-aviso-cerrado">
-            <Clock size={16} />
-            <span>
-              <strong>Estamos cerrados ahora</strong>
-              {estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se
-              agenda y se prepará al abrir, en orden de llegada.
-            </span>
-          </div>
-        )}
-
-        {step === 1 ? (
-          <form onSubmit={handleNext} className="checkout-body">
-            <div className="form-grid">
-              {/* Modo de entrega (según lo configurado en el panel) */}
-              {(settings.offersDelivery !== false || settings.offersPickup !== false || settings.offersLocal !== false) && (
-                <div className="form-group full-width">
-                  <label>¿Cómo lo recibes? *</label>
-                  <div className="entrega-options">
-                    {settings.offersDelivery !== false && (
-                      <button
-                        type="button"
-                        className={`entrega-option ${esDomicilio ? "entrega-option--activa" : ""}`}
-                        onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "domicilio" }))}
-                      >
-                        <FaMotorcycle size={18} />
-                        <span>Domicilio</span>
-                        <small>{formatCOP(settings.deliveryFee ?? 0)} · gratis desde {formatCOP(settings.freeDeliveryThreshold ?? 0)}</small>
-                      </button>
-                    )}
-                    {settings.offersPickup !== false && (
-                      <button
-                        type="button"
-                        className={`entrega-option ${formData.tipoEntrega === "recogida" ? "entrega-option--activa" : ""}`}
-                        onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "recogida" }))}
-                      >
-                        <LuHandPlatter size={18} />
-                        <span>Recoger en tienda</span>
-                        <small>Sin costo de domicilio</small>
-                      </button>
-                    )}
-                    {settings.offersLocal !== false && (
-                      <button
-                        type="button"
-                        className={`entrega-option ${esLocal ? "entrega-option--activa" : ""}`}
-                        onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "local" }))}
-                      >
-                        <Store size={18} />
-                        <span>Comer en el local</span>
-                        <small>Sin recargo</small>
-                      </button>
-                    )}
-                  </div>
+            {step === 1 ? (
+              <form onSubmit={handleNext} className="checkout-form">
+                <div className="form-section-title">
+                  <span className="section-num">1</span>
+                  <h4>¿Dónde entregamos tu pedido?</h4>
                 </div>
-              )}
-              <div className="form-group full-width">
-                <label><User size={15} /> Nombre Completo *</label>
-                <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="¿A quién entregamos?" required />
-              </div>
-              <div className="form-group">
-                <label><Phone size={15} /> Teléfono *</label>
-                <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="300 000 0000" required />
-              </div>
-              <div className="form-group">
-                <label><CreditCard size={15} /> Medio de Pago *</label>
-                <select name="pago" value={formData.pago} onChange={handleChange}>
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Transferencia (Bancolombia/Nequi)">Transferencia (Bancolombia/Nequi)</option>
-                  <option value="Datáfono">Datáfono a domicilio</option>
-                </select>
-              </div>
-              {esDomicilio && (
-                <>
-                  <div className="form-group full-width">
-                    <label><MapPin size={15} /> Dirección Exacta *</label>
-                    <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Carrera, Barrio..." required />
-                  </div>
-                  <div className="form-group">
-                    <label><Building size={15} /> Unidad / Edificio</label>
-                    <input type="text" name="unidad" value={formData.unidad} onChange={handleChange} placeholder="Nombre (si aplica)" />
-                  </div>
-                  <div className="form-group">
-                    <label><Home size={15} /> Apto / Casa / Piso *</label>
-                    <input type="text" name="apto" value={formData.apto} onChange={handleChange} placeholder="Ej: Apto 502" required />
-                  </div>
-                </>
-              )}
-              <div className="form-group full-width">
-                <label><MessageSquare size={15} /> Observaciones</label>
-                <textarea name="observaciones" rows={2} value={formData.observaciones} onChange={handleChange} placeholder="Ej: Dejar en portería, timbrar dos veces..." />
-              </div>
-            </div>
-            <div className="checkout-footer">
-              <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-              <button type="submit" className="btn-primary">Revisar Pedido <ArrowRight size={16} /></button>
-            </div>
-          </form>
-        ) : (
-          <div className="checkout-body summary-body">
-            <div className="summary-card">
-              <div className="card-header">
-                <CheckCircle size={18} className="icon-success" />
-                <h4>Datos de Entrega</h4>
-              </div>
-              <div className="card-content">
-                <p><strong>Destinatario:</strong> {formData.nombre}</p>
-                <p><strong>Teléfono:</strong> {formData.telefono}</p>
-                <p>
-                  <strong>Modalidad:</strong> {textoModalidad}
-                </p>
-                {esDomicilio && (
-                  <p><strong>Dirección:</strong> {formData.direccion}{formData.unidad && `, ${formData.unidad}`}{`, ${formData.apto}`}</p>
-                )}
-                <p><strong>Método de pago:</strong> {formData.pago}</p>
-                {formData.observaciones && <p className="note"><strong>Nota:</strong> &quot;{formData.observaciones}&quot;</p>}
-              </div>
-            </div>
-
-            <div className="summary-card">
-              <div className="card-header">
-                <LuClipboardList
-                  size={18} className="icon-success" />
-                <h4>Resumen de Productos</h4>
-              </div>
-              <div className="card-content items-list">
-                {cart.map((item, idx) => {
-                  const itemUnitPrice = calculateItemUnitPrice(item);
-                  const itemSubtotal = itemUnitPrice * item.quantity;
-                  const itemName = item.nombre || "Postre";
-                  return (
-                    <div key={idx} className="summary-item">
-                      <div className="item-qty-badge">{item.quantity}x</div>
-                      <div className="item-details">
-                        <span className="item-name">{itemName}</span>
-                        {item.customizations && (
-                          <span className="item-options">
-                            {[
-                              ...Object.values(item.customizations.options || {})
-                                .map((o) => o?.nombre)
-                                .filter(Boolean),
-                              ...(item.customizations.toppings || [])
-                                .map((t) => (typeof t === "string" ? t : t.nombre))
-                                .filter(Boolean),
-                              ...Object.values(item.customizations.adiciones || {})
-                                .map((a) => a.nombre)
-                                .filter(Boolean),
-                              ...Object.values(item.customizations.salsas || {})
-                                .map((s) => s.nombre)
-                                .filter(Boolean),
-                            ].join(", ")}
-                          </span>
+                
+                <div className="form-grid">
+                  {(settings.offersDelivery !== false || settings.offersPickup !== false || settings.offersLocal !== false) && (
+                    <div className="form-group full-width">
+                      <div className="entrega-options">
+                        {settings.offersDelivery !== false && (
+                          <button
+                            type="button"
+                            className={`entrega-option ${esDomicilio ? "entrega-option--activa" : ""}`}
+                            onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "domicilio" }))}
+                          >
+                            <FaMotorcycle size={18} />
+                            <span>Domicilio</span>
+                          </button>
+                        )}
+                        {settings.offersPickup !== false && (
+                          <button
+                            type="button"
+                            className={`entrega-option ${formData.tipoEntrega === "recogida" ? "entrega-option--activa" : ""}`}
+                            onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "recogida" }))}
+                          >
+                            <Store size={18} />
+                            <span>Recoger</span>
+                          </button>
+                        )}
+                        {settings.offersLocal !== false && (
+                          <button
+                            type="button"
+                            className={`entrega-option ${esLocal ? "entrega-option--activa" : ""}`}
+                            onClick={() => setFormData((p) => ({ ...p, tipoEntrega: "local" }))}
+                          >
+                            <User size={18} />
+                            <span>Local</span>
+                          </button>
                         )}
                       </div>
-                      <span className="item-subtotal">{formatCOP(itemSubtotal)}</span>
                     </div>
-                  );
-                })}
+                  )}
+
+                  <div className="form-group full-width">
+                    <label>Nombre y Apellido *</label>
+                    <div className="input-with-icon">
+                      <User size={16} className="input-icon" />
+                      <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Ej: Carolina Restrepo" required />
+                    </div>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Teléfono Celular / WhatsApp *</label>
+                    <div className="input-with-icon">
+                      <Phone size={16} className="input-icon" />
+                      <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Ej: 310 123 4567" required />
+                    </div>
+                    <small className="input-hint"><FaWhatsapp style={{display: "inline", marginRight: "4px"}} color="#25D366" />Te contactaremos a este número para confirmar tu entrega.</small>
+                  </div>
+
+                  {esDomicilio && (
+                    <>
+                      <div className="form-group full-width">
+                        <label>Dirección Principal *</label>
+                        <div className="input-with-icon">
+                          <MapPin size={16} className="input-icon" />
+                          <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Ej: Carrera 50 # 49 - 20, Barrio San Pedro" required />
+                        </div>
+                      </div>
+                      
+                      <div className="form-row">
+                        <div className="form-group half-width">
+                          <label>Unidad / Edificio (opcional)</label>
+                          <div className="input-with-icon">
+                            <Building size={16} className="input-icon" />
+                            <input type="text" name="unidad" value={formData.unidad} onChange={handleChange} placeholder="Ej: Edificio Los Pinos" />
+                          </div>
+                        </div>
+                        <div className="form-group half-width">
+                          <label>Apto / Casa / Piso *</label>
+                          <div className="input-with-icon">
+                            <Home size={16} className="input-icon" />
+                            <input type="text" name="apto" value={formData.apto} onChange={handleChange} placeholder="Ej: Apto 302" required />
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div className="form-group full-width">
+                    <label>Indicaciones para el repartidor (opcional)</label>
+                    <div className="input-with-icon textarea-icon">
+                      <MessageSquare size={16} className="input-icon" />
+                      <textarea name="observaciones" rows={2} value={formData.observaciones} onChange={handleChange} placeholder="Ej: Dejar en portería, timbrar dos veces..." />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section-title" style={{ marginTop: "2rem" }}>
+                  <span className="section-num">2</span>
+                  <h4>Método de Pago *</h4>
+                </div>
+
+                <div className="payment-options">
+                  <label className={`payment-card ${formData.pago === "Efectivo" ? "selected" : ""}`}>
+                    <input type="radio" name="pago" value="Efectivo" checked={formData.pago === "Efectivo"} onChange={handleChange} />
+                    <div className="payment-icon-bg"><CreditCard size={20} /></div>
+                    <strong>Efectivo</strong>
+                    <span>Pagas al recibir</span>
+                    {formData.pago === "Efectivo" && <CheckCircle size={16} className="check-icon" />}
+                  </label>
+                  
+                  <label className={`payment-card ${formData.pago === "Transferencia" ? "selected" : ""}`}>
+                    <input type="radio" name="pago" value="Transferencia" checked={formData.pago === "Transferencia"} onChange={handleChange} />
+                    <div className="payment-icon-bg"><Phone size={20} /></div>
+                    <strong>Transferencia</strong>
+                    <span>Nequi / Bancolombia</span>
+                    {formData.pago === "Transferencia" && <CheckCircle size={16} className="check-icon" />}
+                  </label>
+
+                  <label className={`payment-card ${formData.pago === "Datáfono" ? "selected" : ""}`}>
+                    <input type="radio" name="pago" value="Datáfono" checked={formData.pago === "Datáfono"} onChange={handleChange} />
+                    <div className="payment-icon-bg"><CreditCard size={20} /></div>
+                    <strong>Datáfono</strong>
+                    <span>Tarjeta débito/crédito</span>
+                    {formData.pago === "Datáfono" && <CheckCircle size={16} className="check-icon" />}
+                  </label>
+                </div>
+
+                <div className="checkout-footer form-actions">
+                  <button type="button" className="btn-volver" onClick={onClose}>
+                    <ArrowLeft size={16} /> Volver al Menú
+                  </button>
+                  <button type="submit" className="btn-continuar">
+                    Revisar y Confirmar <ArrowRight size={16} />
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="checkout-confirmation-panel">
+                <div className="confirm-banner">
+                  <div className="confirm-icon-bg"><Check size={24} color="#fff" /></div>
+                  <div className="confirm-banner-text">
+                    <h4>¡Casi listo! Revisa tus datos de entrega</h4>
+                    <p>Verifica que todo esté correcto antes de enviar tu pedido por WhatsApp.</p>
+                  </div>
+                </div>
+
+                <div className="confirm-details-card">
+                  <div className="confirm-detail-row">
+                    <span className="detail-label"><User size={14} /> DESTINATARIO</span>
+                    <strong className="detail-value">{formData.nombre}</strong>
+                  </div>
+                  
+                  <div className="confirm-detail-row">
+                    <span className="detail-label"><Phone size={14} /> CELULAR WHATSAPP</span>
+                    <strong className="detail-value">{formData.telefono}</strong>
+                  </div>
+
+                  <div className="confirm-detail-row">
+                    <span className="detail-label"><MapPin size={14} /> DIRECCIÓN DE ENTREGA</span>
+                    <strong className="detail-value">
+                      {esDomicilio ? `${formData.direccion}${formData.unidad ? `, ${formData.unidad}` : ''}, ${formData.apto}` : textoModalidad}
+                    </strong>
+                  </div>
+
+                  <div className="confirm-detail-row">
+                    <span className="detail-label"><CreditCard size={14} /> MEDIO DE PAGO</span>
+                    <span className="payment-badge">{formData.pago}</span>
+                  </div>
+                </div>
+
+                <div className="modify-section">
+                  <span className="modify-text">¿Deseas cambiar algo en la entrega o el medio de pago?</span>
+                  <button type="button" className="btn-modify" onClick={() => setStep(1)}>
+                    Modificar datos
+                  </button>
+                </div>
+
+                <div className="checkout-footer confirm-actions">
+                  <button type="button" className="btn-volver" onClick={() => setStep(1)}>
+                    <ArrowLeft size={16} /> Volver a editar
+                  </button>
+                  <button type="button" className="btn-whatsapp-send" onClick={handleSubmit}>
+                    <FaWhatsapp size={18} /> Enviar Pedido a WhatsApp
+                  </button>
+                </div>
               </div>
-              <div className="summary-totals">
-                <div className="total-row"><span>Subtotal productos:</span><span>{formatCOP(totalProductos)}</span></div>
+            )}
+          </div>
+
+          {/* COLUMNA DERECHA: Resumen del Pedido */}
+          <div className="checkout-right-panel">
+            <div className="resumen-header">
+              <h4>Resumen del Pedido</h4>
+              <span className="items-count">{cart.reduce((acc, i) => acc + i.quantity, 0)} items</span>
+            </div>
+
+            <div className="resumen-items-list">
+              {cart.map((item, idx) => {
+                const itemUnitPrice = calculateItemUnitPrice(item);
+                const itemSubtotal = itemUnitPrice * item.quantity;
+                const itemName = item.nombre || "Postre";
+                
+                const customOptions = item.customizations ? [
+                  ...Object.values(item.customizations.options || {}).map((o) => o?.nombre).filter(Boolean),
+                  ...(item.customizations.toppings || []).map((t) => (typeof t === "string" ? t : t.nombre)).filter(Boolean),
+                  ...Object.values(item.customizations.adiciones || {}).map((a) => a.nombre).filter(Boolean),
+                  ...Object.values(item.customizations.salsas || {}).map((s) => s.nombre).filter(Boolean),
+                ] : [];
+
+                return (
+                  <div key={idx} className="resumen-item">
+                    <div className="resumen-item-qty">{item.quantity}x</div>
+                    <div className="resumen-item-details">
+                      <div className="resumen-item-title-price">
+                        <span className="resumen-item-name">{itemName}</span>
+                        <span className="resumen-item-price">{formatCOP(itemSubtotal)}</span>
+                      </div>
+                      {customOptions.length > 0 && (
+                        <div className="resumen-item-customs">
+                          {customOptions.map((opt, i) => (
+                            <span key={i} className="resumen-custom-badge">{opt}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="resumen-totals">
+              <div className="totals-row">
+                <span className="totals-label">Subtotal productos:</span>
+                <span className="totals-value">{formatCOP(totalProductos)}</span>
+              </div>
+              <div className="totals-row">
+                <span className="totals-label">Domicilio:</span>
                 {!esDomicilio ? (
-                  <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica</span></div>
+                  <span className="totals-value free">No aplica</span>
                 ) : (
-                  <div className="total-row"><span>Domicilio:</span><span className={esGratis ? "text-free" : ""}>{esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT)}</span></div>
+                  <span className={`totals-value ${esGratis ? "free" : ""}`}>
+                    {esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT)}
+                  </span>
                 )}
-                <div className="divider" />
-                <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>
+              </div>
+              
+              <div className="totals-divider"></div>
+              
+              <div className="totals-row grand-total">
+                <span className="totals-label">Total a Pagar:</span>
+                <span className="totals-value highlighted">{formatCOP(totalNetoAPagar)}</span>
               </div>
             </div>
 
-            <div className="checkout-footer">
-              <button type="button" className="btn-secondary" onClick={() => setStep(1)}><ArrowLeft size={16} /> Modificar Datos</button>
-              <button type="button" className="btn-whatsapp" onClick={handleSubmit}><Send size={16} /> Enviar Pedido</button>
+            <div className="resumen-guarantees">
+              <div className="guarantee-item">
+                <Clock size={12} color="#8a6652" />
+                <span>Preparado al instante</span>
+              </div>
+              <div className="guarantee-item">
+                <CheckCircle size={12} color="#8a6652" />
+                <span>Pedido seguro por WhatsApp</span>
+              </div>
             </div>
+
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

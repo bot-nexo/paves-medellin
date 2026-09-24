@@ -21,14 +21,12 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
           icon: "info",
           confirmButtonColor: "#ffcc00",
           confirmButtonText: "Ver Menú",
-          customClass: {
-            popup: "saborio-swal-dark",
-          }
+          customClass: { popup: "saborio-swal-dark" }
         }).then((res) => {
           if (res.isConfirmed) handleScrollTo("menu");
         });
       } else {
-        handleScrollTo("menu");
+        window.dispatchEvent(new CustomEvent("show-favorites"));
       }
     } catch {
       handleScrollTo("menu");
