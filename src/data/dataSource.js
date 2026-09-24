@@ -256,7 +256,7 @@ const normalizeCatalogDesign = (row) => ({
   promotionsBg: !isLegacyLightColor(row.promotions_bg) ? row.promotions_bg : DEFAULT_CATALOG_DESIGN.promotionsBg,
   promotionsCardBg: !isLegacyLightColor(row.promotions_card_bg) ? row.promotions_card_bg : DEFAULT_CATALOG_DESIGN.promotionsCardBg,
   promotionsAccent: row.promotions_accent || DEFAULT_CATALOG_DESIGN.promotionsAccent,
-  promotionsItems: Array.isArray(row.promotions_items) && row.promotions_items.length > 0
+  promotionsItems: Array.isArray(row.promotions_items)
     ? row.promotions_items
     : DEFAULT_PROMOTIONS_ITEMS,
 
@@ -267,15 +267,20 @@ const normalizeCatalogDesign = (row) => ({
   combosBg: !isLegacyLightColor(row.combos_bg) ? row.combos_bg : DEFAULT_CATALOG_DESIGN.combosBg,
   combosCardBg: !isLegacyLightColor(row.combos_card_bg) ? row.combos_card_bg : DEFAULT_CATALOG_DESIGN.combosCardBg,
   combosAccent: row.combos_accent || DEFAULT_CATALOG_DESIGN.combosAccent,
-  combosItems: Array.isArray(row.combos_items) && row.combos_items.length > 0
+  combosItems: Array.isArray(row.combos_items)
     ? row.combos_items
     : DEFAULT_COMBOS_ITEMS,
 
   // Menú
   bgColor: !isLegacyLightColor(row.bg_color) ? row.bg_color : DEFAULT_CATALOG_DESIGN.bgColor,
   cardBg: !isLegacyLightColor(row.card_bg) ? row.card_bg : DEFAULT_CATALOG_DESIGN.cardBg,
-  headerBadgeBg: row.header_badge_bg || DEFAULT_CATALOG_DESIGN.headerBadgeBg,
-  headerBadgeText: row.header_badge_text || DEFAULT_CATALOG_DESIGN.headerBadgeText,
+  specialEvent: (function() {
+    try {
+      return row.header_badge_text ? JSON.parse(row.header_badge_text) : { active: false };
+    } catch (e) {
+      return { active: false, texto: row.header_badge_text || "", bgColor: row.header_badge_bg || "#d92b38", textColor: "#ffffff" };
+    }
+  })(),
   textPrimary: row.text_primary && row.text_primary !== "#3d2314" ? row.text_primary : DEFAULT_CATALOG_DESIGN.textPrimary,
   textMuted: row.text_muted && row.text_muted !== "#7a6353" ? row.text_muted : DEFAULT_CATALOG_DESIGN.textMuted,
   borderColor: row.border_color || DEFAULT_CATALOG_DESIGN.borderColor,
@@ -855,7 +860,7 @@ const COLUMNAS_DESIGN = {
   bgColor: "bg_color",
   cardBg: "card_bg",
   headerBadgeBg: "header_badge_bg",
-  headerBadgeText: "header_badge_text",
+  specialEvent: "header_badge_text",
   textPrimary: "text_primary",
   textMuted: "text_muted",
   borderColor: "border_color",
@@ -890,8 +895,15 @@ const COLUMNAS_DESIGN = {
 export async function updateCatalogDesign(cambios) {
   const fila = {};
   Object.entries(cambios).forEach(([clave, valor]) => {
-    fila[COLUMNAS_DESIGN[clave] || clave] = valor;
+    if (clave === "specialEvent") {
+      fila["header_badge_text"] = typeof valor === "object" ? JSON.stringify(valor) : valor;
+    } else if (COLUMNAS_DESIGN[clave]) {
+      fila[COLUMNAS_DESIGN[clave]] = valor;
+    }
   });
+  
+  if (Object.keys(fila).length === 0) return;
+
   const { error } = await supabase.from("catalog_design").upsert({ id: 1, ...fila });
   if (error) throw error;
   invalidateCatalog();

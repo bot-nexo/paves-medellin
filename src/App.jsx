@@ -56,15 +56,34 @@ const App = () => {
   // Estado del cliente (identificación por nombre y teléfono cel)
   const [customer, setCustomer] = useState(() => {
     try {
-      const saved = localStorage.getItem("paves_customer_info");
+      const saved = sessionStorage.getItem("paves_customer_info") || localStorage.getItem("paves_customer_info");
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
   });
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  
-  //***************************** */
+
+  // Al cerrar o salir de la página del menú, eliminar la info del cliente de storage para garantizar la seguridad de los datos
+  useEffect(() => {
+    const handleClearCustomerStorage = () => {
+      try {
+        localStorage.removeItem("paves_customer_info");
+        sessionStorage.removeItem("paves_customer_info");
+      } catch {
+        /* noop */
+      }
+    };
+
+    window.addEventListener("beforeunload", handleClearCustomerStorage);
+    window.addEventListener("pagehide", handleClearCustomerStorage);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleClearCustomerStorage);
+      window.removeEventListener("pagehide", handleClearCustomerStorage);
+    };
+  }, []);
+
   useEffect(() => {
     // Si al ingresar a la tienda el cliente aún no se ha identificado, abrir el modal automáticamente
     if (!customer || !customer.telefono) {
@@ -87,13 +106,17 @@ const App = () => {
         fecha_cumple: dbCust?.fecha_cumple || customerData.fecha_cumple || null
       };
 
-      localStorage.setItem("paves_customer_info", JSON.stringify(mergedCustomer));
+      // Guardar en sessionStorage para que sea volátil (se borra al cerrar la pestaña) y limpiar localStorage
+      sessionStorage.setItem("paves_customer_info", JSON.stringify(mergedCustomer));
+      localStorage.removeItem("paves_customer_info");
+
       setCustomer(mergedCustomer);
       setIsCustomerModalOpen(false);
     } catch (e) {
       console.warn("Error al guardar cliente en BD real:", e);
     }
   };
+
 
   // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
   const whatsappNumber = settings.phone || info.phone;

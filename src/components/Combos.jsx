@@ -6,7 +6,7 @@ import "../css/Combos.css";
 
 const AUTOPLAY_TIME = 6000;
 
-const Combos = ({ design = DEFAULT_CATALOG_DESIGN, onAddToCart }) => {
+const Combos = ({ design = DEFAULT_CATALOG_DESIGN, onComboClick }) => {
   const d = design || DEFAULT_CATALOG_DESIGN;
   const trackRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -15,13 +15,9 @@ const Combos = ({ design = DEFAULT_CATALOG_DESIGN, onAddToCart }) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  if (d.showCombos === false) return null;
-
   const items = d.combosItems && d.combosItems.length > 0
     ? d.combosItems
     : [];
-
-  if (items.length === 0) return null;
 
   const cssVars = {
     "--combos-bg": d.combosBg && !d.combosBg.includes("fbf") && !d.combosBg.includes("fff") && !d.combosBg.includes("fdf") ? d.combosBg : "#0f0906",
@@ -87,21 +83,9 @@ const Combos = ({ design = DEFAULT_CATALOG_DESIGN, onAddToCart }) => {
     return () => el && el.removeEventListener("scroll", checkScroll);
   }, [items]);
 
-  const handleAddCombo = (combo) => {
-    if (!onAddToCart) return;
-    const comboProduct = {
-      id: combo.id || `combo-${combo.nombre}`,
-      nombre: combo.nombre,
-      precio: combo.precio,
-      imagen: combo.imagen,
-      descripcion: combo.descripcion,
-      categoria: "Combos",
-      customizations: {
-        observaciones: combo.incluye ? `Incluye: ${combo.incluye.join(", ")}` : "",
-      },
-    };
-    onAddToCart(comboProduct);
-  };
+
+
+  if (d.showCombos === false || items.length === 0) return null;
 
   return (
     <section
@@ -129,43 +113,7 @@ const Combos = ({ design = DEFAULT_CATALOG_DESIGN, onAddToCart }) => {
             )}
           </div>
 
-          <div className="carousel-nav-wrap">
-            {/* Indicadores de puntos (dots) */}
-            {items.length > 1 && (
-              <div className="carousel-dots" aria-hidden="true">
-                {items.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`carousel-dot ${currentIndex === i ? "carousel-dot--active" : ""}`}
-                    onClick={() => scrollToSlide(i)}
-                    aria-label={`Ir a combo ${i + 1}`}
-                  />
-                ))}
-              </div>
-            )}
 
-            {items.length > 1 && (
-              <div className="carousel-nav-btns" aria-label="Navegación de combos">
-                <button
-                  type="button"
-                  className="carousel-nav-btn"
-                  onClick={handlePrev}
-                  aria-label="Combo anterior"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="carousel-nav-btn"
-                  onClick={handleNext}
-                  aria-label="Siguiente combo"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Carrusel Deslizable Compacto */}
@@ -173,75 +121,79 @@ const Combos = ({ design = DEFAULT_CATALOG_DESIGN, onAddToCart }) => {
           {items.map((combo, idx) => (
             <article
               key={combo.id || `combo-${idx}`}
-              className={`combo-card--compact ${currentIndex === idx ? "combo-card--active" : ""}`}
+              className={`combo-card--cinematic ${currentIndex === idx ? "combo-card--active" : ""}`}
+              style={{ 
+                width: "100%", flex: "0 0 100%", maxWidth: "100%", 
+                cursor: "pointer", 
+                position: "relative", 
+                height: "240px", 
+                borderRadius: "24px", 
+                overflow: "hidden",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,0.05)"
+              }}
+              onClick={onComboClick}
             >
-              <div className="combo-card__media">
-                <img
-                  src={combo.imagen || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80"}
-                  alt={combo.nombre}
-                  className="combo-card__img"
-                  loading="lazy"
-                />
-                {combo.badge && (
-                  <span className="combo-card__badge">
-                    <Sparkles size={10} />
-                    {combo.badge}
-                  </span>
-                )}
-              </div>
-
-              <div className="combo-card__body">
-                <div>
-                  <div className="combo-card__header">
-                    <h3 className="combo-card__name">{combo.nombre}</h3>
-                    <div className="combo-card__prices">
-                      <span className="combo-card__price-current">
-                        {formatCOP(combo.precio)}
-                      </span>
-                      {combo.precioOriginal && (
-                        <span className="combo-card__price-original">
-                          {formatCOP(combo.precioOriginal)}
-                        </span>
-                      )}
+              <img
+                src={combo.imagen || "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=1000&auto=format&fit=crop&q=80"}
+                alt={combo.nombre}
+                style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0, transition: "transform 0.5s ease" }}
+                className="hover:scale-105"
+                loading="lazy"
+              />
+              <div style={{
+                position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+                background: "linear-gradient(to top, rgba(13,8,5,0.95) 0%, rgba(13,8,5,0.5) 50%, rgba(13,8,5,0.1) 100%)",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "1.5rem", color: "white"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  {combo.badge ? (
+                    <span style={{ background: d.combosAccent || "#d92b38", color: "#fff", padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px", display: "inline-flex", alignItems: "center", gap: "4px", boxShadow: "0 4px 10px rgba(217,43,56,0.4)" }}>
+                      <Sparkles size={12} /> {combo.badge}
+                    </span>
+                  ) : <div></div>}
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: "1.3rem", fontWeight: "900", color: d.combosAccent || "#d92b38", textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>
+                      {formatCOP(combo.precio)}
                     </div>
+                    {combo.precioOriginal && (
+                      <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.6)", textDecoration: "line-through", marginTop: "-2px" }}>
+                        {formatCOP(combo.precioOriginal)}
+                      </div>
+                    )}
                   </div>
+                </div>
 
-                  <p className="combo-card__desc">{combo.descripcion}</p>
-
+                <div>
+                  <h3 style={{ fontSize: "1.5rem", fontWeight: "900", margin: "0 0 6px 0", lineHeight: "1.1", textShadow: "0 2px 10px rgba(0,0,0,0.8)", fontFamily: d.fontFamily || "inherit" }}>
+                    {combo.nombre}
+                  </h3>
+                  <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.8)", margin: "0 0 10px 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                    {combo.descripcion}
+                  </p>
+                  
                   {combo.incluye && combo.incluye.length > 0 && (
-                    <div className="combo-card__includes-compact">
-                      {combo.incluye.slice(0, 2).map((inc, i) => (
-                        <span key={i} className="combo-card__includes-tag">
+                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "8px" }}>
+                      {combo.incluye.slice(0, 3).map((inc, i) => (
+                        <span key={i} style={{ fontSize: "0.7rem", color: "#fff", background: "rgba(255,255,255,0.15)", padding: "2px 8px", borderRadius: "10px", backdropFilter: "blur(2px)", border: "1px solid rgba(255,255,255,0.1)" }}>
                           ✓ {inc}
                         </span>
                       ))}
                     </div>
                   )}
-                </div>
 
-                <button
-                  type="button"
-                  className="combo-card__btn-add"
-                  onClick={() => handleAddCombo(combo)}
-                >
-                  <Plus size={14} />
-                  <span>Agregar al Carrito</span>
-                </button>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: d.combosAccent || "#d92b38", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Explorar este combo <ChevronRight size={14} />
+                  </div>
+                </div>
               </div>
             </article>
           ))}
         </div>
       </div>
 
-      {/* Barra de progreso de autoplay continuo (igual que Destacados) */}
-      {items.length > 1 && (
-        <div className="carousel-progress-track">
-          <div
-            className="carousel-progress-fill"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
+
     </section>
   );
 };

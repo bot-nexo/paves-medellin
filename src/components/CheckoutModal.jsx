@@ -58,7 +58,7 @@ const CheckoutModal = ({
     if (isOpen) {
       setStep(1);
       try {
-        const savedCust = localStorage.getItem("paves_customer_info");
+        const savedCust = sessionStorage.getItem("paves_customer_info") || localStorage.getItem("paves_customer_info");
         if (savedCust) {
           const cust = JSON.parse(savedCust);
           setFormData((prev) => ({

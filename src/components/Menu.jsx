@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import MenuCard from "./MenuCard";
-import { Flame, ArrowRight, Rocket } from "lucide-react";
+import { Flame, ArrowRight, Search, X } from "lucide-react";
+import Promociones from "./Promociones";
+import Combos from "./Combos";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
 import { formatCOP } from "../utils/price";
 import "../css/Menu.css";
@@ -21,6 +23,7 @@ const Menu = ({
 
   const d = design || DEFAULT_CATALOG_DESIGN;
 
+  //*************************** */
   // Promociones relámpago dinámicas desde la BD (catalog_design.promotions_items)
   const flashPromotions = useMemo(() => {
     if (d.promotionsItems && Array.isArray(d.promotionsItems) && d.promotionsItems.length > 0) {
@@ -185,9 +188,46 @@ const Menu = ({
     return deals.length > 0 ? deals : data.slice(0, 6);
   }, [data]);
 
+  //*************************** */
   return (
     <section id="menu" className="menu-section bg-neutral-950 text-neutral-100" style={cssVariables}>
       <div className="container mx-auto px-4 max-w-5xl">
+
+        {/* ── 0. Barra de Búsqueda Integrada al Menú ─ */}
+        <div className="menu-search-wrapper">
+          <div className="menu-search-box">
+            <Search size={17} className="menu-search-icon" />
+            <input
+              id="menu-search-input"
+              type="text"
+              className="menu-search-input"
+              placeholder="¿Qué antojo tienes hoy?"
+              value={searchQuery}
+              onChange={(e) => {
+                if (setSearchQuery) setSearchQuery(e.target.value);
+              }}
+              aria-label="Buscar en el menú"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="menu-search-clear"
+                onClick={() => { if (setSearchQuery) setSearchQuery(""); }}
+                aria-label="Limpiar búsqueda"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="menu-search-results-hint">
+              {filteredProducts.length === 0
+                ? "Sin resultados para "
+                : `${filteredProducts.length} resultado${filteredProducts.length !== 1 ? "s" : ""} para `}
+              <strong>"{searchQuery}"</strong>
+            </p>
+          )}
+        </div>
 
         {/* ── 1. Sección de Categorías: "Explora por universo" (Saborio Style) ─ */}
         <div className="universe-section my-6">
@@ -252,113 +292,52 @@ const Menu = ({
           </div>
         </div>
 
-        {/* ── 2. Promos Relámpago: Secondary Banner ("Pide, disfruta, repite") ─ */}
-        {flashPromotions.length > 0 && (
-          <div className="saborio-secondary-banner-wrapper mt-3 mb-8 md:mt-5 md:mb-10">
-            {flashPromotions.length === 1 ? (
-              /* Tarjeta Estática a Ancho Completo (Lógica estricta cuando es 1 sola promo) */
-              <div className="saborio-repeat-banner relative rounded-2xl sm:rounded-3xl p-4 sm:p-6 pb-4 sm:pb-6 overflow-hidden border border-[#ffcc00]/30 bg-gradient-to-r from-neutral-900 via-neutral-900/95 to-neutral-950 shadow-2xl">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#ffcc00]/15 border border-[#ffcc00]/30 text-[#ffcc00] text-[10.5px] sm:text-xs font-black tracking-wider uppercase mb-2 sm:mb-3">
-                  <Rocket size={12} className="text-[#ffcc00]" />
-                  <span>{flashPromotions[0].tag || "ENVÍO ULTRA RÁPIDO"}</span>
-                </div>
 
-                <div className="flex items-center justify-between gap-3 sm:gap-4">
-                  <div className="max-w-md flex-1">
-                    <h3 className="text-base sm:text-2xl font-black leading-tight tracking-tight uppercase">
-                      <span className="text-white">PIDE, </span>
-                      <span className="text-[#ffcc00]">DISFRUTA, REPITE</span>
-                    </h3>
-                    <p className="text-xs sm:text-sm text-neutral-300 mt-1 line-clamp-2 leading-relaxed">
-                      {flashPromotions[0].descripcion || flashPromotions[0].titulo}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setActiveCategory("Promociones especiales")}
-                      className="mt-3 sm:mt-4 inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-[#ffcc00] text-neutral-950 text-xs font-black shadow-lg hover:bg-[#ffe04d] transition-transform active:scale-95"
-                    >
-                      <span>Ver menú</span>
-                      <ArrowRight size={13} />
-                    </button>
-                  </div>
-
-                  {flashPromotions[0].imagen && (
-                    <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden border border-white/15 shadow-md bg-neutral-950">
-                      <img
-                        src={flashPromotions[0].imagen}
-                        alt="Promo Relámpago"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Carrusel Dinámico (Lógica estricta cuando hay > 1 promo activa) */
-              <div className="saborio-repeat-banner-carousel relative rounded-2xl sm:rounded-3xl p-4 sm:p-6 pb-3 sm:pb-5 overflow-hidden border border-[#ffcc00]/30 bg-gradient-to-r from-neutral-900 via-neutral-900/95 to-neutral-950 shadow-2xl">
-                {flashPromotions.map((promo, idx) => {
-                  if (idx !== currentPromoIndex) return null;
-                  return (
-                    <div key={promo.id || idx} className="saborio-repeat-slide transition-opacity duration-300">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-[#ffcc00]/15 border border-[#ffcc00]/30 text-[#ffcc00] text-[10.5px] sm:text-xs font-black tracking-wider uppercase mb-2 sm:mb-3">
-                        <Rocket size={12} className="text-[#ffcc00]" />
-                        <span>{promo.tag || promo.descuento || "OFERTA ESPECIAL"}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-3 sm:gap-4">
-                        <div className="max-w-md flex-1">
-                          <h3 className="text-base sm:text-2xl font-black leading-tight tracking-tight uppercase">
-                            <span className="text-white">
-                              {promo.titulo ? promo.titulo.split(" ")[0] : "PIDE,"}{" "}
-                            </span>
-                            <span className="text-[#ffcc00]">
-                              {promo.titulo ? promo.titulo.split(" ").slice(1).join(" ") : "DISFRUTA, REPITE"}
-                            </span>
-                          </h3>
-                          <p className="text-xs sm:text-sm text-neutral-300 mt-1 line-clamp-2 leading-relaxed">
-                            {promo.descripcion}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => setActiveCategory("Promociones especiales")}
-                            className="mt-3 sm:mt-4 inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-[#ffcc00] text-neutral-950 text-xs font-black shadow-lg hover:bg-[#ffe04d] transition-transform active:scale-95"
-                          >
-                            <span>Ver promo</span>
-                            <ArrowRight size={13} />
-                          </button>
-                        </div>
-
-                        {promo.imagen && (
-                          <div className="relative w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 rounded-xl sm:rounded-2xl overflow-hidden border border-white/15 shadow-md bg-neutral-950">
-                            <img
-                              src={promo.imagen}
-                              alt={promo.titulo}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Dots del Carrusel de Promos Relámpago con margen protegido */}
-                <div className="flex justify-center items-center gap-2 pt-3 pb-1">
-                  {flashPromotions.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setCurrentPromoIndex(i)}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${currentPromoIndex === i ? "w-6 bg-[#ffcc00]" : "w-1.5 bg-white/30"
-                        }`}
-                      aria-label={`Slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        {/* ── Banner Evento Especial (Flotante Top) ── */}
+        {d.specialEvent?.active && (
+          <div
+            className="fixed top-5 left-1/2 z-[999] w-[92%] max-w-md text-center p-2.5 md:p-3 rounded-full shadow-2xl border overflow-hidden cursor-pointer"
+            style={{
+              background: d.specialEvent.bgColor || "#d92b38",
+              color: d.specialEvent.textColor || "#ffffff",
+              borderColor: `${d.specialEvent.textColor}30`,
+              boxShadow: `0 10px 40px -5px ${(d.specialEvent.bgColor || "#d92b38")}90`,
+              transform: "translateX(-50%)",
+              animation: "floatBanner 3.5s ease-in-out infinite"
+            }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <style>{`
+              @keyframes floatBanner {
+                0%, 100% { transform: translateX(-50%) translateY(0px); }
+                50% { transform: translateX(-50%) translateY(-6px); }
+              }
+            `}</style>
+            <div className="absolute inset-0 opacity-20  rounded-full" style={{ background: "linear-gradient(45deg, transparent 20%, white 50%, transparent 80%)", backgroundSize: "200% 200%", animation: "shimmer 3s infinite linear" }} />
+            <h3 className="relative z-10 text-[0.8rem] md:text-[0.9rem] 
+            tracking-widest uppercase m-0 leading-none drop-shadow-md">
+              {d.specialEvent.texto}
+            </h3>
           </div>
         )}
+
+        {/* ── 2.5 Carruseles de Promos y Combos ── */}
+        <Promociones
+          design={design}
+          onPromoClick={() => {
+            setActiveCategory("Promociones especiales");
+            const menuEl = document.getElementById("saborio-menu-tabs");
+            if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
+        <Combos
+          design={design}
+          onComboClick={() => {
+            setActiveCategory("Combos");
+            const menuEl = document.getElementById("saborio-menu-tabs");
+            if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
 
         {/* ── 3. Sección "Promociones" (Centralizada en Menu.css) ── */}
         {activeCategory === "Todos" && !searchQuery && dealProducts.length > 0 && (

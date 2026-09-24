@@ -10,6 +10,84 @@
   transition: background-color 0.3s ease;
 }
 
+/* ── Barra de Búsqueda integrada al Menú ─────────────────────────────────── */
+.menu-search-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 0.75rem 0 0.5rem;
+  background: linear-gradient(180deg, var(--menu-bg, #0d0805) 60%, transparent 100%);
+}
+
+.menu-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.10);
+  border-radius: 14px;
+  padding: 0.55rem 0.85rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.menu-search-box:focus-within {
+  border-color: rgba(255, 204, 0, 0.5);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.08);
+}
+
+.menu-search-icon {
+  color: #bda899;
+  flex-shrink: 0;
+}
+
+.menu-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #fdfbf7;
+  font-family: var(--menu-font, "Montserrat", sans-serif);
+}
+
+.menu-search-input::placeholder {
+  color: #7a6a5a;
+}
+
+.menu-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  color: #bda899;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.menu-search-clear:hover {
+  background: rgba(255, 204, 0, 0.18);
+  color: #ffcc00;
+}
+
+.menu-search-results-hint {
+  font-size: 0.75rem;
+  color: #bda899;
+  margin: 0.3rem 0 0 0.2rem;
+}
+
+.menu-search-results-hint strong {
+  color: #ffcc00;
+}
+
 /* ── Sección: Explora por Universo (Saborio Style) ────────────────────────── */
 
 .universe-section {

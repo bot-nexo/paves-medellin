@@ -133,9 +133,11 @@ const Hero = ({
     if (onSearchChange) {
       onSearchChange(e.target.value);
     }
-    const menuEl = document.getElementById("menu");
-    if (menuEl && window.scrollY < 200) {
-      menuEl.scrollIntoView({ behavior: "smooth" });
+    // Si el usuario escribe y aún está en la zona del Hero, hace scroll suave al menú
+    // solo si ya hay texto (no al borrar) para no interrumpir la experiencia
+    if (e.target.value && window.scrollY < 100) {
+      const menuEl = document.getElementById("menu");
+      if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
     }
   };
 

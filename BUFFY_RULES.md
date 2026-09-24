@@ -35,5 +35,7 @@
 
 - **Definir antes de programar:** para módulos nuevos, primero acordar el alcance
   y la arquitectura con el usuario (con opciones a elegir), y recién entonces codificar.
-- Verificar con `npm run build` / typecheck antes de dar un cambio por terminado.
+- Verificar con `npm run build` / typecheck antes de dar un cambio por terminado, preguntandome si lo ejecuto o no.
 - Debes validar que lo que se hizo funciona y no rompe nada mas antes de darlo por terminado. 
+- Con esas preguntas de confirmacion, debes ser muy critico, y validar si el cambio es tan critico que puede dañar la app
+me preguntas, de lo contrario puede ejecutar lo que necesites sin estar preguntando

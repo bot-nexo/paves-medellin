@@ -5,7 +5,7 @@ import "../css/Promociones.css";
 
 const AUTOPLAY_TIME = 5500;
 
-const Promociones = ({ design = DEFAULT_CATALOG_DESIGN }) => {
+const Promociones = ({ design = DEFAULT_CATALOG_DESIGN, onPromoClick }) => {
   const d = design || DEFAULT_CATALOG_DESIGN;
   const trackRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -14,13 +14,9 @@ const Promociones = ({ design = DEFAULT_CATALOG_DESIGN }) => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  if (d.showPromotions === false) return null;
-
   const items = d.promotionsItems && d.promotionsItems.length > 0
     ? d.promotionsItems
     : [];
-
-  if (items.length === 0) return null;
 
   const cssVars = {
     "--promos-bg": d.promotionsBg && !d.promotionsBg.includes("fff") && !d.promotionsBg.includes("fdf") ? d.promotionsBg : "#120a06",
@@ -86,6 +82,8 @@ const Promociones = ({ design = DEFAULT_CATALOG_DESIGN }) => {
     return () => el && el.removeEventListener("scroll", checkScroll);
   }, [items]);
 
+  if (d.showPromotions === false || items.length === 0) return null;
+
   return (
     <section
       id="promociones"
@@ -112,43 +110,7 @@ const Promociones = ({ design = DEFAULT_CATALOG_DESIGN }) => {
             )}
           </div>
 
-          <div className="carousel-nav-wrap">
-            {/* Indicadores de puntos (dots) */}
-            {items.length > 1 && (
-              <div className="carousel-dots" aria-hidden="true">
-                {items.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`carousel-dot ${currentIndex === i ? "carousel-dot--active" : ""}`}
-                    onClick={() => scrollToSlide(i)}
-                    aria-label={`Ir a promoción ${i + 1}`}
-                  />
-                ))}
-              </div>
-            )}
 
-            {items.length > 1 && (
-              <div className="carousel-nav-btns" aria-label="Navegación de promociones">
-                <button
-                  type="button"
-                  className="carousel-nav-btn"
-                  onClick={handlePrev}
-                  aria-label="Promoción anterior"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="carousel-nav-btn"
-                  onClick={handleNext}
-                  aria-label="Siguiente promoción"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Carrusel Deslizable Compacto */}
@@ -156,48 +118,66 @@ const Promociones = ({ design = DEFAULT_CATALOG_DESIGN }) => {
           {items.map((promo, idx) => (
             <article
               key={promo.id || `promo-${idx}`}
-              className={`promo-card--compact ${currentIndex === idx ? "promo-card--active" : ""}`}
+              className={`promo-card--cinematic ${currentIndex === idx ? "promo-card--active" : ""}`}
+              style={{ 
+                width: "100%", flex: "0 0 100%", maxWidth: "100%", 
+                cursor: "pointer", 
+                position: "relative", 
+                height: "240px", 
+                borderRadius: "24px", 
+                overflow: "hidden",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                border: "1px solid rgba(255,255,255,0.05)"
+              }}
+              onClick={onPromoClick}
             >
-              <div className="promo-card__media">
-                <img
-                  src={promo.imagen || "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80"}
-                  alt={promo.titulo}
-                  className="promo-card__img"
-                  loading="lazy"
-                />
-                {promo.descuento && (
-                  <span className="promo-card__discount-tag">
-                    {promo.descuento}
-                  </span>
-                )}
-              </div>
-
-              <div className="promo-card__body">
-                <div>
-                  {promo.tag && <span className="promo-card__tag">{promo.tag}</span>}
-                  <h3 className="promo-card__title">{promo.titulo}</h3>
-                  <p className="promo-card__desc">{promo.descripcion}</p>
+              <img
+                src={promo.imagen || "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=1000&auto=format&fit=crop&q=80"}
+                alt={promo.titulo}
+                style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0, transition: "transform 0.5s ease" }}
+                className="hover:scale-105"
+                loading="lazy"
+              />
+              <div style={{
+                position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+                background: "linear-gradient(to top, rgba(13,8,5,0.95) 0%, rgba(13,8,5,0.5) 50%, rgba(13,8,5,0.1) 100%)",
+                display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "1.5rem", color: "white"
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  {promo.tag ? (
+                    <span style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)", color: "#fff", padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px", border: "1px solid rgba(255,255,255,0.2)" }}>
+                      {promo.tag}
+                    </span>
+                  ) : <div></div>}
+                  {promo.descuento && (
+                    <div style={{ background: d.promotionsAccent || "#ffcc00", color: "#000", padding: "6px 14px", borderRadius: "12px", fontSize: "0.95rem", fontWeight: "900", boxShadow: "0 4px 15px rgba(255,204,0,0.4)", transform: "rotate(-2deg)" }}>
+                      {promo.descuento}
+                    </div>
+                  )}
                 </div>
 
-                <a href="#menu" className="promo-card__cta">
-                  <span>Aprovechar</span>
-                  <ArrowRight size={12} />
-                </a>
+                <div>
+                  <h3 style={{ fontSize: "1.5rem", fontWeight: "900", margin: "0 0 6px 0", lineHeight: "1.1", textShadow: "0 2px 10px rgba(0,0,0,0.8)", fontFamily: d.fontFamily || "inherit" }}>
+                    {promo.titulo}
+                  </h3>
+                  <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.8)", margin: "0 0 12px 0", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                    {promo.descripcion}
+                  </p>
+                  
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: d.promotionsAccent || "#ffcc00", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Ver menú de promociones <ArrowRight size={14} />
+                  </div>
+                </div>
               </div>
             </article>
+
+
           ))}
         </div>
       </div>
 
-      {/* Barra de progreso de autoplay continuo (igual que Destacados) */}
-      {items.length > 1 && (
-        <div className="carousel-progress-track">
-          <div
-            className="carousel-progress-fill"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
+
     </section>
   );
 };

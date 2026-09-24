@@ -71,8 +71,8 @@ const PRESETS = [
       combosAccent: "#d92b38",
       bgColor: "#0d0805",
       cardBg: "#160e0a",
-      headerBadgeBg: "rgba(255, 204, 0, 0.12)",
-      headerBadgeText: "#ffcc00",
+      ignored2: "rgba(255, 204, 0, 0.12)",
+      ignored1: "#ffcc00",
       textPrimary: "#fdfbf7",
       textMuted: "#bda899",
       borderColor: "rgba(255, 255, 255, 0.08)",
@@ -124,8 +124,8 @@ const PRESETS = [
       combosAccent: "#d4af37",
       bgColor: "#1c1410",
       cardBg: "#2b1e17",
-      headerBadgeBg: "rgba(212, 175, 55, 0.15)",
-      headerBadgeText: "#e5c058",
+      ignored2: "rgba(212, 175, 55, 0.15)",
+      ignored1: "#e5c058",
       textPrimary: "#fdfbf7",
       textMuted: "#d4c5b9",
       borderColor: "rgba(212, 175, 55, 0.25)",
@@ -177,8 +177,8 @@ const PRESETS = [
       combosAccent: "#ff4d6d",
       bgColor: "#fff0f3",
       cardBg: "#ffffff",
-      headerBadgeBg: "rgba(255, 77, 109, 0.12)",
-      headerBadgeText: "#ff4d6d",
+      ignored2: "rgba(255, 77, 109, 0.12)",
+      ignored1: "#ff4d6d",
       textPrimary: "#590d22",
       textMuted: "#a4133c",
       borderColor: "rgba(255, 77, 109, 0.15)",
@@ -230,8 +230,8 @@ const PRESETS = [
       combosAccent: "#2e7d32",
       bgColor: "#e8f5e9",
       cardBg: "#ffffff",
-      headerBadgeBg: "rgba(46, 125, 50, 0.15)",
-      headerBadgeText: "#2e7d32",
+      ignored2: "rgba(46, 125, 50, 0.15)",
+      ignored1: "#2e7d32",
       textPrimary: "#1b5e20",
       textMuted: "#388e3c",
       borderColor: "rgba(46, 125, 50, 0.15)",
@@ -283,8 +283,8 @@ const PRESETS = [
       combosAccent: "#0f172a",
       bgColor: "#f8fafc",
       cardBg: "#ffffff",
-      headerBadgeBg: "rgba(15, 23, 42, 0.08)",
-      headerBadgeText: "#0f172a",
+      ignored2: "rgba(15, 23, 42, 0.08)",
+      ignored1: "#0f172a",
       textPrimary: "#0f172a",
       textMuted: "#64748b",
       borderColor: "rgba(226, 232, 240, 1)",
@@ -465,69 +465,6 @@ const Diseno = () => {
     }
   };
 
-  // ── Gestor de Promociones en caliente ──
-  const handleAddPromo = () => {
-    const nueva = {
-      id: `promo-${Date.now()}`,
-      titulo: "Nueva Promoción",
-      tag: "Oferta Especial",
-      descripcion: "Descripción de la oferta o beneficio para el cliente.",
-      descuento: "20% OFF",
-      imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80",
-    };
-    setForm((prev) => ({
-      ...prev,
-      promotionsItems: [...(prev.promotionsItems || []), nueva],
-    }));
-  };
-
-  const handleUpdatePromo = (index, field, val) => {
-    setForm((prev) => {
-      const items = [...(prev.promotionsItems || [])];
-      items[index] = { ...items[index], [field]: val };
-      return { ...prev, promotionsItems: items };
-    });
-  };
-
-  const handleRemovePromo = (index) => {
-    setForm((prev) => {
-      const items = (prev.promotionsItems || []).filter((_, i) => i !== index);
-      return { ...prev, promotionsItems: items };
-    });
-  };
-
-  // ── Gestor de Combos en caliente ──
-  const handleAddCombo = () => {
-    const nuevo = {
-      id: `combo-${Date.now()}`,
-      nombre: "Nuevo Combo Dulce",
-      precio: 35000,
-      precioOriginal: 42000,
-      badge: "Ahorra $7.000",
-      descripcion: "Combinación de postres para compartir.",
-      incluye: ["1x Pavé 8oz", "1x Bebida o Torta"],
-      imagen: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80",
-    };
-    setForm((prev) => ({
-      ...prev,
-      combosItems: [...(prev.combosItems || []), nuevo],
-    }));
-  };
-
-  const handleUpdateCombo = (index, field, val) => {
-    setForm((prev) => {
-      const items = [...(prev.combosItems || [])];
-      items[index] = { ...items[index], [field]: val };
-      return { ...prev, combosItems: items };
-    });
-  };
-
-  const handleRemoveCombo = (index) => {
-    setForm((prev) => {
-      const items = (prev.combosItems || []).filter((_, i) => i !== index);
-      return { ...prev, combosItems: items };
-    });
-  };
 
   if (cargando || !form) {
     return <LoadingOverlay fullScreen text="Cargando estudio de diseño integral…" />;
@@ -584,20 +521,7 @@ const Diseno = () => {
             >
               <Compass size={16} /> Hero & Header
             </button>
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "promos" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("promos")}
-            >
-              <Tag size={16} /> Promociones
-            </button>
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "combos" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("combos")}
-            >
-              <Gift size={16} /> Combos & Packs
-            </button>
+
             <button
               type="button"
               className={`diseno-tab ${activeTab === "menu" ? "diseno-tab--active" : ""}`}
@@ -723,265 +647,7 @@ const Diseno = () => {
               </div>
             )}
 
-            {/* TAB 3: PROMOCIONES */}
-            {activeTab === "promos" && (
-              <div className="diseno-fields-group">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <h3 className="diseno-group-title" style={{ margin: 0 }}>
-                    <Tag size={16} /> Sección de Promociones & Descuentos
-                  </h3>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.85rem", color: "var(--acento)" }}>
-                    <input
-                      type="checkbox"
-                      checked={form.showPromotions}
-                      onChange={(e) => handleChange("showPromotions", e.target.checked)}
-                    />
-                    <span>Mostrar Sección en Catálogo</span>
-                  </label>
-                </div>
 
-                <div className="diseno-grid-2">
-                  <label className="admin-field">
-                    <span className="admin-field__label">Título de la Sección</span>
-                    <input
-                      type="text"
-                      value={form.promotionsTitle}
-                      onChange={(e) => handleChange("promotionsTitle", e.target.value)}
-                      className="admin-field__input"
-                    />
-                  </label>
-                  <label className="admin-field">
-                    <span className="admin-field__label">Subtítulo Descriptivo</span>
-                    <input
-                      type="text"
-                      value={form.promotionsSubtitle}
-                      onChange={(e) => handleChange("promotionsSubtitle", e.target.value)}
-                      className="admin-field__input"
-                    />
-                  </label>
-                </div>
-
-                {/* Fondo de Promociones con Selector de Gradientes */}
-                <GradientPickerField
-                  label="Fondo de la Sección Promociones"
-                  value={form.promotionsBg}
-                  onChange={(v) => handleChange("promotionsBg", v)}
-                  description="Color o gradiente detrás del bloque de promociones."
-                />
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Fondo de Tarjetas de Promoción"
-                    value={form.promotionsCardBg}
-                    onChange={(v) => handleChange("promotionsCardBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Color de Acento / Etiqueta Descuento"
-                    value={form.promotionsAccent}
-                    onChange={(v) => handleChange("promotionsAccent", v)}
-                  />
-                </div>
-
-                {/* Lista de Promociones */}
-                <div style={{ marginTop: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                    <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--crema)" }}>
-                      Tarjetas de Promociones Activas ({form.promotionsItems?.length || 0}):
-                    </span>
-                    <button
-                      type="button"
-                      className="admin-btn-ghost"
-                      onClick={handleAddPromo}
-                      style={{ fontSize: "0.78rem", padding: "0.3rem 0.65rem" }}
-                    >
-                      <Plus size={14} /> Añadir Promo
-                    </button>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    {(form.promotionsItems || []).map((promo, idx) => (
-                      <div
-                        key={promo.id || idx}
-                        style={{
-                          background: "rgba(255, 255, 255, 0.02)",
-                          border: "1px solid var(--aborde)",
-                          borderRadius: "10px",
-                          padding: "0.85rem",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "space-between" }}>
-                          <input
-                            type="text"
-                            placeholder="Título Promo"
-                            value={promo.titulo}
-                            onChange={(e) => handleUpdatePromo(idx, "titulo", e.target.value)}
-                            className="admin-field__input"
-                            style={{ fontWeight: 700 }}
-                          />
-                          <input
-                            type="text"
-                            placeholder="Descuento (ej: 2x1)"
-                            value={promo.descuento}
-                            onChange={(e) => handleUpdatePromo(idx, "descuento", e.target.value)}
-                            className="admin-field__input"
-                            style={{ width: "120px" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemovePromo(idx)}
-                            style={{ background: "none", border: "none", color: "#e11d48", cursor: "pointer" }}
-                            title="Eliminar"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Descripción breve de la promo"
-                          value={promo.descripcion}
-                          onChange={(e) => handleUpdatePromo(idx, "descripcion", e.target.value)}
-                          className="admin-field__input"
-                          style={{ fontSize: "0.8rem" }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 4: COMBOS & PACKS */}
-            {activeTab === "combos" && (
-              <div className="diseno-fields-group">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <h3 className="diseno-group-title" style={{ margin: 0 }}>
-                    <Gift size={16} /> Sección de Combos Especiales
-                  </h3>
-                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", fontSize: "0.85rem", color: "var(--acento)" }}>
-                    <input
-                      type="checkbox"
-                      checked={form.showCombos}
-                      onChange={(e) => handleChange("showCombos", e.target.checked)}
-                    />
-                    <span>Mostrar Sección en Catálogo</span>
-                  </label>
-                </div>
-
-                <div className="diseno-grid-2">
-                  <label className="admin-field">
-                    <span className="admin-field__label">Título de la Sección</span>
-                    <input
-                      type="text"
-                      value={form.combosTitle}
-                      onChange={(e) => handleChange("combosTitle", e.target.value)}
-                      className="admin-field__input"
-                    />
-                  </label>
-                  <label className="admin-field">
-                    <span className="admin-field__label">Subtítulo Descriptivo</span>
-                    <input
-                      type="text"
-                      value={form.combosSubtitle}
-                      onChange={(e) => handleChange("combosSubtitle", e.target.value)}
-                      className="admin-field__input"
-                    />
-                  </label>
-                </div>
-
-                {/* Fondo de Combos con Selector de Gradientes */}
-                <GradientPickerField
-                  label="Fondo de la Sección Combos"
-                  value={form.combosBg}
-                  onChange={(v) => handleChange("combosBg", v)}
-                  description="Color o gradiente detrás del bloque de combos y packs."
-                />
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Fondo de Tarjetas de Combo"
-                    value={form.combosCardBg}
-                    onChange={(v) => handleChange("combosCardBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Color de Acento / Badge de Ahorro"
-                    value={form.combosAccent}
-                    onChange={(v) => handleChange("combosAccent", v)}
-                  />
-                </div>
-
-                {/* Lista de Combos */}
-                <div style={{ marginTop: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                    <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--crema)" }}>
-                      Combos Disponibles ({form.combosItems?.length || 0}):
-                    </span>
-                    <button
-                      type="button"
-                      className="admin-btn-ghost"
-                      onClick={handleAddCombo}
-                      style={{ fontSize: "0.78rem", padding: "0.3rem 0.65rem" }}
-                    >
-                      <Plus size={14} /> Añadir Combo
-                    </button>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    {(form.combosItems || []).map((combo, idx) => (
-                      <div
-                        key={combo.id || idx}
-                        style={{
-                          background: "rgba(255, 255, 255, 0.02)",
-                          border: "1px solid var(--aborde)",
-                          borderRadius: "10px",
-                          padding: "0.85rem",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "space-between" }}>
-                          <input
-                            type="text"
-                            placeholder="Nombre del Combo"
-                            value={combo.nombre}
-                            onChange={(e) => handleUpdateCombo(idx, "nombre", e.target.value)}
-                            className="admin-field__input"
-                            style={{ fontWeight: 700 }}
-                          />
-                          <input
-                            type="number"
-                            placeholder="Precio COP"
-                            value={combo.precio}
-                            onChange={(e) => handleUpdateCombo(idx, "precio", Number(e.target.value))}
-                            className="admin-field__input"
-                            style={{ width: "110px" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCombo(idx)}
-                            style={{ background: "none", border: "none", color: "#e11d48", cursor: "pointer" }}
-                            title="Eliminar"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Descripción breve del combo"
-                          value={combo.descripcion}
-                          onChange={(e) => handleUpdateCombo(idx, "descripcion", e.target.value)}
-                          className="admin-field__input"
-                          style={{ fontSize: "0.8rem" }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* TAB 5: MENÚ & TARJETAS */}
             {activeTab === "menu" && (
@@ -1027,12 +693,12 @@ const Diseno = () => {
 
                 <div className="diseno-grid-2">
                   <ColorPickerField
-                    label='Botón "+ Agregar" (Fondo)'
+                    label="Boton + Agregar (Fondo)"
                     value={form.btnPrimaryBg}
                     onChange={(v) => handleChange("btnPrimaryBg", v)}
                   />
                   <ColorPickerField
-                    label='Botón "+ Agregar" (Texto)'
+                    label="Boton + Agregar (Texto)"
                     value={form.btnPrimaryText}
                     onChange={(v) => handleChange("btnPrimaryText", v)}
                   />
@@ -1053,12 +719,12 @@ const Diseno = () => {
 
                 <div className="diseno-grid-2">
                   <ColorPickerField
-                    label='Insignia "Más Pedido" (Fondo)'
+                    label="Insignia Popular (Fondo)"
                     value={form.badgePopularBg}
                     onChange={(v) => handleChange("badgePopularBg", v)}
                   />
                   <ColorPickerField
-                    label='Insignia "Más Pedido" (Texto)'
+                    label="Insignia Popular (Texto)"
                     value={form.badgePopularText}
                     onChange={(v) => handleChange("badgePopularText", v)}
                   />
