@@ -35,10 +35,9 @@ const Promociones = ({ design = DEFAULT_CATALOG_DESIGN, onPromoClick }) => {
     if (!trackRef.current) return;
     const cards = trackRef.current.children;
     if (cards[index]) {
-      cards[index].scrollIntoView({
+      trackRef.current.scrollTo({
+        left: cards[index].offsetLeft - trackRef.current.offsetLeft,
         behavior: "smooth",
-        block: "nearest",
-        inline: "start",
       });
       setCurrentIndex(index);
       setProgress(0);

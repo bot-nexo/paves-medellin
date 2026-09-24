@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Flame, Search, SlidersHorizontal, User } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
@@ -29,7 +29,13 @@ const Hero = ({
   const progressRef = useRef(null);
 
   const AUTOPLAY_DURATION = 6500;
-  const featured = (products && products.length > 0) ? products : localProducts;
+
+  const featured = useMemo(() => {
+    const pool = (products && products.length > 0) ? products : localProducts;
+    const populares = pool.filter(p => p.destacado);
+    if (populares.length > 0) return populares;
+    return [...pool].sort(() => 0.5 - Math.random()).slice(0, 5);
+  }, [products]);
 
   //***************************** */
   // const formatCOP = (val) => {
@@ -197,32 +203,6 @@ const Hero = ({
           </div>
         </header>
 
-        {/* ── Barra de Búsqueda Flotante Estilo Saborio ─────────────────────── */}
-        <div className="saborio-search-container">
-          <div className="saborio-search-box">
-            <Search size={18} className="saborio-search-icon" />
-            <input
-              type="text"
-              className="saborio-search-input"
-              placeholder="¿Qué antojo tienes hoy?"
-              value={searchQuery}
-              onChange={handleSearchInput}
-              aria-label="Buscar postres"
-            />
-            <button
-              type="button"
-              className="saborio-filter-btn"
-              onClick={() => {
-                const menuEl = document.getElementById("menu");
-                if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
-              }}
-              title="Filtrar por categoría"
-            >
-              <SlidersHorizontal size={16} />
-            </button>
-          </div>
-        </div>
-
         {/* ── Hero Card: Banner Principal de Impacto Estilo Saborio ─────────── */}
         {featured.length > 0 && (
           <div
@@ -243,31 +223,18 @@ const Hero = ({
               >
                 {/* Lado Izquierdo: Contenido Tipográfico de Gran Impacto */}
                 <div className="saborio-card-banner__content">
-                  <div className="saborio-card-banner__badge">
-                    <span>PROMO EXCLUSIVA</span>
-                  </div>
-
-                  <h2 className="saborio-card-banner__headline">
-                    <span className="headline-light">SABORES</span>
-                    <span className="headline-yellow">SIN LÍMITES</span>
+                  <h2 className="saborio-card-banner__headline" style={{ marginTop: "1rem" }}>
+                    <span className="headline-light">
+                      {activeProduct.nombre?.split(" ")[0] || "SABORES"}
+                    </span>
+                    <span className="headline-yellow">
+                      {activeProduct.nombre?.split(" ").slice(1).join(" ") || "SIN LÍMITES"}
+                    </span>
                   </h2>
 
                   <p className="saborio-card-banner__subtitle">
-                    {activeProduct.nombre
-                      ? `Disfruta nuestro ${activeProduct.nombre} preparado artesanalmente con Leche Klim.`
-                      : "Descubre combinaciones únicas, creadas para los que se atreven a más."}
+                    {activeProduct.descripcion || "Descubre combinaciones únicas, creadas para los que se atreven a más."}
                   </p>
-
-                  <div className="saborio-card-banner__action">
-                    <button
-                      type="button"
-                      className="saborio-cta-btn"
-                      onClick={handleCtaClick}
-                    >
-                      <span>Ver la promo</span>
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
                 </div>
 
                 {/* Lado Derecho: Imagen Gastronómica + Badge Flotante */}
@@ -281,9 +248,8 @@ const Hero = ({
 
                   {/* Badge Flotante Circular Estilo Saborio */}
                   <div className="saborio-discount-badge">
-                    <span className="discount-top">HASTA</span>
-                    <span className="discount-main">20%</span>
-                    <span className="discount-bottom">OFF</span>
+                    <span className="discount-top">The</span>
+                    <span className="discount-main">Best</span>
                   </div>
                 </div>
               </motion.div>

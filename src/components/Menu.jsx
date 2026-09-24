@@ -138,36 +138,49 @@ const Menu = ({
     }));
   }, [d.combosItems]);
 
+  // Promociones dinámicas de la BD adaptadas al shape de producto
+  const dynamicPromoProducts = useMemo(() => {
+    if (!d.promotionsItems || !Array.isArray(d.promotionsItems)) return [];
+    return d.promotionsItems.map((p, i) => ({
+      id: p.id || `promo-${i}`,
+      nombre: p.titulo || "Promoción Especial",
+      precio: p.precio || null, 
+      precioOriginal: p.precioOriginal || null,
+      descuento: p.descuento || p.tag,
+      imagen: p.imagen,
+      descripcion: p.descripcion,
+      category: "Promociones especiales",
+      categoria: "Promociones especiales",
+      destacado: true,
+    }));
+  }, [d.promotionsItems]);
+
   // Filtrado reactivo por categoría y buscador en vivo
   const filteredProducts = useMemo(() => {
-    if (!data && dynamicComboProducts.length === 0) return [];
+    if (!data && dynamicComboProducts.length === 0 && dynamicPromoProducts.length === 0) return [];
 
-    let pool = [...data];
+    let pool = [];
 
-    // Si seleccionó la categoría Combos, sumar o priorizar los combos dinámicos
-    if (activeCategory === "Combos") {
-      const combosFromProducts = pool.filter((p) =>
+    if (activeCategory === "Todos") {
+      pool = [...data];
+    } else if (activeCategory === "Combos") {
+      const combosFromProducts = data.filter((p) =>
         (p.category || p.categoria || "").toLowerCase().includes("combo")
       );
-      return combosFromProducts.length > 0 ? combosFromProducts : dynamicComboProducts;
-    }
-
-    // Si seleccionó la categoría Promociones especiales, filtrar productos con descuento
-    if (activeCategory === "Promociones especiales") {
-      const promosFromProducts = pool.filter((p) => p.descuento || p.precioOriginal || p.destacado);
-      return promosFromProducts.length > 0 ? promosFromProducts : pool.slice(0, 6);
-    }
-
-    // Filtro estándar por categoría
-    if (activeCategory !== "Todos") {
-      pool = pool.filter((item) => {
+      pool = [...dynamicComboProducts, ...combosFromProducts];
+    } else if (activeCategory === "Promociones especiales") {
+      // Mostrar ÚNICAMENTE las promociones creadas en el panel de control
+      pool = [...dynamicPromoProducts];
+    } else {
+      // Filtro estándar por categoría
+      pool = data.filter((item) => {
         const itemCategory = (item.category || item.categoria || "").trim().toLowerCase();
         const targetCategory = activeCategory.trim().toLowerCase();
         return itemCategory === targetCategory || itemCategory.includes(targetCategory);
       });
     }
 
-    // Filtro en vivo del buscador superior
+    // Filtro en vivo del buscador superior (aplica para cualquier categoría en la que esté)
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       pool = pool.filter((item) => {
@@ -178,7 +191,7 @@ const Menu = ({
     }
 
     return pool;
-  }, [activeCategory, searchQuery, data, dynamicComboProducts]);
+  }, [activeCategory, searchQuery, data, dynamicComboProducts, dynamicPromoProducts]);
 
   // Productos con descuento para la sección "Promociones del día"
   const dealProducts = useMemo(() => {
@@ -194,7 +207,10 @@ const Menu = ({
       <div className="container mx-auto px-4 max-w-5xl">
 
         {/* ── 0. Barra de Búsqueda Integrada al Menú ─ */}
-        <div className="menu-search-wrapper">
+        <div 
+          className="menu-search-wrapper"
+          style={{ top: d.specialEvent?.active ? '75px' : '0' }}
+        >
           <div className="menu-search-box">
             <Search size={17} className="menu-search-icon" />
             <input
@@ -339,90 +355,9 @@ const Menu = ({
           }}
         />
 
-        {/* ── 3. Sección "Promociones" (Centralizada en Menu.css) ── */}
-        {activeCategory === "Todos" && !searchQuery && dealProducts.length > 0 && (
-          <div className="daily-deals-section">
-            <div className="daily-deals-header">
-              <div className="daily-deals-title-wrap">
-                <Flame size={20} className="text-[#ffcc00]" />
-                <h2 className="daily-deals-title">
-                  Promociones
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveCategory("Promociones especiales")}
-                className="daily-deals-all-btn"
-              >
-                <span>Ver todas</span>
-                <ArrowRight size={12} />
-              </button>
-            </div>
+        {/* ── 3. Sección Removida por solicitud: Las promos ahora son solo una categoría normal ── */}
 
-            {/* Scroll Horizontal de Tarjetas de Producto */}
-            <div className="daily-deals-track-wrap">
-              <div className="daily-deals-track">
-                {dealProducts.map((product) => {
-                  const calculatedDiscount = product.descuento || "-25%";
-                  const currentPrice = formatCOP(product.precio ?? 0);
-                  const originalPrice = product.precioOriginal
-                    ? formatCOP(product.precioOriginal)
-                    : formatCOP(Math.round((product.precio ?? 0) * 1.3));
 
-                  return (
-                    <article
-                      key={product.id || product.nombre}
-                      className="daily-deal-card"
-                    >
-                      {/* Imagen con Badge de Descuento Flotante */}
-                      <div className="relative w-full h-36 rounded-xl overflow-hidden bg-neutral-950 mb-5">
-                        <img
-                          src={product.imagen || "/images/placeholder.png"}
-                          alt={product.nombre}
-                          className="daily-deal-card__image w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                          loading="lazy"
-                        />
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#ffcc00] text-neutral-950 text-[11px] font-black shadow-md">
-                          {calculatedDiscount}
-                        </span>
-                      </div>
-
-                      {/* Info del Producto */}
-                      <h3 className="text-sm font-bold text-white line-clamp-1 mb-1">
-                        {product.nombre}
-                      </h3>
-                      <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed mb-3 flex-1">
-                        {product.descripcion || "Delicioso postre artesanal preparado con Leche Klim."}
-                      </p>
-
-                      {/* Precios y Botón Circular (+) */}
-                      <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-neutral-500 line-through">
-                            {originalPrice}
-                          </span>
-                          <span className="text-base font-black text-[#ffcc00] leading-none">
-                            {currentPrice}
-                          </span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => addToCart(product)}
-                          className="w-8 h-8 rounded-full bg-[#ffcc00] text-neutral-950 flex items-center justify-center font-black shadow-lg hover:scale-110 active:scale-95 transition-transform"
-                          aria-label={`Agregar ${product.nombre}`}
-                          title="Agregar al pedido"
-                        >
-                          <span className="text-lg leading-none">+</span>
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── 4. Catálogo Completo / Productos de la Categoría Seleccionada ── */}
         <div className="catalog-section">

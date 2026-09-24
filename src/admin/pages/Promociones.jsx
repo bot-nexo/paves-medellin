@@ -8,6 +8,7 @@ import {
   subscribeToCatalog,
   DEFAULT_CATALOG_DESIGN,
 } from "../../data/dataSource";
+import { uploadProductImage, deleteProductImage } from "../../services/storage";
 import "../admin.css";
 
 // ── Factories ───────────────────────────────────────────────────────────────
@@ -30,6 +31,44 @@ const newCombo = () => ({
   incluye: ["1x Pavé 8oz", "1x Bebida o Torta"],
   imagen: "",
 });
+
+// ── Image Uploader Component ──────────────────────────────────────────────────
+const ImageUploader = ({ label, url, onUpload, defaultName }) => {
+  const [uploading, setUploading] = useState(false);
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const newUrl = await uploadProductImage(defaultName, file, url);
+      onUpload(newUrl);
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Error al subir", text: err.message, toast: true, position: "top-end" });
+    } finally {
+      setUploading(false);
+    }
+  };
+  return (
+    <label className="admin-field" style={{ marginBottom: 0 }}>
+      <span className="admin-field__label" style={{ fontSize: ".72rem", display: "flex", justifyContent: "space-between" }}>
+        {label} {uploading && <span style={{ color: "#ffcc00" }}>Subiendo...</span>}
+      </span>
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <input 
+          type="file" 
+          accept="image/*" 
+          onChange={handleFileChange} 
+          disabled={uploading} 
+          className="admin-field__input" 
+          style={{ padding: "0.3rem", fontSize: ".75rem" }} 
+        />
+        {url && (
+          <img src={url} alt="Preview" style={{ width: "34px", height: "34px", borderRadius: "6px", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }} />
+        )}
+      </div>
+    </label>
+  );
+};
 
 // ── PromoCard ────────────────────────────────────────────────────────────────
 const PromoCard = ({ promo, idx, onChange, onRemove }) => {
@@ -71,9 +110,15 @@ const PromoCard = ({ promo, idx, onChange, onRemove }) => {
             <input type="text" value={promo.descripcion || ""} onChange={(e) => onChange(idx, "descripcion", e.target.value)} className="admin-field__input" placeholder="Descripción breve de la oferta" />
           </label>
           <label className="admin-field" style={{ marginBottom: 0 }}>
-            <span className="admin-field__label" style={{ fontSize: ".72rem" }}>URL de Imagen</span>
-            <input type="text" value={promo.imagen || ""} onChange={(e) => onChange(idx, "imagen", e.target.value)} className="admin-field__input" placeholder="https://..." style={{ fontFamily: "monospace", fontSize: ".78rem" }} />
+            <span className="admin-field__label" style={{ fontSize: ".72rem" }}>Descripción para el cliente</span>
+            <input type="text" value={promo.descripcion || ""} onChange={(e) => onChange(idx, "descripcion", e.target.value)} className="admin-field__input" placeholder="Descripción breve de la oferta" />
           </label>
+          <ImageUploader 
+            label="Imagen Promocional" 
+            url={promo.imagen} 
+            defaultName={promo.titulo || `promo-${idx}`} 
+            onUpload={(url) => onChange(idx, "imagen", url)} 
+          />
         </div>
       )}
     </div>
@@ -128,16 +173,18 @@ const ComboCard = ({ combo, idx, onChange, onRemove }) => {
             <input
               type="text"
               value={Array.isArray(combo.incluye) ? combo.incluye.join(", ") : (combo.incluye || "")}
-              onChange={(e) => onChange(idx, "incluye", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+              onChange={(e) => onChange(idx, "incluye", e.target.value)}
               className="admin-field__input"
               placeholder="1x Pavé 8oz, 1x Torta de chocolate"
               style={{ fontSize: ".8rem" }}
             />
           </label>
-          <label className="admin-field" style={{ marginBottom: 0 }}>
-            <span className="admin-field__label" style={{ fontSize: ".72rem" }}>URL de Imagen</span>
-            <input type="text" value={combo.imagen || ""} onChange={(e) => onChange(idx, "imagen", e.target.value)} className="admin-field__input" placeholder="https://..." style={{ fontFamily: "monospace", fontSize: ".78rem" }} />
-          </label>
+          <ImageUploader 
+            label="Imagen del Combo" 
+            url={combo.imagen} 
+            defaultName={combo.nombre || `combo-${idx}`} 
+            onUpload={(url) => onChange(idx, "imagen", url)} 
+          />
         </div>
       )}
     </div>
@@ -171,7 +218,17 @@ const PromocionesAdmin = () => {
   const guardar = async () => {
     setGuardando(true);
     try {
-      await updateCatalogDesign(form);
+      const sanitizedForm = {
+        ...form,
+        combosItems: form.combosItems?.map(combo => ({
+          ...combo,
+          incluye: typeof combo.incluye === "string" 
+            ? combo.incluye.split(",").map(s => s.trim()).filter(Boolean)
+            : combo.incluye
+        })) || []
+      };
+
+      await updateCatalogDesign(sanitizedForm);
       Swal.fire({ toast: true, position: "top-end", icon: "success", title: "¡Cambios guardados en tiempo real!", showConfirmButton: false, timer: 1800 });
     } catch (err) {
       Swal.fire({ title: "No se pudo guardar", text: err.message, icon: "error", confirmButtonColor: "#3D2314" });
@@ -182,11 +239,19 @@ const PromocionesAdmin = () => {
 
   const updatePromo = (idx, field, val) => setForm((prev) => { const items = [...(prev.promotionsItems || [])]; items[idx] = { ...items[idx], [field]: val }; return { ...prev, promotionsItems: items }; });
   const addPromo = () => setForm((prev) => ({ ...prev, promotionsItems: [...(prev.promotionsItems || []), newPromo()] }));
-  const removePromo = (idx) => setForm((prev) => ({ ...prev, promotionsItems: (prev.promotionsItems || []).filter((_, i) => i !== idx) }));
+  const removePromo = (idx) => {
+    const item = form.promotionsItems?.[idx];
+    if (item?.imagen) deleteProductImage(item.imagen);
+    setForm((prev) => ({ ...prev, promotionsItems: (prev.promotionsItems || []).filter((_, i) => i !== idx) }));
+  };
 
   const updateCombo = (idx, field, val) => setForm((prev) => { const items = [...(prev.combosItems || [])]; items[idx] = { ...items[idx], [field]: val }; return { ...prev, combosItems: items }; });
   const addCombo = () => setForm((prev) => ({ ...prev, combosItems: [...(prev.combosItems || []), newCombo()] }));
-  const removeCombo = (idx) => setForm((prev) => ({ ...prev, combosItems: (prev.combosItems || []).filter((_, i) => i !== idx) }));
+  const removeCombo = (idx) => {
+    const item = form.combosItems?.[idx];
+    if (item?.imagen) deleteProductImage(item.imagen);
+    setForm((prev) => ({ ...prev, combosItems: (prev.combosItems || []).filter((_, i) => i !== idx) }));
+  };
 
   if (cargando || !form) return <LoadingOverlay fullScreen text="Cargando módulo de Promociones…" />;
 
