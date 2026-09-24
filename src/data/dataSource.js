@@ -81,13 +81,15 @@ const normalizeSettings = (row) => {
   }
 
   return {
-    name: localInfo.name,
-    phone: row.phone || localInfo.phone,
-    address: row.address || localInfo.address,
-    mapsGoogle: row.maps_url || localInfo.mapsGoogle,
-    instagram: row.instagram || localInfo.instagram,
-    facebook: row.facebook || localInfo.facebook,
-    tiktok: row.tiktok || localInfo.tiktok,
+    name: row.razon_social || "",
+    razonSocial:row.razon_social,
+    slogan:row.slogan,
+    phone: row.phone || "",
+    address: row.address || "",
+    mapsGoogle: row.maps_url || "",
+    instagram: row.instagram || "",
+    facebook: row.facebook || "",
+    tiktok: row.tiktok || "",
     closed: localInfo.closed || "",
     day1: row.day1 || localInfo.day1,
     hours1: row.hours1 || localInfo.hours1,
@@ -801,6 +803,8 @@ const COLUMNAS_SETTINGS = {
   forceClosed: "force_closed",
   isActive: "is_active",
   canChangePassword: "can_change_password",
+  razonSocial: "razon_social",
+  slogan: "slogan",
 };
 
 /** Actualiza la fila única de settings (upsert: crea la fila si no existe). */
@@ -938,8 +942,35 @@ export function subscribeToOrders(fn) {
 }
 
 /**
+ * Busca un cliente en la tabla 'clientes' de Supabase por número de celular/WhatsApp.
+ */
+export async function findCustomerByPhone(telefono) {
+  if (!telefono || !isSupabaseConfigured) return null;
+  const cleanPhone = String(telefono).replace(/\D/g, "");
+  if (!cleanPhone || cleanPhone.length < 7) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("telefono", cleanPhone)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("[dataSource] findCustomerByPhone error:", error.message);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.warn("[dataSource] findCustomerByPhone catch error:", err);
+    return null;
+  }
+}
+
+/**
  * Valida o registra un cliente por su número de WhatsApp (único) en Supabase DB.
- * Soporta los campos: nombre, telefono, pedidos_count (o cant_pedidos_concretados), fecha_cumple (opcional).
+ * Si el cliente ya existe: NO se crea de nuevo (idempotente).
+ * Si no existe: lo crea en la BD.
  */
 export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) {
   if (!telefono) return null;
@@ -947,87 +978,107 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) 
   const cleanNombre = (nombre || "").trim();
   const cleanCumple = fechaCumple ? String(fechaCumple).trim() : null;
 
+  if (!cleanPhone) return null;
+
   if (!isSupabaseConfigured) {
-    return { nombre: cleanNombre, telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
+    return { nombre: cleanNombre || "Cliente", telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
   }
 
   try {
-    // 1. Consultar si el cliente ya existe en la tabla 'clientes' de Supabase DB
-    const { data: custData, error: custErr } = await supabase
+    // 1. Buscar si el cliente ya existe en 'clientes'
+    const { data: custData, error: selectErr } = await supabase
       .from("clientes")
       .select("*")
       .eq("telefono", cleanPhone)
       .maybeSingle();
 
-    if (!custErr && custData) {
-      const currentCount = custData.pedidos_count ?? custData.cant_pedidos_concretados ?? 0;
+    if (!selectErr && custData) {
+      console.log("[dataSource] Cliente ya existe en Supabase DB:", custData);
       const updates = {};
-      if (cleanNombre && custData.nombre !== cleanNombre) updates.nombre = cleanNombre;
-      if (cleanCumple && custData.fecha_cumple !== cleanCumple) updates.fecha_cumple = cleanCumple;
+      if (cleanCumple && !custData.fecha_cumple) updates.fecha_cumple = cleanCumple;
+      if (cleanNombre && (!custData.nombre || custData.nombre === "Cliente")) updates.nombre = cleanNombre;
 
       if (Object.keys(updates).length > 0) {
-        await supabase
+        const { data: updatedCust } = await supabase
           .from("clientes")
-          .update({ ...updates, updated_at: new Date() })
-          .eq("telefono", cleanPhone);
+          .update(updates)
+          .eq("telefono", cleanPhone)
+          .select()
+          .maybeSingle();
+        if (updatedCust) return updatedCust;
       }
 
       return {
         ...custData,
-        nombre: cleanNombre || custData.nombre,
-        telefono: cleanPhone,
-        pedidos_count: currentCount,
-        fecha_cumple: cleanCumple || custData.fecha_cumple || null,
+        pedidos_count: custData.pedidos_count ?? custData.cant_pedidos_concretados ?? 0,
       };
     }
 
-    // 2. Si no existe en 'clientes', contar cuántos pedidos previos ha registrado en la tabla 'orders'
-    const { data: pastOrders } = await supabase
-      .from("orders")
-      .select("id, nombre")
-      .or(`telefono.eq.${cleanPhone},telefono.like.%${cleanPhone}%`);
+    // 2. Si no existe, intentar la función RPC 'registrar_cliente_si_no_existe'
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("registrar_cliente_si_no_existe", {
+      p_telefono: cleanPhone,
+      p_nombre: cleanNombre || "Cliente",
+      p_fecha_cumple: cleanCumple || null,
+    });
 
-    const initialCount = pastOrders ? pastOrders.length : 0;
-    const pastName = (pastOrders && pastOrders[0] && pastOrders[0].nombre) ? pastOrders[0].nombre : cleanNombre;
-    const finalNombre = cleanNombre || pastName;
-
-    // 3. Ejecutar QUERY explícito de INSERCIÓN en la tabla 'clientes' de Supabase DB
-    if (finalNombre) {
-      const payload = {
-        nombre: finalNombre,
-        telefono: cleanPhone,
-        pedidos_count: initialCount,
-        cant_pedidos_concretados: initialCount,
-        fecha_cumple: cleanCumple || null,
-        created_at: new Date()
+    if (!rpcErr && rpcRes) {
+      console.log("[dataSource] ✅ Cliente registrado via RPC:", rpcRes);
+      return {
+        ...rpcRes,
+        pedidos_count: rpcRes.pedidos_count ?? rpcRes.cant_pedidos_concretados ?? 0,
       };
+    }
 
-      const { data: newCust, error: insertErr } = await supabase
+    // 3. Fallback: Inserción directa / Upsert en la tabla 'clientes'
+    const payload = {
+      nombre: cleanNombre || "Cliente",
+      telefono: cleanPhone,
+      pedidos_count: 0,
+      cant_pedidos_concretados: 0,
+      fecha_cumple: cleanCumple || null,
+    };
+
+    console.log("[dataSource] Insertando nuevo cliente en Supabase DB...", payload);
+
+    const { data: newCust, error: insertErr } = await supabase
+      .from("clientes")
+      .insert([payload])
+      .select()
+      .maybeSingle();
+
+    if (insertErr) {
+      console.warn("[dataSource] Insert directo falló, intentando upsert:", insertErr.message);
+      const { data: upsertedCust, error: upsertErr } = await supabase
         .from("clientes")
-        .insert([payload])
+        .upsert([payload], { onConflict: "telefono" })
         .select()
         .maybeSingle();
 
-      if (!insertErr && newCust) {
-        return {
-          ...newCust,
-          pedidos_count: newCust.pedidos_count ?? newCust.cant_pedidos_concretados ?? initialCount
-        };
+      if (upsertErr) {
+        console.error("[dataSource] ❌ Error final registrando cliente en BD Supabase:", upsertErr.message);
+      } else if (upsertedCust) {
+        console.log("[dataSource] ✅ Cliente guardado via upsert en BD:", upsertedCust);
+        return upsertedCust;
       }
+    } else if (newCust) {
+      console.log("[dataSource] ✅ Cliente registrado con éxito en BD:", newCust);
+      return {
+        ...newCust,
+        pedidos_count: newCust.pedidos_count ?? newCust.cant_pedidos_concretados ?? 0,
+      };
     }
 
     return {
-      nombre: finalNombre,
+      nombre: cleanNombre || "Cliente",
       telefono: cleanPhone,
-      pedidos_count: initialCount,
+      pedidos_count: 0,
       fecha_cumple: cleanCumple || null,
-      hasOrders: initialCount > 0
     };
   } catch (err) {
-    console.warn("Error en getOrCreateCustomer Supabase query:", err);
+    console.error("Excepción en getOrCreateCustomer:", err);
   }
 
-  return { nombre: cleanNombre, telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
+  return { nombre: cleanNombre || "Cliente", telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
 }
 
 /**
@@ -1046,11 +1097,11 @@ export async function incrementCustomerOrderCount(telefono, nombre = "") {
       .update({
         pedidos_count: newCount,
         cant_pedidos_concretados: newCount,
-        updated_at: new Date()
       })
       .eq("telefono", cleanPhone);
   } catch (err) {
     console.warn("Error incrementando compras en Supabase DB:", err);
   }
 }
+
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Sparkles, ArrowRight, StoreIcon, Flame, Search, SlidersHorizontal, Heart, User } from "lucide-react";
+import { ArrowRight, Flame, Search, SlidersHorizontal, User } from "lucide-react";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
@@ -8,8 +8,6 @@ import { products as localProducts } from "../data/menu";
 import "../css/Hero.css";
 
 const Hero = ({
-  cartCount = 0,
-  onOpenCart,
   estadoNegocio,
   design = DEFAULT_CATALOG_DESIGN,
   products: propProducts,
@@ -33,14 +31,15 @@ const Hero = ({
   const AUTOPLAY_DURATION = 6500;
   const featured = (products && products.length > 0) ? products : localProducts;
 
-  const formatCOP = (val) => {
-    if (!val) return "$0";
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  //***************************** */
+  // const formatCOP = (val) => {
+  //   if (!val) return "$0";
+  //   return new Intl.NumberFormat("es-CO", {
+  //     style: "currency",
+  //     currency: "COP",
+  //     maximumFractionDigits: 0,
+  //   }).format(val);
+  // };
 
   const next = useCallback(() => {
     if (featured.length === 0) return;
@@ -140,6 +139,11 @@ const Hero = ({
     }
   };
 
+  useEffect(() => {
+    console.log(settings);
+  }, [settings]);
+
+  //******************************* */
   return (
     <section className="saborio-hero-section">
       <div className="container">
@@ -154,12 +158,11 @@ const Hero = ({
               />
               <div className="saborio-brand-info">
                 <div className="saborio-brand-title">
-                  <span className="saborio-brand-name">Pavés</span>
-                  <span className="saborio-brand-city">Medellín</span>
+                  <span className="saborio-brand-name">{settings?.razonSocial}</span>
                   <Flame size={16} className="saborio-brand-icon" />
                 </div>
                 <span className="saborio-brand-tagline">
-                  EL VERDADERO SABOR BRASILEÑO
+                  {settings?.slogan || "EL VERDADERO SABOR DEL PAVÉ"}
                 </span>
               </div>
             </div>

@@ -15,6 +15,8 @@ const CAMPOS_TEXTO = [
   { clave: "instagram",  label: "Instagram (URL)",         placeholder: "https://www.instagram.com/…" },
   { clave: "facebook",   label: "Facebook (URL)",          placeholder: "https://www.facebook.com/…" },
   { clave: "tiktok",     label: "TikTok (URL)",            placeholder: "https://www.tiktok.com/@…" },
+  { clave: "slogan",     label: "Eslogan",                 placeholder: "El verdadero sabor del pavé" },
+  { clave: "razonSocial",label: "Razón Social",              placeholder: "El Nombre legal o comercial" },
 ];
 
 // ── Helpers de hora ──────────────────────────────────────────────────────────
@@ -196,7 +198,7 @@ const Empresa = () => {
       <header className="admin-page__header admin-page__header--row">
         <div>
           <h1 className="admin-page__titulo">Empresa</h1>
-          <p className="admin-page__sub">Información y apariencia de la tienda.</p>
+          <p className="admin-page__sub">Información y apariencia.</p>
         </div>
       </header>
 
@@ -237,7 +239,7 @@ const Empresa = () => {
                   >
                     <Upload size={22} className="adm-logo-drop__icon" />
                     <span>Subir logo</span>
-                    <small>PNG, JPG, WEBP — se comprime automáticamente</small>
+                    <small>PNG, JPG, WEBP</small>
                   </button>
                 )}
                 <input

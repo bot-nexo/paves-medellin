@@ -63,7 +63,8 @@ const App = () => {
     }
   });
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-
+  
+  //***************************** */
   useEffect(() => {
     // Si al ingresar a la tienda el cliente aún no se ha identificado, abrir el modal automáticamente
     if (!customer || !customer.telefono) {
@@ -100,7 +101,6 @@ const App = () => {
   // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
   const estadoNegocio = estaAbiertoSegunHorario(settings);
 
-  //***************************** */
   useEffect(() => {
     window.scrollTo(0, 0);
     AOS.init({ duration: 1600, once: true, offset: 100 });

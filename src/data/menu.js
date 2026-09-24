@@ -214,17 +214,19 @@ export const categoryIcons = {
 export const heroImages = [logoImg];
 
 export const info = {
-  name: "Pavés Medellín",
-  address: "Cl. 101c #74-40, Pedregal, Medellín, Antioquia",
-  mapsGoogle: "https://maps.app.goo.gl/jKWVmMneA4KPTjgo6",
-  instagram: "https://www.instagram.com/pavemedellin_roselbiscolina?igsi=MXU3MGl0NnV1azJ5Yw==",
-  facebook: "https://www.facebook.com/pavesmedellin/",
-  tiktok: "https://www.tiktok.com/@pavesmedellin",
-  phone: "573157978326",
+  name: "",
+  razonSocial: "",
+  slogan: "",
+  address: "",
+  mapsGoogle: "",
+  instagram: "",
+  facebook: "",
+  tiktok: "",
+  phone: "",
   closed: "",
-  day1: "Todos los días",
-  hours1: "12:00 M - 08:00 PM",
+  day1: "",
+  hours1: "",
 };
 
-export const VALOR_DOMICILIO_DEFAULT = 5000;
-export const MINIMO_ENVIO_GRATIS_DEFAULT = 45000;
+export const VALOR_DOMICILIO_DEFAULT = 0;
+export const MINIMO_ENVIO_GRATIS_DEFAULT = 0;

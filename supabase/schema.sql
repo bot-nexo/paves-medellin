@@ -45,12 +45,14 @@ create table if not exists public.settings (
   logo_url                text not null default '',
   day1                    text not null default '',
   hours1                  text not null default '',
-  delivery_fee            int  not null default 3500,
-  free_delivery_threshold int  not null default 45000,
+  delivery_fee            int  not null default 0,
+  free_delivery_threshold int  not null default 0,
   offers_delivery         boolean not null default true,   -- 🛵 domicilio
   offers_pickup           boolean not null default true,   -- 🏪 recogida en tienda
   offersLocal             boolean not null default true,   -- 🍽️ local
   force_closed            boolean not null default false,  -- cierre de emergencia
+  slogan                  text not null default '',
+  razon_social            text not null default '',
   updated_at              timestamptz not null default now()
 );
 
@@ -345,5 +347,65 @@ grant select, insert, update on public.clientes to anon, authenticated;
 do $$ begin
   alter publication supabase_realtime add table public.clientes;
 exception when duplicate_object then null; end $$;
+
+create or replace function public.registrar_cliente_si_no_existe(
+  p_telefono text,
+  p_nombre text default '',
+  p_fecha_cumple date default null
+) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_clean_phone text;
+  v_cliente public.clientes%rowtype;
+begin
+  v_clean_phone := regexp_replace(coalesce(p_telefono, ''), '\D', '', 'g');
+  if v_clean_phone = '' then
+    return null;
+  end if;
+
+  -- 1. Validar si ya existe
+  select * into v_cliente from public.clientes where telefono = v_clean_phone limit 1;
+
+  if found then
+    -- Si existe y se proporciona fecha_cumple cuando antes estaba nula, actualizarla opcionalmente
+    if v_cliente.fecha_cumple is null and p_fecha_cumple is not null then
+      update public.clientes
+      set fecha_cumple = p_fecha_cumple,
+          updated_at = now()
+      where id = v_cliente.id
+      returning * into v_cliente;
+    end if;
+    return to_jsonb(v_cliente);
+  else
+    -- 2. Si no existe en 'clientes', verificar si tiene nombre previo en 'orders'
+    if p_nombre is null or trim(p_nombre) = '' then
+      select nombre into p_nombre from public.orders
+      where regexp_replace(telefono, '\D', '', 'g') = v_clean_phone
+      limit 1;
+    end if;
+
+    -- 3. Crear nuevo registro de cliente
+    insert into public.clientes (
+      telefono,
+      nombre,
+      fecha_cumple,
+      pedidos_count,
+      cant_pedidos_concretados
+    )
+    values (
+      v_clean_phone,
+      coalesce(nullif(trim(p_nombre), ''), 'Cliente'),
+      p_fecha_cumple,
+      0,
+      0
+    )
+    returning * into v_cliente;
+
+    return to_jsonb(v_cliente);
+  end if;
+end $$;
+
+grant execute on function public.registrar_cliente_si_no_existe(text, text, date) to anon, authenticated;
+
 
 
