@@ -3,6 +3,7 @@ import MenuCard from "./MenuCard";
 import { ArrowRight, Search, X, Sparkles } from "lucide-react";
 import Promociones from "./Promociones";
 import Combos from "./Combos";
+import QuickGuide from "./QuickGuide";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
 import "../css/Menu.css";
 
@@ -258,6 +259,9 @@ const Menu = ({
             </p>
           )}
         </div>
+
+        {/* ── Banner de Guía Rápida ── */}
+        <QuickGuide />
 
         {/* ── 1. Sección de Categorías: "Explora por universo" (Saborio Style) ─ */}
         <div className="universe-section my-6">

@@ -299,8 +299,11 @@ const CheckoutModal = ({
               <div className="checkout-aviso-cerrado">
                 <Clock size={16} />
                 <span>
-                  <strong>Estamos cerrados ahora</strong>
-                  {estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se agendará.
+                  <strong>Estamos cerrados ahora.</strong>
+                  {estadoNegocio.horarioTexto
+                    ? ` Horario de atención: ${estadoNegocio.horarioTexto}.`
+                    : ""}
+                  {" "}Tu pedido se agendará.
                 </span>
               </div>
             )}

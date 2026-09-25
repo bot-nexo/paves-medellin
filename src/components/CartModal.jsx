@@ -76,7 +76,7 @@ const CartModal = ({
             </button>
           </div>
         ) : (
-          <>
+          <div className="cart-with-footer">
             {/* Product List */}
             <div className="cart-items">
               {cart.map((item, index) => {
@@ -229,25 +229,25 @@ const CartModal = ({
               </div>
 
               <div className="cart-actions">
-                <button className="btn-back" onClick={onClose} type="button">
-                  <ArrowLeft size={16} /> Seguir pidiendo
+                <button className="cart-btn-secondary" onClick={onClose} type="button">
+                  Seguir pidiendo
                 </button>
                 {settings.isActive === false ? (
-                  <button className="btn-checkout" type="button" disabled style={{ backgroundColor: "#999", cursor: "not-allowed" }}>
+                  <button className="cart-btn-primary" type="button" disabled style={{ backgroundColor: "#999", cursor: "not-allowed" }}>
                     En Mantenimiento <ArrowRight size={16} />
                   </button>
                 ) : (
                   <button
-                    className="btn-checkout"
+                    className="cart-btn-primary"
                     onClick={onCheckout}
                     type="button"
                   >
-                    Datos de entrega <ArrowRight size={16} />
+                    Datos de entrega <ArrowRight size={18} />
                   </button>
                 )}
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

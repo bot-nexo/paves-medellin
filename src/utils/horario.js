@@ -48,12 +48,27 @@ const formatMinutosAHora = (minutosTotales, format24 = true) => {
 };
 
 /**
+ * Parsea el día/array de días en un texto legible
+ */
+const formatearDias = (days) => {
+  if (!days) return "";
+  if (Array.isArray(days)) {
+    if (days.length === 7) return "Todos los días";
+    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return "Lun - Vie";
+    const map = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 0: "Dom" };
+    return days.map((d) => map[d] || d).join(", ");
+  }
+  return String(days);
+};
+
+/**
  * Estado del negocio para la tienda y el checkout.
  * @returns {{abierto:boolean, fuerzaCierre:boolean, dentroHorario:boolean, horarioTexto:string, siempreAbierto:boolean}}
  */
 export const estaAbiertoSegunHorario = (settings = {}) => {
   const fuerzaCierre = settings.forceClosed === true;
-  const horarioTexto = [settings.day1, settings.hours1].filter(Boolean).join(" · ");
+  const daysText = formatearDias(settings.day1);
+  const horarioTexto = [daysText, settings.hours1].filter(Boolean).join(" · ");
   const p = parseHorario(settings.hours1);
 
   if (!p.ok) {

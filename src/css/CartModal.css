@@ -15,7 +15,8 @@
 
 /* Modal Content (Drawer en Desktop, Modal en Mobile) */
 .cart-modal-content {
-    background-color: #120a06; /* Saborio Dark */
+    background-color: #120a06;
+    /* Saborio Dark */
     width: 100%;
     max-width: 480px;
     height: 100%;
@@ -31,6 +32,7 @@
     from {
         transform: translateX(100%);
     }
+
     to {
         transform: translateX(0);
     }
@@ -127,6 +129,15 @@
     margin: 0 0 2rem 0;
 }
 
+/* Wrapper que ocupa el espacio restante y pega el footer abajo */
+.cart-with-footer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
 /* Cuerpo del Carrito */
 .cart-body {
     flex: 1;
@@ -137,12 +148,21 @@
     gap: 1.5rem;
 }
 
+/* Lista de items scrollable */
+.cart-items {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
 .cart-body::-webkit-scrollbar {
     width: 6px;
 }
+
 .cart-body::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .cart-body::-webkit-scrollbar-thumb {
     background: #333;
     border-radius: 10px;
@@ -320,6 +340,7 @@
 .action-icon-btn.edit {
     color: #ffcc00;
 }
+
 .action-icon-btn.edit:hover {
     background-color: rgba(255, 204, 0, 0.1);
     border-color: #ffcc00;
@@ -328,6 +349,7 @@
 .action-icon-btn.remove {
     color: #ff4d4f;
 }
+
 .action-icon-btn.remove:hover {
     background-color: rgba(255, 77, 79, 0.1);
     border-color: #ff4d4f;
@@ -342,6 +364,7 @@
     flex-direction: column;
     gap: 1.25rem;
     flex-shrink: 0;
+
 }
 
 .cart-breakdown {
@@ -408,7 +431,7 @@
 .cart-btn-secondary {
     background: transparent;
     color: #a3a3a3;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(184, 141, 0, 0.527);
     border-radius: 12px;
     padding: 0.85rem;
     font-size: 0.95rem;
@@ -435,6 +458,7 @@
     from {
         transform: translateY(100%);
     }
+
     to {
         transform: translateY(0);
     }

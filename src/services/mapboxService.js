@@ -11,11 +11,23 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "";
 export const isMapboxConfigured = Boolean(MAPBOX_TOKEN);
 
 // ── Session token (optimiza costos de Search Box API) ───────────────────────
-let _sessionToken = crypto.randomUUID();
+const generateUUID = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback para entornos http:// (red local)
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+let _sessionToken = generateUUID();
 
 /** Renueva el session token (llamar tras seleccionar una sugerencia). */
 export const renewSession = () => {
-  _sessionToken = crypto.randomUUID();
+  _sessionToken = generateUUID();
 };
 
 // ── 1. Autocompletar dirección (Search Box API — suggest) ───────────────────
