@@ -45,6 +45,7 @@ const CheckoutModal = ({
   const [formData, setFormData] = useState({
     nombre: "",
     telefono: "",
+    email: "",
     tipoEntrega: settings.offersDelivery !== false ? "domicilio" 
                  : settings.offersLocal !== false ? "local" 
                  : "recogida",
@@ -91,6 +92,7 @@ const CheckoutModal = ({
             ...prev,
             nombre: prev.nombre || cust.nombre || "",
             telefono: prev.telefono || cust.telefono || "",
+            email: prev.email || cust.email || "",
           }));
         }
       } catch {
@@ -153,6 +155,7 @@ const CheckoutModal = ({
     const faltantes =
       !formData.nombre.trim() ||
       !formData.telefono.trim() ||
+      !formData.email.trim() ||
       !formData.pago ||
       (esDomicilio && (!formData.direccion.trim() || !formData.apto.trim()));
     if (faltantes) {
@@ -160,7 +163,7 @@ const CheckoutModal = ({
         title: "Campos incompletos",
         text: esDomicilio
           ? "Por favor completa los campos obligatorios para continuar."
-          : "Nombre, teléfono y medio de pago son obligatorios.",
+          : "Nombre, teléfono, email y medio de pago son obligatorios.",
         icon: "warning",
         confirmButtonColor: "#3D2314",
       });
@@ -217,6 +220,7 @@ const CheckoutModal = ({
     setFormData((prev) => ({
       nombre: "",
       telefono: "",
+      email: "",
       tipoEntrega: prev.tipoEntrega,
       direccion: "",
       unidad: "",
@@ -368,6 +372,14 @@ const CheckoutModal = ({
                       <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Ej: 310 123 4567" required />
                     </div>
                     <small className="input-hint"><FaWhatsapp style={{display: "inline", marginRight: "4px"}} color="#25D366" />Te contactaremos a este número para confirmar tu entrega.</small>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Correo Electrónico *</label>
+                    <div className="input-with-icon">
+                      <MessageSquare size={16} className="input-icon" />
+                      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Ej: correo@ejemplo.com" required />
+                    </div>
                   </div>
 
                   {esDomicilio && (

@@ -1160,16 +1160,17 @@ export async function findCustomerByPhone(telefono) {
  * Si el cliente ya existe: NO se crea de nuevo (idempotente).
  * Si no existe: lo crea en la BD.
  */
-export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) {
+export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, email = null) {
   if (!telefono) return null;
   const cleanPhone = String(telefono).replace(/\D/g, "");
   const cleanNombre = (nombre || "").trim();
   const cleanCumple = fechaCumple ? String(fechaCumple).trim() : null;
+  const cleanEmail = (email || "").trim() || null;
 
   if (!cleanPhone) return null;
 
   if (!isSupabaseConfigured) {
-    return { nombre: cleanNombre || "Cliente", telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
+    return { nombre: cleanNombre || "Cliente", telefono: cleanPhone, email: cleanEmail, pedidos_count: 0, fecha_cumple: cleanCumple };
   }
 
   try {
@@ -1185,6 +1186,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) 
       const updates = {};
       if (cleanCumple && !custData.fecha_cumple) updates.fecha_cumple = cleanCumple;
       if (cleanNombre && (!custData.nombre || custData.nombre === "Cliente")) updates.nombre = cleanNombre;
+      if (cleanEmail && !custData.email) updates.email = cleanEmail;
 
       if (Object.keys(updates).length > 0) {
         const { data: updatedCust } = await supabase
@@ -1207,6 +1209,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) 
       p_telefono: cleanPhone,
       p_nombre: cleanNombre || "Cliente",
       p_fecha_cumple: cleanCumple || null,
+      p_email: cleanEmail || null,
     });
 
     if (!rpcErr && rpcRes) {
@@ -1221,6 +1224,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null) 
     const payload = {
       nombre: cleanNombre || "Cliente",
       telefono: cleanPhone,
+      email: cleanEmail || null,
       pedidos_count: 0,
       cant_pedidos_concretados: 0,
       fecha_cumple: cleanCumple || null,

@@ -117,7 +117,8 @@ const App = () => {
       const dbCust = await getOrCreateCustomer(
         customerData.nombre,
         customerData.telefono,
-        customerData.fecha_cumple
+        customerData.fecha_cumple,
+        customerData.email
       );
 
       const mergedCustomer = {

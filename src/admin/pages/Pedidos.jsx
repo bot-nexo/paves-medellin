@@ -9,8 +9,9 @@ import {
   subscribeToOrders,
 } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
-import { Eye, RefreshCw, Calendar, Printer } from "lucide-react";
+import { Eye, RefreshCw, Calendar, Printer, MessageCircle } from "lucide-react";
 import { printTicket } from "../../utils/printTicket";
+import { notificarCambioEstado, generarMensajeWhatsApp } from "../../utils/notifications";
 import "../admin.css";
 
 const ESTADOS = [
@@ -251,6 +252,9 @@ const Pedidos = () => {
         prev.map((p) => (p.id === pedido.id ? { ...p, estado: nuevoEstado } : p)),
       );
       setDetalle((d) => (d?.id === pedido.id ? { ...d, estado: nuevoEstado } : d));
+      
+      // Notificar al cliente (Email automático)
+      notificarCambioEstado(pedido, nuevoEstado).catch(console.error);
     } catch (e) {
       Swal.fire({
         title: "No se pudo actualizar",
@@ -372,6 +376,29 @@ const Pedidos = () => {
                     >
                       <Printer size={16} />
                     </button>
+                    {(() => {
+                      const waData = generarMensajeWhatsApp(p, p.estado);
+                      if (waData.hasPhone) {
+                        return (
+                          <a
+                            href={waData.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="admin-btn-ghost"
+                            style={{
+                              padding: '5px', minWidth: 'auto', border: '1px solid #25D366',
+                              marginTop: "-7px", background: '#25D366', color: '#fff',
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            title="Notificar por WhatsApp"
+                          >
+                            <MessageCircle size={16} />
+                          </a>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
 

@@ -8,6 +8,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
   const [step, setStep] = useState(1);
   const [telefono, setTelefono] = useState(currentCustomer?.telefono || "");
   const [nombre, setNombre] = useState(currentCustomer?.nombre || "");
+  const [email, setEmail] = useState(currentCustomer?.email || "");
   const [fechaCumple, setFechaCumple] = useState(currentCustomer?.fecha_cumple || "");
   const [isChecking, setIsChecking] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
@@ -23,6 +24,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
       setIsChecking(false);
       setTelefono(currentCustomer?.telefono || "");
       setNombre(currentCustomer?.nombre || "");
+      setEmail(currentCustomer?.email || "");
       setFechaCumple(currentCustomer?.fecha_cumple || "");
     }
   }, [isOpen, currentCustomer]);
@@ -57,6 +59,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
         const fullCust = {
           nombre: dbCust.nombre,
           telefono: dbCust.telefono || cleanPhone,
+          email: dbCust.email || "",
           fecha_cumple: dbCust.fecha_cumple || null,
           pedidos_count: count,
         };
@@ -92,6 +95,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
     onSaveCustomer({
       nombre: cleanNombre,
       telefono: cleanPhone,
+      email: email.trim() || null,
       fecha_cumple: fechaCumple || null,
     });
   };
@@ -208,6 +212,21 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="customer-field-group">
+              <label className="customer-field-label">Correo Electrónico *</label>
+              <div className="customer-input-wrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="customer-input-icon"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <input
+                  type="email"
+                  className="customer-input"
+                  placeholder="Ej. correo@ejemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
