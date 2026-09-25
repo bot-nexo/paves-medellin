@@ -1,5 +1,6 @@
-import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote } from "lucide-react";
+import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote, Printer } from "lucide-react";
 import { formatCOP } from "../utils/price";
+import { printTicket } from "../utils/printTicket";
 import "./admin.css";
 
 const labelEstado = (estado) =>
@@ -28,6 +29,10 @@ const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
       `Hola ${pedido.nombre}! 🍨 Te contactamos sobre tu pedido #${pedido.numero}.`,
     );
     window.open(`https://wa.me/${conIndicativo}?text=${msg}`, "_blank");
+  };
+
+  const imprimirComanda = () => {
+    printTicket(pedido);
   };
 
   //************************************ */
@@ -125,16 +130,20 @@ const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
           </section>
         </div>
 
-        <footer className="adm-det__pie">
+        <footer className="adm-det__pie" style={{ flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          <button type="button" className="admin-btn-primary admin-btn-primary--compacto" onClick={imprimirComanda}>
+            <Printer size={15} /> Imprimir Comanda
+          </button>
+
           <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
             <MessageCircle size={15} /> WhatsApp
           </button>
-          
+
           {pedido.estado !== "cancelado" && pedido.estado !== "entregado" && onCancel && (
-            <button 
-              type="button" 
-              className="admin-btn-ghost" 
-              style={{ color: "#ef4444", borderColor: "transparent" }} 
+            <button
+              type="button"
+              className="admin-btn-ghost"
+              style={{ color: "#ef4444", borderColor: "transparent" }}
               onClick={() => onCancel(pedido)}
             >
               Cancelar

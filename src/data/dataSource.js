@@ -57,9 +57,15 @@ export async function saveRating(telefono, rating, comment) {
   if (!isSupabaseConfigured) return;
   try {
     const cleanPhone = telefono ? String(telefono).replace(/\D/g, "") : null;
-    await supabase.from("store_ratings").insert({ telefono: cleanPhone, rating, comment });
+    const { error } = await supabase.from("store_ratings").insert([{ telefono: cleanPhone, rating, comment }]);
+    if (error) {
+      console.error("Supabase error:", error);
+      alert("Error guardando en BD: " + JSON.stringify(error));
+      throw error;
+    }
   } catch (e) {
     console.error("Error saving rating:", e);
+    alert("Catch error: " + e.message);
   }
 }
 
@@ -473,10 +479,20 @@ export async function getProducts() {
 
 /** Configuración del negocio (info de contacto + costos de domicilio). */
 export async function getSettings() {
-  if (cache.settings) return cache.settings;
+  if (cache.settings) {
+    const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
+    if (actualRazonSocial) {
+      localStorage.setItem("store_razon_social", actualRazonSocial);
+    }
+    return cache.settings;
+  }
 
   if (!isSupabaseConfigured) {
     cache.settings = buildLocalSettings();
+    const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
+    if (actualRazonSocial) {
+      localStorage.setItem("store_razon_social", actualRazonSocial);
+    }
     return cache.settings;
   }
 
@@ -492,6 +508,12 @@ export async function getSettings() {
     console.warn("[dataSource] settings → fallback local:", e.message);
     cache.settings = buildLocalSettings();
   }
+  
+  const actualRazonSocial = cache.settings?.razonSocial || cache.settings?.name || cache.settings?.razon_social;
+  if (actualRazonSocial) {
+    localStorage.setItem("store_razon_social", actualRazonSocial);
+  }
+  
   return cache.settings;
 }
 
@@ -899,6 +921,12 @@ export async function updateSettings(cambios) {
   });
   const { error } = await supabase.from("settings").upsert({ id: 1, ...fila });
   if (error) throw error;
+  
+  const updatedRazonSocial = cambios.razonSocial || cambios.razon_social || fila.razon_social;
+  if (updatedRazonSocial) {
+    localStorage.setItem("store_razon_social", updatedRazonSocial);
+  }
+  
   invalidateCatalog(); // la tienda refresca WhatsApp/domicilios en segundos
 }
 

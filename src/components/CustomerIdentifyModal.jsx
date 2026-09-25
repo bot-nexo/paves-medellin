@@ -49,7 +49,10 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
         // EL CLIENTE YA EXISTE EN LA BD -> Ingresa derecho automáticamente
         setWelcomeName(dbCust.nombre || "Cliente");
         const count = dbCust.pedidos_count ?? dbCust.cant_pedidos_concretados ?? 0;
-        setCustomerBadge(getCustomerBadge(count));
+        
+        if (settings?.useCustomerBadges !== false) {
+          setCustomerBadge(getCustomerBadge(count));
+        }
         
         const fullCust = {
           nombre: dbCust.nombre,

@@ -9,7 +9,8 @@ import {
   subscribeToOrders,
 } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
-import { Eye, RefreshCw, Bell, Calendar, ChevronDown } from "lucide-react";
+import { Eye, RefreshCw, Calendar, Printer } from "lucide-react";
+import { printTicket } from "../../utils/printTicket";
 import "../admin.css";
 
 const ESTADOS = [
@@ -283,9 +284,20 @@ const Pedidos = () => {
                       {new Date(p.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
                     </span>
                   </div>
-                  <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>
-                    {labelEstado(p.estado)}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>
+                      {labelEstado(p.estado)}
+                    </span>
+                    <button
+                      type="button"
+                      className="admin-btn-ghost"
+                      style={{ padding: '6px', minWidth: 'auto', border: '1px solid rgba(0,0,0,0.1)', background: '#f5f5f5', color: '#333' }}
+                      onClick={(e) => { e.stopPropagation(); printTicket(p); }}
+                      title="Imprimir Comanda"
+                    >
+                      <Printer size={16} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="adm-ped-card__body">

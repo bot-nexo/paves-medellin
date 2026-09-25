@@ -138,11 +138,11 @@
 .saborio-user-badge-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 999px;
-  background: rgba(255, 204, 0, 0.12);
-  border: 1px solid rgba(255, 204, 0, 0.35);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fdfbf7;
   font-size: 0.76rem;
   font-weight: 800;
@@ -152,8 +152,8 @@
 }
 
 .saborio-user-badge-btn:hover {
-  background: rgba(255, 204, 0, 0.22);
-  border-color: #ffcc00;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
@@ -170,6 +170,25 @@
   border-radius: 999px;
   background: #ffcc00;
   color: #120a06;
+}
+
+.saborio-user-badge-tag-premium {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  animation: pulse-glow 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.02); filter: brightness(1.2); }
 }
 
 .saborio-avatar-btn {
@@ -409,6 +428,37 @@
   z-index: 1;
 }
 
+/* Rating Badge Circular Flotante (Lado Izquierdo) */
+.saborio-hero-rating-badge {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  background: rgba(18, 10, 6, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 204, 0, 0.4);
+  color: #ffcc00;
+  border-radius: 999px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--menu-font, "Outfit", "Montserrat", sans-serif);
+  font-weight: 900;
+  font-size: 0.85rem;
+  z-index: 3;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.saborio-hero-rating-badge:hover {
+  transform: scale(1.05) translateY(-2px);
+  background: rgba(18, 10, 6, 0.95);
+  border-color: #ffcc00;
+  box-shadow: 0 6px 16px rgba(255, 204, 0, 0.25);
+}
+
 /* Badge Circular Flotante (-20% OFF) */
 .saborio-discount-badge {
   position: absolute;
@@ -497,6 +547,38 @@
   transition: width 0.05s linear;
 }
 
+/* ── Insignia Flotante Premium ─────────────────────────────────────────── */
+
+.saborio-floating-badge {
+  position: fixed;
+  bottom: 85px;
+  left: 20px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  z-index: 1000;
+  cursor: pointer;
+  overflow: hidden;
+  animation: float-badge-anim 3.5s ease-in-out infinite;
+  transition: transform 0.3s ease;
+}
+
+.saborio-floating-badge:hover {
+  transform: scale(1.1);
+}
+
+.saborio-floating-badge-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes float-badge-anim {
+  0% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-8px); filter: brightness(1.15); }
+  100% { transform: translateY(0); filter: brightness(1); }
+}
+
 /* ── Responsive Móvil ──────────────────────────────────────────────────── */
 
 @media (max-width: 680px) {
@@ -524,10 +606,35 @@
     font-size: 1.85rem;
   }
 
+  .saborio-top-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.8rem;
+    padding: 0.5rem 0.25rem 0.5rem;
+  }
+
+  .saborio-top-bar__left {
+    justify-content: center;
+    width: 100%;
+    padding-right: 0;
+  }
+  
+  .saborio-top-bar__right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .saborio-card-banner__visual {
     width: 100%;
     height: 180px;
     flex: none;
+  }
+
+  .saborio-hero-rating-badge {
+    top: -4px;
+    left: -4px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
   }
 
   .saborio-discount-badge {

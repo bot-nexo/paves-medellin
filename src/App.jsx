@@ -21,6 +21,7 @@ import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./da
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
 import { createOrder, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
+import { getCustomerBadge } from "./utils/badges";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
@@ -81,18 +82,26 @@ const App = () => {
         /* noop */
       }
     };
-    const handleOpenRating = () => setIsRatingOpen(true);
-
     window.addEventListener("beforeunload", handleClearCustomerStorage);
     window.addEventListener("pagehide", handleClearCustomerStorage);
-    window.addEventListener("open-rating", handleOpenRating);
 
     return () => {
       window.removeEventListener("beforeunload", handleClearCustomerStorage);
       window.removeEventListener("pagehide", handleClearCustomerStorage);
-      window.removeEventListener("open-rating", handleOpenRating);
     };
   }, []);
+
+  useEffect(() => {
+    const handleOpenRating = () => {
+      if (!customer || !customer.telefono) {
+        setIsCustomerModalOpen(true);
+      } else {
+        setIsRatingOpen(true);
+      }
+    };
+    window.addEventListener("open-rating", handleOpenRating);
+    return () => window.removeEventListener("open-rating", handleOpenRating);
+  }, [customer]);
 
   useEffect(() => {
     // Si al ingresar a la tienda el cliente aún no se ha identificado, abrir el modal automáticamente
@@ -329,6 +338,26 @@ const App = () => {
               onOpenCart={openCart}
               whatsappNumber={whatsappNumber}
             />
+
+            {/* Floating Badge */}
+            {customer && customer.nombre && settings?.useCustomerBadges !== false && (
+              (() => {
+                const badge = getCustomerBadge(customer.pedidos_count || 0);
+                return (
+                  <div 
+                    className="saborio-floating-badge" 
+                    onClick={() => setIsCustomerModalOpen(true)}
+                    title={`Nivel ${badge.name}: ${badge.description}`}
+                    style={{
+                      boxShadow: `0 0 15px ${badge.glow}, 0 4px 12px rgba(0,0,0,0.5)`,
+                      border: `2px solid ${badge.color}`
+                    }}
+                  >
+                    <img src={badge.image} alt={`Insignia ${badge.name}`} className="saborio-floating-badge-img" />
+                  </div>
+                );
+              })()
+            )}
 
             <CartModal
               cart={cart}

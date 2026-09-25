@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Flame, Search, SlidersHorizontal, User, Star } from "lucide-react";
+import { ArrowRight, Flame, Search, SlidersHorizontal, User, Star, Medal, Award, Trophy, Crown } from "lucide-react";
 import Swal from "sweetalert2";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { DEFAULT_CATALOG_DESIGN, getStoreRatingStats, submitStoreRating } from "../data/dataSource";
 import { products as localProducts } from "../data/menu";
+import { getCustomerBadge } from "../utils/badges";
 import "../css/Hero.css";
 
 const Hero = ({
@@ -229,10 +230,6 @@ const Hero = ({
               <div className="saborio-brand-info">
                 <div className="saborio-brand-title">
                   <span className="saborio-brand-name">{settings?.razonSocial}</span>
-                  <button type="button" onClick={handleRateBusiness} className="saborio-brand-rating-btn" style={{ background: "rgba(255, 204, 0, 0.15)", border: "1px solid rgba(255, 204, 0, 0.3)", borderRadius: "12px", padding: "2px 8px", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer", marginLeft: "6px" }}>
-                    <Star size={12} color="#ffcc00" fill="#ffcc00" />
-                    <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#ffcc00" }}>{ratingStats.average}</span>
-                  </button>
                 </div>
                 <span className="saborio-brand-tagline">
                   {settings?.slogan || "EL VERDADERO SABOR DEL PAVÉ"}
@@ -252,7 +249,6 @@ const Hero = ({
               >
                 <User size={13} className="text-[#ffcc00]" />
                 <span className="saborio-user-badge-name">Hola, {customer.nombre.split(" ")[0]}</span>
-                <span className="saborio-user-badge-tag">⭐ VIP</span>
               </button>
             ) : (
               <button
@@ -311,7 +307,13 @@ const Hero = ({
                   />
                   <div className="saborio-banner-glow" />
 
-                  {/* Badge Flotante Circular Estilo Saborio */}
+                  {/* Rating Badge Flotante (Izquierda) */}
+                  <button type="button" onClick={handleRateBusiness} className="saborio-hero-rating-badge" title="Calificar Negocio">
+                    <Star size={14} color="#ffcc00" fill="#ffcc00" />
+                    <span>{ratingStats.average}</span>
+                  </button>
+
+                  {/* Badge Flotante Circular Estilo Saborio (Derecha) */}
                   <div className="saborio-discount-badge">
                     <span className="discount-top">The</span>
                     <span className="discount-main">Best</span>
@@ -345,6 +347,8 @@ const Hero = ({
           </div>
         )}
       </div>
+
+
     </section>
   );
 };

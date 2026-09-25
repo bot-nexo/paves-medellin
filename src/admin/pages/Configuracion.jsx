@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
-import { Loader2, Save, Truck, Power } from "lucide-react";
+import { Loader2, Save, Truck, Power, Star } from "lucide-react";
 import { getSettings, updateSettings } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
 import "../admin.css";
@@ -25,6 +25,7 @@ const Configuracion = () => {
           offersPickup: s.offersPickup !== false,
           offersLocal: s.offersLocal !== false,
           forceClosed: s.forceClosed === true,
+          useCustomerBadges: s.useCustomerBadges !== false,
         });
       } catch (e) {
         Swal.fire({
@@ -73,6 +74,7 @@ const Configuracion = () => {
           offersDelivery: form.offersDelivery,
           offersPickup: form.offersPickup,
           offersLocal: form.offersLocal,
+          useCustomerBadges: form.useCustomerBadges,
         }),
         esperar(timeOut),
       ]);
@@ -187,6 +189,26 @@ const Configuracion = () => {
             </div>
             <span className="adm-modal__precio-hint">
               El checkout solo ofrece las modalidades activas. Debe quedar al menos una.
+            </span>
+          </div>
+
+          {/* Fidelización de Clientes */}
+          <div className="adm-cfg__seccion">
+            <div className="adm-cfg__seccion-titulo">
+              <Star size={15} /> Fidelización y Experiencia
+            </div>
+            <div className="adm-cfg__checks">
+              <label className="adm-toggle-fila">
+                <input
+                  type="checkbox"
+                  checked={form.useCustomerBadges}
+                  onChange={(e) => setForm((f) => ({ ...f, useCustomerBadges: e.target.checked }))}
+                />
+                <span>🏆 Usar insignias (Bronce, Plata, Oro, Platino) según pedidos</span>
+              </label>
+            </div>
+            <span className="adm-modal__precio-hint">
+              Si se desactiva, los clientes no verán insignias ni animaciones de nivel en la tienda.
             </span>
           </div>
 
