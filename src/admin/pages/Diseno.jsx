@@ -1,39 +1,14 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+﻿import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
 import {
-  Palette,
-  LayoutGrid,
-  Type,
-  Sparkles,
-  Save,
-  RotateCcw,
-  Eye,
-  Plus,
-  Monitor,
-  Smartphone,
-  Check,
-  Layers,
-  Gift,
-  Tag,
-  Store,
-  Compass,
-  Trash2,
-  Edit3,
-  CheckCircle2,
-  Focus,
-  Globe,
+  Palette, LayoutGrid, Type, Sparkles, Save, RotateCcw, Eye,
+  Monitor, Smartphone, Check, Store, Compass, ChevronDown, ChevronRight,
+  AlertTriangle, CheckCircle, Layers, Focus, Globe, Gift, Tag, Sliders,
 } from "lucide-react";
 import {
-  getCatalogDesign,
-  updateCatalogDesign,
-  getProducts,
-  getCategories,
-  getSettings,
-  subscribeToCatalog,
-  DEFAULT_CATALOG_DESIGN,
-  DEFAULT_PROMOTIONS_ITEMS,
-  DEFAULT_COMBOS_ITEMS,
+  getCatalogDesign, updateCatalogDesign, getProducts, getCategories,
+  getSettings, subscribeToCatalog, DEFAULT_CATALOG_DESIGN,
 } from "../../data/dataSource";
 import { estaAbiertoSegunHorario } from "../../utils/horario";
 import Hero from "../../components/Hero";
@@ -41,288 +16,323 @@ import Promociones from "../../components/Promociones";
 import Menu from "../../components/Menu";
 import Combos from "../../components/Combos";
 import Footer from "../../components/Footer";
-import { formatCOP } from "../../utils/price";
 import ColorPickerField from "../components/ColorPickerField";
 import GradientPickerField from "../components/GradientPickerField";
 import "../admin.css";
 
-// Paletas predefinidas para aplicar en 1 clic a TODO el catálogo
+// PRESETS
 const PRESETS = [
   {
-    name: "Pavés Gourmet (Oficial)",
-    emoji: "🍓",
-    desc: "Paleta oficial del logo y estética Saborio: Chocolate oscuro, crema, acentos oro y rojo",
+    name: "Paves Gourmet", emoji: "🍓", desc: "Oficial Paves: chocolate oscuro, crema y oro",
+    accent: "#ffcc00", bg: "#0d0805",
     values: {
-      appBg: "#0d0805",
-      fontFamily: "Montserrat",
-      heroBg: "linear-gradient(180deg, #0d0805 0%, #140c08 100%)",
-      heroHeaderBg: "rgba(13, 8, 5, 0.85)",
-      heroCtaBg: "#ffcc00",
-      heroCtaText: "#120a06",
-      heroBadgeBg: "rgba(255, 204, 0, 0.15)",
-      heroBadgeText: "#ffcc00",
-      heroFloatCartBg: "#ffcc00",
-      heroFloatCartText: "#120a06",
-      promotionsBg: "#120a06",
-      promotionsCardBg: "#180e09",
-      promotionsAccent: "#ffcc00",
-      combosBg: "#0f0906",
-      combosCardBg: "#180e09",
-      combosAccent: "#d92b38",
-      bgColor: "#0d0805",
-      cardBg: "#160e0a",
-      ignored2: "rgba(255, 204, 0, 0.12)",
-      ignored1: "#ffcc00",
-      textPrimary: "#fdfbf7",
-      textMuted: "#bda899",
-      borderColor: "rgba(255, 255, 255, 0.08)",
-      cardRadius: "22px",
-      cardShadow: "md",
-      btnPrimaryBg: "#ffcc00",
-      btnPrimaryText: "#120a06",
-      btnDetailsBg: "rgba(255, 255, 255, 0.05)",
-      btnDetailsText: "#e2d5cc",
-      btnDetailsBorder: "rgba(255, 255, 255, 0.12)",
-      priceTagBg: "#ffcc00",
-      priceTagText: "#120a06",
-      badgePopularBg: "#ffcc00",
-      badgePopularText: "#120a06",
-      categoryBarBg: "rgba(20, 12, 8, 0.9)",
-      categoryActiveBg: "#ffcc00",
-      categoryActiveText: "#120a06",
-      categoryInactiveBg: "transparent",
-      categoryInactiveText: "#bda899",
-      columnsDesktop: "auto",
-      columnsMobile: "1",
-      cardLayout: "vertical",
-      imageAspectRatio: "16/11",
-      footerBg: "linear-gradient(180deg, #0d0805 0%, #060402 100%)",
-      footerText: "rgba(253, 251, 247, 0.7)",
-      footerAccent: "#ffcc00",
+      appBg:"#0d0805", fontFamily:"Montserrat",
+      heroBg:"linear-gradient(180deg, #0d0805 0%, #140c08 100%)",
+      heroHeaderBg:"rgba(13, 8, 5, 0.85)", heroCtaBg:"#ffcc00", heroCtaText:"#120a06",
+      heroBadgeBg:"rgba(255, 204, 0, 0.15)", heroBadgeText:"#ffcc00",
+      heroFloatCartBg:"#ffcc00", heroFloatCartText:"#120a06",
+      promotionsBg:"#120a06", promotionsCardBg:"#180e09", promotionsAccent:"#ffcc00",
+      combosBg:"#0f0906", combosCardBg:"#180e09", combosAccent:"#d92b38",
+      bgColor:"#0d0805", cardBg:"#160e0a",
+      ignored2:"rgba(255, 204, 0, 0.12)", ignored1:"#ffcc00",
+      textPrimary:"#fdfbf7", textMuted:"#bda899",
+      borderColor:"rgba(255, 255, 255, 0.08)", cardRadius:"22px", cardShadow:"md",
+      btnPrimaryBg:"#ffcc00", btnPrimaryText:"#120a06",
+      btnDetailsBg:"rgba(255, 255, 255, 0.05)", btnDetailsText:"#e2d5cc",
+      btnDetailsBorder:"rgba(255, 255, 255, 0.12)",
+      priceTagBg:"#ffcc00", priceTagText:"#120a06",
+      badgePopularBg:"#ffcc00", badgePopularText:"#120a06",
+      categoryBarBg:"rgba(20, 12, 8, 0.9)", categoryActiveBg:"#ffcc00",
+      categoryActiveText:"#120a06", categoryInactiveBg:"transparent", categoryInactiveText:"#bda899",
+      columnsDesktop:"auto", columnsMobile:"1", cardLayout:"vertical", imageAspectRatio:"16/11",
+      footerBg:"linear-gradient(180deg, #0d0805 0%, #060402 100%)",
+      footerText:"rgba(253, 251, 247, 0.7)", footerAccent:"#ffcc00",
     },
   },
   {
-    name: "Choco Noir & Gold",
-    emoji: "🍫",
-    desc: "Tonos oscuros chocolate y acentos dorados gourmet",
+    name: "Choco Noir & Gold", emoji: "🍫", desc: "Oscuro chocolate con acentos dorados gourmet",
+    accent: "#d4af37", bg: "#140e0a",
     values: {
-      appBg: "#140e0a",
-      fontFamily: "Playfair Display",
-      heroBg: "linear-gradient(180deg, #1c1410 0%, #2b1e17 100%)",
-      heroHeaderBg: "rgba(43, 30, 23, 0.85)",
-      heroCtaBg: "#d4af37",
-      heroCtaText: "#1c1410",
-      heroBadgeBg: "rgba(212, 175, 55, 0.2)",
-      heroBadgeText: "#e5c058",
-      heroFloatCartBg: "#d4af37",
-      heroFloatCartText: "#1c1410",
-      promotionsBg: "#1c1410",
-      promotionsCardBg: "#2b1e17",
-      promotionsAccent: "#d4af37",
-      combosBg: "#18110d",
-      combosCardBg: "#2b1e17",
-      combosAccent: "#d4af37",
-      bgColor: "#1c1410",
-      cardBg: "#2b1e17",
-      ignored2: "rgba(212, 175, 55, 0.15)",
-      ignored1: "#e5c058",
-      textPrimary: "#fdfbf7",
-      textMuted: "#d4c5b9",
-      borderColor: "rgba(212, 175, 55, 0.25)",
-      cardRadius: "16px",
-      cardShadow: "md",
-      btnPrimaryBg: "#d4af37",
-      btnPrimaryText: "#1c1410",
-      btnDetailsBg: "transparent",
-      btnDetailsText: "#e5c058",
-      btnDetailsBorder: "rgba(212, 175, 55, 0.4)",
-      priceTagBg: "#d4af37",
-      priceTagText: "#1c1410",
-      badgePopularBg: "#d4af37",
-      badgePopularText: "#1c1410",
-      categoryBarBg: "rgba(43, 30, 23, 0.8)",
-      categoryActiveBg: "#d4af37",
-      categoryActiveText: "#1c1410",
-      categoryInactiveBg: "transparent",
-      categoryInactiveText: "#d4c5b9",
-      columnsDesktop: "auto",
-      columnsMobile: "1",
-      cardLayout: "vertical",
-      imageAspectRatio: "4/3",
-      footerBg: "#0f0a07",
-      footerText: "rgba(245, 235, 225, 0.7)",
-      footerAccent: "#d4af37",
+      appBg:"#140e0a", fontFamily:"Playfair Display",
+      heroBg:"linear-gradient(180deg, #1c1410 0%, #2b1e17 100%)",
+      heroHeaderBg:"rgba(43, 30, 23, 0.85)", heroCtaBg:"#d4af37", heroCtaText:"#1c1410",
+      heroBadgeBg:"rgba(212, 175, 55, 0.2)", heroBadgeText:"#e5c058",
+      heroFloatCartBg:"#d4af37", heroFloatCartText:"#1c1410",
+      promotionsBg:"#1c1410", promotionsCardBg:"#2b1e17", promotionsAccent:"#d4af37",
+      combosBg:"#18110d", combosCardBg:"#2b1e17", combosAccent:"#d4af37",
+      bgColor:"#1c1410", cardBg:"#2b1e17",
+      ignored2:"rgba(212, 175, 55, 0.15)", ignored1:"#e5c058",
+      textPrimary:"#fdfbf7", textMuted:"#d4c5b9",
+      borderColor:"rgba(212, 175, 55, 0.25)", cardRadius:"16px", cardShadow:"md",
+      btnPrimaryBg:"#d4af37", btnPrimaryText:"#1c1410",
+      btnDetailsBg:"transparent", btnDetailsText:"#e5c058",
+      btnDetailsBorder:"rgba(212, 175, 55, 0.4)",
+      priceTagBg:"#d4af37", priceTagText:"#1c1410",
+      badgePopularBg:"#d4af37", badgePopularText:"#1c1410",
+      categoryBarBg:"rgba(43, 30, 23, 0.8)", categoryActiveBg:"#d4af37",
+      categoryActiveText:"#1c1410", categoryInactiveBg:"transparent", categoryInactiveText:"#d4c5b9",
+      columnsDesktop:"auto", columnsMobile:"1", cardLayout:"vertical", imageAspectRatio:"4/3",
+      footerBg:"#0f0a07", footerText:"rgba(245, 235, 225, 0.7)", footerAccent:"#d4af37",
     },
   },
   {
-    name: "Pastelería Rosa",
-    emoji: "🌸",
-    desc: "Estilo dulce, tonos pasteles y blancos puros",
+    name: "Pasteleria Rosa", emoji: "🌸", desc: "Tonos dulces, pasteles y blancos luminosos",
+    accent: "#ff4d6d", bg: "#fff5f7",
     values: {
-      appBg: "#fff5f7",
-      fontFamily: "Poppins",
-      heroBg: "linear-gradient(180deg, #fff0f3 0%, #ffccd5 100%)",
-      heroHeaderBg: "rgba(255, 255, 255, 0.85)",
-      heroCtaBg: "#ff4d6d",
-      heroCtaText: "#ffffff",
-      heroBadgeBg: "rgba(255, 77, 109, 0.15)",
-      heroBadgeText: "#ff4d6d",
-      heroFloatCartBg: "#590d22",
-      heroFloatCartText: "#ffffff",
-      promotionsBg: "#fff0f3",
-      promotionsCardBg: "#ffffff",
-      promotionsAccent: "#ff4d6d",
-      combosBg: "#fff5f7",
-      combosCardBg: "#ffffff",
-      combosAccent: "#ff4d6d",
-      bgColor: "#fff0f3",
-      cardBg: "#ffffff",
-      ignored2: "rgba(255, 77, 109, 0.12)",
-      ignored1: "#ff4d6d",
-      textPrimary: "#590d22",
-      textMuted: "#a4133c",
-      borderColor: "rgba(255, 77, 109, 0.15)",
-      cardRadius: "24px",
-      cardShadow: "lg",
-      btnPrimaryBg: "#ff4d6d",
-      btnPrimaryText: "#ffffff",
-      btnDetailsBg: "transparent",
-      btnDetailsText: "#590d22",
-      btnDetailsBorder: "rgba(255, 77, 109, 0.25)",
-      priceTagBg: "#800f2f",
-      priceTagText: "#ffffff",
-      badgePopularBg: "#ff4d6d",
-      badgePopularText: "#ffffff",
-      categoryBarBg: "rgba(255, 255, 255, 0.85)",
-      categoryActiveBg: "#ff4d6d",
-      categoryActiveText: "#ffffff",
-      categoryInactiveBg: "transparent",
-      categoryInactiveText: "#a4133c",
-      columnsDesktop: "auto",
-      columnsMobile: "1",
-      cardLayout: "vertical",
-      imageAspectRatio: "4/3",
-      footerBg: "linear-gradient(180deg, #2b0813 0%, #150308 100%)",
-      footerText: "rgba(255, 225, 235, 0.8)",
-      footerAccent: "#ff4d6d",
+      appBg:"#fff5f7", fontFamily:"Poppins",
+      heroBg:"linear-gradient(180deg, #fff0f3 0%, #ffccd5 100%)",
+      heroHeaderBg:"rgba(255, 255, 255, 0.85)", heroCtaBg:"#ff4d6d", heroCtaText:"#ffffff",
+      heroBadgeBg:"rgba(255, 77, 109, 0.15)", heroBadgeText:"#ff4d6d",
+      heroFloatCartBg:"#590d22", heroFloatCartText:"#ffffff",
+      promotionsBg:"#fff0f3", promotionsCardBg:"#ffffff", promotionsAccent:"#ff4d6d",
+      combosBg:"#fff5f7", combosCardBg:"#ffffff", combosAccent:"#ff4d6d",
+      bgColor:"#fff0f3", cardBg:"#ffffff",
+      ignored2:"rgba(255, 77, 109, 0.12)", ignored1:"#ff4d6d",
+      textPrimary:"#590d22", textMuted:"#a4133c",
+      borderColor:"rgba(255, 77, 109, 0.15)", cardRadius:"24px", cardShadow:"lg",
+      btnPrimaryBg:"#ff4d6d", btnPrimaryText:"#ffffff",
+      btnDetailsBg:"transparent", btnDetailsText:"#590d22",
+      btnDetailsBorder:"rgba(255, 77, 109, 0.25)",
+      priceTagBg:"#800f2f", priceTagText:"#ffffff",
+      badgePopularBg:"#ff4d6d", badgePopularText:"#ffffff",
+      categoryBarBg:"rgba(255, 255, 255, 0.85)", categoryActiveBg:"#ff4d6d",
+      categoryActiveText:"#ffffff", categoryInactiveBg:"transparent", categoryInactiveText:"#a4133c",
+      columnsDesktop:"auto", columnsMobile:"1", cardLayout:"vertical", imageAspectRatio:"4/3",
+      footerBg:"linear-gradient(180deg, #2b0813 0%, #150308 100%)",
+      footerText:"rgba(255, 225, 235, 0.8)", footerAccent:"#ff4d6d",
     },
   },
   {
-    name: "Menta & Frutas",
-    emoji: "🍃",
-    desc: "Frescura botánica y tonos verdes gourmet",
+    name: "Organico Verde", emoji: "🍃", desc: "Frescura botanica, verdes naturales y saludables",
+    accent: "#2e7d32", bg: "#f4fbf6",
     values: {
-      appBg: "#f4fbf6",
-      fontFamily: "Outfit",
-      heroBg: "linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)",
-      heroHeaderBg: "rgba(255, 255, 255, 0.85)",
-      heroCtaBg: "#2e7d32",
-      heroCtaText: "#ffffff",
-      heroBadgeBg: "rgba(46, 125, 50, 0.15)",
-      heroBadgeText: "#2e7d32",
-      heroFloatCartBg: "#1b5e20",
-      heroFloatCartText: "#ffffff",
-      promotionsBg: "#e8f5e9",
-      promotionsCardBg: "#ffffff",
-      promotionsAccent: "#2e7d32",
-      combosBg: "#f1f8f3",
-      combosCardBg: "#ffffff",
-      combosAccent: "#2e7d32",
-      bgColor: "#e8f5e9",
-      cardBg: "#ffffff",
-      ignored2: "rgba(46, 125, 50, 0.15)",
-      ignored1: "#2e7d32",
-      textPrimary: "#1b5e20",
-      textMuted: "#388e3c",
-      borderColor: "rgba(46, 125, 50, 0.15)",
-      cardRadius: "18px",
-      cardShadow: "md",
-      btnPrimaryBg: "#2e7d32",
-      btnPrimaryText: "#ffffff",
-      btnDetailsBg: "transparent",
-      btnDetailsText: "#1b5e20",
-      btnDetailsBorder: "rgba(46, 125, 50, 0.25)",
-      priceTagBg: "#1b5e20",
-      priceTagText: "#ffffff",
-      badgePopularBg: "#2e7d32",
-      badgePopularText: "#ffffff",
-      categoryBarBg: "rgba(255, 255, 255, 0.85)",
-      categoryActiveBg: "#2e7d32",
-      categoryActiveText: "#ffffff",
-      categoryInactiveBg: "transparent",
-      categoryInactiveText: "#388e3c",
-      columnsDesktop: "auto",
-      columnsMobile: "1",
-      cardLayout: "vertical",
-      imageAspectRatio: "4/3",
-      footerBg: "linear-gradient(180deg, #0d2810 0%, #051408 100%)",
-      footerText: "rgba(235, 250, 240, 0.75)",
-      footerAccent: "#4caf50",
+      appBg:"#f4fbf6", fontFamily:"Outfit",
+      heroBg:"linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)",
+      heroHeaderBg:"rgba(255, 255, 255, 0.85)", heroCtaBg:"#2e7d32", heroCtaText:"#ffffff",
+      heroBadgeBg:"rgba(46, 125, 50, 0.15)", heroBadgeText:"#2e7d32",
+      heroFloatCartBg:"#1b5e20", heroFloatCartText:"#ffffff",
+      promotionsBg:"#e8f5e9", promotionsCardBg:"#ffffff", promotionsAccent:"#2e7d32",
+      combosBg:"#f1f8f3", combosCardBg:"#ffffff", combosAccent:"#2e7d32",
+      bgColor:"#e8f5e9", cardBg:"#ffffff",
+      ignored2:"rgba(46, 125, 50, 0.15)", ignored1:"#2e7d32",
+      textPrimary:"#1b5e20", textMuted:"#388e3c",
+      borderColor:"rgba(46, 125, 50, 0.15)", cardRadius:"18px", cardShadow:"md",
+      btnPrimaryBg:"#2e7d32", btnPrimaryText:"#ffffff",
+      btnDetailsBg:"transparent", btnDetailsText:"#1b5e20",
+      btnDetailsBorder:"rgba(46, 125, 50, 0.25)",
+      priceTagBg:"#1b5e20", priceTagText:"#ffffff",
+      badgePopularBg:"#2e7d32", badgePopularText:"#ffffff",
+      categoryBarBg:"rgba(255, 255, 255, 0.85)", categoryActiveBg:"#2e7d32",
+      categoryActiveText:"#ffffff", categoryInactiveBg:"transparent", categoryInactiveText:"#388e3c",
+      columnsDesktop:"auto", columnsMobile:"1", cardLayout:"vertical", imageAspectRatio:"4/3",
+      footerBg:"linear-gradient(180deg, #0d2810 0%, #051408 100%)",
+      footerText:"rgba(235, 250, 240, 0.75)", footerAccent:"#4caf50",
     },
   },
   {
-    name: "Minimalista Moderno",
-    emoji: "⚪",
-    desc: "Gris sutil, alto contraste y diseño pulcro",
+    name: "Minimal Blanco", emoji: "⬜", desc: "Alto contraste, limpio y ultra profesional",
+    accent: "#0f172a", bg: "#ffffff",
     values: {
-      appBg: "#ffffff",
-      fontFamily: "Inter",
-      heroBg: "linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)",
-      heroHeaderBg: "rgba(255, 255, 255, 0.9)",
-      heroCtaBg: "#0f172a",
-      heroCtaText: "#ffffff",
-      heroBadgeBg: "rgba(15, 23, 42, 0.08)",
-      heroBadgeText: "#0f172a",
-      heroFloatCartBg: "#0f172a",
-      heroFloatCartText: "#ffffff",
-      promotionsBg: "#f8fafc",
-      promotionsCardBg: "#ffffff",
-      promotionsAccent: "#0f172a",
-      combosBg: "#f1f5f9",
-      combosCardBg: "#ffffff",
-      combosAccent: "#0f172a",
-      bgColor: "#f8fafc",
-      cardBg: "#ffffff",
-      ignored2: "rgba(15, 23, 42, 0.08)",
-      ignored1: "#0f172a",
-      textPrimary: "#0f172a",
-      textMuted: "#64748b",
-      borderColor: "rgba(226, 232, 240, 1)",
-      cardRadius: "12px",
-      cardShadow: "sm",
-      btnPrimaryBg: "#0f172a",
-      btnPrimaryText: "#ffffff",
-      btnDetailsBg: "transparent",
-      btnDetailsText: "#0f172a",
-      btnDetailsBorder: "rgba(203, 213, 225, 1)",
-      priceTagBg: "#0f172a",
-      priceTagText: "#ffffff",
-      badgePopularBg: "#0f172a",
-      badgePopularText: "#ffffff",
-      categoryBarBg: "#ffffff",
-      categoryActiveBg: "#0f172a",
-      categoryActiveText: "#ffffff",
-      categoryInactiveBg: "transparent",
-      categoryInactiveText: "#64748b",
-      columnsDesktop: "auto",
-      columnsMobile: "1",
-      cardLayout: "vertical",
-      imageAspectRatio: "4/3",
-      footerBg: "#0f172a",
-      footerText: "rgba(241, 245, 249, 0.8)",
-      footerAccent: "#94a3b8",
+      appBg:"#ffffff", fontFamily:"Inter",
+      heroBg:"linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)",
+      heroHeaderBg:"rgba(255, 255, 255, 0.9)", heroCtaBg:"#0f172a", heroCtaText:"#ffffff",
+      heroBadgeBg:"rgba(15, 23, 42, 0.08)", heroBadgeText:"#0f172a",
+      heroFloatCartBg:"#0f172a", heroFloatCartText:"#ffffff",
+      promotionsBg:"#f8fafc", promotionsCardBg:"#ffffff", promotionsAccent:"#0f172a",
+      combosBg:"#f1f5f9", combosCardBg:"#ffffff", combosAccent:"#0f172a",
+      bgColor:"#f8fafc", cardBg:"#ffffff",
+      ignored2:"rgba(15, 23, 42, 0.08)", ignored1:"#0f172a",
+      textPrimary:"#0f172a", textMuted:"#64748b",
+      borderColor:"rgba(226, 232, 240, 1)", cardRadius:"12px", cardShadow:"sm",
+      btnPrimaryBg:"#0f172a", btnPrimaryText:"#ffffff",
+      btnDetailsBg:"transparent", btnDetailsText:"#0f172a",
+      btnDetailsBorder:"rgba(203, 213, 225, 1)",
+      priceTagBg:"#0f172a", priceTagText:"#ffffff",
+      badgePopularBg:"#0f172a", badgePopularText:"#ffffff",
+      categoryBarBg:"#ffffff", categoryActiveBg:"#0f172a",
+      categoryActiveText:"#ffffff", categoryInactiveBg:"transparent", categoryInactiveText:"#64748b",
+      columnsDesktop:"auto", columnsMobile:"1", cardLayout:"vertical", imageAspectRatio:"4/3",
+      footerBg:"#0f172a", footerText:"rgba(241, 245, 249, 0.8)", footerAccent:"#94a3b8",
+    },
+  },
+  {
+    name: "Fast Food Neon", emoji: "🍔", desc: "Energetico, vibrante, amarillo y rojo neon",
+    accent: "#ffd600", bg: "#1a1a1a",
+    values: {
+      appBg:"#111111", fontFamily:"Poppins",
+      heroBg:"linear-gradient(180deg, #1a1a1a 0%, #2d1f00 100%)",
+      heroHeaderBg:"rgba(17, 17, 17, 0.9)", heroCtaBg:"#ffd600", heroCtaText:"#111111",
+      heroBadgeBg:"rgba(255, 214, 0, 0.18)", heroBadgeText:"#ffd600",
+      heroFloatCartBg:"#e53935", heroFloatCartText:"#ffffff",
+      promotionsBg:"#1a1a1a", promotionsCardBg:"#262626", promotionsAccent:"#ffd600",
+      combosBg:"#141414", combosCardBg:"#262626", combosAccent:"#e53935",
+      bgColor:"#1a1a1a", cardBg:"#262626",
+      ignored2:"rgba(255, 214, 0, 0.12)", ignored1:"#ffd600",
+      textPrimary:"#ffffff", textMuted:"#aaaaaa",
+      borderColor:"rgba(255, 214, 0, 0.2)", cardRadius:"10px", cardShadow:"lg",
+      btnPrimaryBg:"#ffd600", btnPrimaryText:"#111111",
+      btnDetailsBg:"transparent", btnDetailsText:"#ffd600",
+      btnDetailsBorder:"rgba(255, 214, 0, 0.4)",
+      priceTagBg:"#e53935", priceTagText:"#ffffff",
+      badgePopularBg:"#ffd600", badgePopularText:"#111111",
+      categoryBarBg:"rgba(26, 26, 26, 0.95)", categoryActiveBg:"#ffd600",
+      categoryActiveText:"#111111", categoryInactiveBg:"transparent", categoryInactiveText:"#aaaaaa",
+      columnsDesktop:"3", columnsMobile:"2", cardLayout:"vertical", imageAspectRatio:"1/1",
+      footerBg:"#0a0a0a", footerText:"rgba(255, 255, 255, 0.65)", footerAccent:"#ffd600",
     },
   },
 ];
 
-const FONTS = [
-  { id: "Montserrat", label: "Montserrat (Original Moderno)" },
-  { id: "Poppins", label: "Poppins (Geométrico Amigable)" },
-  { id: "Inter", label: "Inter (Limpio & Minimalista)" },
-  { id: "Outfit", label: "Outfit (Elegante & Redondeado)" },
-  { id: "Playfair Display", label: "Playfair Display (Gourmet Clásico)" },
+// FONT PAIRS
+const FONT_PAIRS = [
+  { id: "Montserrat", label: "Moderna", subtitle: "Montserrat - Limpia y geometrica", preview: "Montserrat" },
+  { id: "Inter", label: "Tech / SaaS", subtitle: "Inter - Ultra legible para catalogos", preview: "Inter" },
+  { id: "Poppins", label: "Amigable", subtitle: "Poppins - Redondeada y accesible", preview: "Poppins" },
+  { id: "Playfair Display", label: "Gourmet Clasico", subtitle: "Playfair Display - Elegancia editorial", preview: "Playfair Display" },
+  { id: "Outfit", label: "Organica", subtitle: "Outfit - Moderna con calidez", preview: "Outfit" },
 ];
 
+const CARD_STYLES = [
+  { id: "md", label: "Moderno", desc: "Sombra suave y profundidad", icon: "◻" },
+  { id: "flat", label: "Flat", desc: "Borde delgado, sin sombra", icon: "▭" },
+  { id: "none", label: "Minimo", desc: "Sin borde ni fondo", icon: "—" },
+];
+
+const RADIUS_OPTIONS = [
+  { id: "0px", label: "Ninguno", preview: "0px" },
+  { id: "8px", label: "Suave", preview: "8px" },
+  { id: "16px", label: "Redondeado", preview: "16px" },
+  { id: "24px", label: "Pildora", preview: "24px" },
+];
+
+const DESKTOP_COLS = [
+  { id: "auto", label: "Auto", icon: "⣿", desc: "Adaptable" },
+  { id: "2", label: "2 Col", icon: "■■", desc: "Grandes y destacadas" },
+  { id: "3", label: "3 Col", icon: "■■■", desc: "Equilibrado" },
+  { id: "4", label: "4 Col", icon: "■■■■", desc: "Compacto" },
+];
+
+const MOBILE_COLS = [
+  { id: "1", label: "1 Col", icon: "■", desc: "Clasico vertical" },
+  { id: "2", label: "2 Col", icon: "■■", desc: "Catalogo compacto" },
+];
+
+const CARD_LAYOUTS = [
+  { id: "vertical", label: "Imagen Arriba", icon: "🖼" },
+  { id: "horizontal", label: "Imagen Lateral", icon: "▣" },
+];
+
+const ASPECT_RATIOS = [
+  { id: "1/1", label: "1:1", desc: "Cuadrado" },
+  { id: "4/3", label: "4:3", desc: "Estandar" },
+  { id: "16/9", label: "16:9", desc: "Panoramico" },
+  { id: "16/11", label: "16:11", desc: "Compacto" },
+];
+
+// WCAG contrast utilities
+const hexToRgb = (hex) => {
+  if (!hex || typeof hex !== "string") return null;
+  const clean = hex.trim().replace(/^#/, "");
+  if (clean.length === 3) {
+    return { r: parseInt(clean[0]+clean[0],16), g: parseInt(clean[1]+clean[1],16), b: parseInt(clean[2]+clean[2],16) };
+  }
+  if (clean.length === 6) {
+    return { r: parseInt(clean.slice(0,2),16), g: parseInt(clean.slice(2,4),16), b: parseInt(clean.slice(4,6),16) };
+  }
+  return null;
+};
+
+const getLuminance = (hex) => {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const [r,g,b] = [rgb.r/255, rgb.g/255, rgb.b/255].map(c => c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4));
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+};
+
+const getContrastRatio = (hex1, hex2) => {
+  const l1=getLuminance(hex1), l2=getLuminance(hex2);
+  const bright=Math.max(l1,l2), dark=Math.min(l1,l2);
+  return (bright+0.05)/(dark+0.05);
+};
+
+// ContrastBadge component
+const ContrastBadge = ({ fg, bg, label }) => {
+  if (!fg || !bg) return null;
+  const ratio = getContrastRatio(fg, bg);
+  const ratioFixed = ratio.toFixed(1);
+  const isAA = ratio >= 4.5;
+  const isAAA = ratio >= 7;
+  return (
+    <div className="diseno-contrast-badge" title={"Ratio: " + ratioFixed + ":1"}>
+      {isAA
+        ? <CheckCircle size={11} className="diseno-contrast-icon--ok" />
+        : <AlertTriangle size={11} className="diseno-contrast-icon--warn" />
+      }
+      <span className={"diseno-contrast-label " + (isAA ? "ok" : "warn")}>
+        {isAAA ? "AAA" : isAA ? "AA" : "Bajo"} {ratioFixed}:1
+      </span>
+      {label && <span className="diseno-contrast-field-label">{label}</span>}
+    </div>
+  );
+};
+
+// TokenColorField component
+const TokenColorField = ({ label, desc, value, onChange, contrastWith, contrastLabel }) => {
+  const safeHex = (value && /^#[0-9A-Fa-f]{3,6}$/.test(value.trim())) ? value.trim() : "#d92b38";
+  return (
+    <div className="diseno-token-field">
+      {label && (
+        <div className="diseno-token-field__header">
+          <label className="diseno-token-field__label">{label}</label>
+          {contrastWith && <ContrastBadge fg={safeHex} bg={contrastWith} label={contrastLabel} />}
+        </div>
+      )}
+      {desc && <p className="diseno-token-field__desc">{desc}</p>}
+      <div className="diseno-token-field__row">
+        <div className="diseno-token-field__swatch" style={{ backgroundColor: value || safeHex }}>
+          <input
+            type="color"
+            value={safeHex}
+            onChange={(e) => onChange(e.target.value)}
+            className="diseno-token-field__native"
+            title="Seleccionar color"
+          />
+        </div>
+        <input
+          type="text"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#000000"
+          className="admin-field__input diseno-token-field__text"
+        />
+        {contrastWith && <ContrastBadge fg={safeHex} bg={contrastWith} label={contrastLabel} />}
+      </div>
+    </div>
+  );
+};
+
+// Accordion section
+const AccordionSection = ({ title, icon: Icon, children, defaultOpen }) => {
+  const [open, setOpen] = useState(defaultOpen || false);
+  return (
+    <div className="diseno-accordion">
+      <button
+        type="button"
+        className="diseno-accordion__trigger"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <span className="diseno-accordion__title">
+          {Icon && <Icon size={15} />} {title}
+        </span>
+        {open ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+      </button>
+      {open && <div className="diseno-accordion__content">{children}</div>}
+    </div>
+  );
+};
+
+// MAIN COMPONENT
 const Diseno = () => {
   const [form, setForm] = useState(null);
   const [products, setProducts] = useState([]);
@@ -330,9 +340,9 @@ const Diseno = () => {
   const [settings, setSettings] = useState({});
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
-  const [previewDevice, setPreviewDevice] = useState("desktop"); // desktop | mobile
-  const [previewMode, setPreviewMode] = useState("section"); // section | full
-  const [activeTab, setActiveTab] = useState("presets"); // presets | hero | promos | combos | menu | footer | typography
+  const [previewDevice, setPreviewDevice] = useState("desktop");
+  const [previewMode, setPreviewMode] = useState("section");
+  const [activeTab, setActiveTab] = useState("temas");
 
   const heroRef = useRef(null);
   const promosRef = useRef(null);
@@ -341,26 +351,17 @@ const Diseno = () => {
   const footerRef = useRef(null);
   const viewportRef = useRef(null);
 
-  // Carga de configuración de diseño y catálogo real de la Base de Datos
   const cargarDatos = useCallback(async () => {
     try {
       const [d, prods, cats, sett] = await Promise.all([
-        getCatalogDesign(),
-        getProducts(),
-        getCategories(),
-        getSettings(),
+        getCatalogDesign(), getProducts(), getCategories(), getSettings(),
       ]);
       setForm(d || { ...DEFAULT_CATALOG_DESIGN });
       setProducts(prods || []);
       setCategories(cats || []);
       setSettings(sett || {});
     } catch (e) {
-      Swal.fire({
-        title: "Error al cargar datos del catálogo",
-        text: e.message,
-        icon: "error",
-        confirmButtonColor: "#3D2314",
-      });
+      Swal.fire({ title: "Error al cargar datos", text: e.message, icon: "error", confirmButtonColor: "#3D2314" });
     } finally {
       setCargando(false);
     }
@@ -368,76 +369,40 @@ const Diseno = () => {
 
   useEffect(() => {
     cargarDatos();
-
-    // Sincronización en tiempo real con Supabase
-    const unsubscribe = subscribeToCatalog(() => {
-      cargarDatos();
-    });
-
+    const unsubscribe = subscribeToCatalog(() => cargarDatos());
     return () => unsubscribe();
   }, [cargarDatos]);
 
-  // Desplazamiento automático suave a la sección en el simulador completo
   useEffect(() => {
     if (previewMode !== "full") return;
     const timer = setTimeout(() => {
-      const refMap = {
-        hero: heroRef,
-        promos: promosRef,
-        menu: menuRef,
-        combos: combosRef,
-        footer: footerRef,
-      };
+      const refMap = { hero: heroRef, promos: promosRef, menu: menuRef, combos: combosRef, footer: footerRef };
       const target = refMap[activeTab];
-      if (target?.current) {
-        target.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      if (target?.current) target.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 120);
     return () => clearTimeout(timer);
   }, [activeTab, previewMode]);
 
   const estadoNegocio = useMemo(() => estaAbiertoSegunHorario(settings), [settings]);
 
-  const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const applyPreset = (preset) => {
-    setForm((prev) => ({
-      ...prev,
-      ...preset.values,
-    }));
-    Swal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "success",
-      title: `Tema "${preset.name}" aplicado al catálogo`,
-      showConfirmButton: false,
-      timer: 1800,
-    });
+    setForm(prev => ({ ...prev, ...preset.values }));
+    Swal.fire({ toast: true, position: "top-end", icon: "success", title: "Tema aplicado: " + preset.name, showConfirmButton: false, timer: 1800 });
   };
 
   const resetToDefaults = () => {
     Swal.fire({
-      title: "¿Restablecer diseño completo?",
-      text: "Se volverán a colocar los colores y secciones originales por defecto.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, restablecer",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d92b38",
-      cancelButtonColor: "#666",
-    }).then((res) => {
+      title: "Restablecer diseno?",
+      text: "Se restauraran los colores y estilos originales.",
+      icon: "warning", showCancelButton: true,
+      confirmButtonText: "Si, restablecer", cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d92b38", cancelButtonColor: "#666",
+    }).then(res => {
       if (res.isConfirmed) {
         setForm({ ...DEFAULT_CATALOG_DESIGN });
-        Swal.fire({
-          toast: true,
-          position: "top-end",
-          icon: "info",
-          title: "Diseño restablecido a valores por defecto",
-          showConfirmButton: false,
-          timer: 1800,
-        });
+        Swal.fire({ toast: true, position: "top-end", icon: "info", title: "Diseno restablecido", showConfirmButton: false, timer: 1600 });
       }
     });
   };
@@ -447,490 +412,424 @@ const Diseno = () => {
     setGuardando(true);
     try {
       await updateCatalogDesign(form);
-      Swal.fire({
-        icon: "success",
-        title: "¡Diseño Integral Guardado!",
-        text: "Hero, promociones, combos, menú y pie de página actualizados en tiempo real.",
-        confirmButtonColor: "#3D2314",
-      });
+      Swal.fire({ icon: "success", title: "Diseno guardado!", text: "Cambios publicados en tiempo real.", confirmButtonColor: "#3D2314" });
     } catch (err) {
-      Swal.fire({
-        title: "No se pudo guardar",
-        text: err.message,
-        icon: "error",
-        confirmButtonColor: "#3D2314",
-      });
+      Swal.fire({ title: "Error al guardar", text: err.message, icon: "error", confirmButtonColor: "#3D2314" });
     } finally {
       setGuardando(false);
     }
   };
 
+  if (cargando || !form) return <LoadingOverlay fullScreen text="Cargando estudio de diseno..." />;
 
-  if (cargando || !form) {
-    return <LoadingOverlay fullScreen text="Cargando estudio de diseño integral…" />;
-  }
+  const TABS = [
+    { id: "temas", label: "Temas & Estilo", icon: Sparkles },
+    { id: "tipografia", label: "Tipografia", icon: Type },
+    { id: "layout", label: "Layout", icon: LayoutGrid },
+    { id: "avanzado", label: "Avanzado", icon: Sliders },
+  ];
 
   return (
     <div className="admin-page admin-page--diseno">
-      {guardando && <LoadingOverlay text="Sincronizando diseño del catálogo completo…" />}
+      {guardando && <LoadingOverlay text="Publicando diseno del catalogo..." />}
 
       <header className="admin-page__header">
         <div className="admin-page__header-title-wrap">
-          <h1 className="admin-page__titulo">Diseño Integral del Catálogo</h1>
-          <p className="admin-page__sub">
-            Personaliza Hero, Promociones, Menú, Combos, Footer y la tipografía en toda la tienda.
-          </p>
+          <h1 className="admin-page__titulo">Personalizador del Catalogo</h1>
+          <p className="admin-page__sub">Configura la apariencia de tu tienda en menos de 2 minutos.</p>
         </div>
-
         <div className="admin-page__header-actions" style={{ display: "flex", gap: "0.5rem" }}>
-          <button
-            type="button"
-            className="admin-btn-ghost"
-            onClick={resetToDefaults}
-            title="Restablecer diseño predeterminado"
-          >
+          <button type="button" className="admin-btn-ghost" onClick={resetToDefaults} title="Restablecer">
             <RotateCcw size={15} /> Restablecer
           </button>
-          <button
-            type="button"
-            className="admin-btn-primary admin-btn-primary--compacto"
-            onClick={guardar}
-            disabled={guardando}
-          >
+          <button type="button" className="admin-btn-primary admin-btn-primary--compacto" onClick={guardar} disabled={guardando}>
             <Save size={15} /> Guardar Todo
           </button>
         </div>
       </header>
 
-      {/* Contenedor Principal */}
       <div className="diseno-workspace">
-        {/* Columna Izquierda: Pestañas y Controles de Configuración */}
+        {/* PANEL IZQUIERDO */}
         <div className="diseno-controls-panel">
-          <nav className="diseno-tabs">
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "presets" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("presets")}
-            >
-              <Sparkles size={16} /> Paletas 1-Clic
-            </button>
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "hero" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("hero")}
-            >
-              <Compass size={16} /> Hero & Header
-            </button>
-
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "menu" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("menu")}
-            >
-              <LayoutGrid size={16} /> Menú & Tarjetas
-            </button>
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "footer" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("footer")}
-            >
-              <Store size={16} /> Footer
-            </button>
-            <button
-              type="button"
-              className={`diseno-tab ${activeTab === "typography" ? "diseno-tab--active" : ""}`}
-              onClick={() => setActiveTab("typography")}
-            >
-              <Type size={16} /> Tipografía & Fondo
-            </button>
+          <nav className="diseno-tabs" role="tablist">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id} type="button" role="tab"
+                aria-selected={activeTab === id}
+                className={"diseno-tab " + (activeTab === id ? "diseno-tab--active" : "")}
+                onClick={() => setActiveTab(id)}
+              >
+                <Icon size={15} /> {label}
+              </button>
+            ))}
           </nav>
 
           <div className="diseno-tab-content admin-card">
-            {/* TAB 1: PRESETS / PALETAS */}
-            {activeTab === "presets" && (
+            {/* TAB TEMAS */}
+            {activeTab === "temas" && (
               <div className="diseno-fields-group">
-                <h3 className="diseno-group-title">
-                  <Sparkles size={16} /> Temas y Paletas Coordinadas (1-Clic)
-                </h3>
-                <p style={{ fontSize: "0.84rem", color: "var(--texto-dim)" }}>
-                  Aplica una estética completa coordinada en todas las secciones de tu tienda instantáneamente.
-                </p>
-
-                <div className="diseno-presets-grid" style={{ marginTop: "1rem" }}>
-                  {PRESETS.map((p) => (
-                    <button
-                      key={p.name}
-                      type="button"
-                      className="diseno-preset-chip"
-                      onClick={() => applyPreset(p)}
-                      title={p.desc}
-                    >
-                      <span className="diseno-preset-emoji">{p.emoji}</span>
-                      <div className="diseno-preset-info">
-                        <strong className="diseno-preset-name">{p.name}</strong>
-                        <span style={{ fontSize: "0.72rem", color: "var(--texto-dim)" }}>{p.desc}</span>
-                        <div className="diseno-preset-colors">
-                          <span style={{ background: p.values.heroBg }} />
-                          <span style={{ background: p.values.cardBg }} />
-                          <span style={{ background: p.values.btnPrimaryBg }} />
-                          <span style={{ background: p.values.textPrimary }} />
+                <div>
+                  <h3 className="diseno-group-title"><Sparkles size={16} /> Temas por Nicho — 1 Clic</h3>
+                  <p className="diseno-group-desc">Cada tema aplica automaticamente colores, fuente y estilos de tu tienda.</p>
+                  <div className="diseno-presets-grid-v2">
+                    {PRESETS.map((p) => (
+                      <button key={p.name} type="button" className="diseno-preset-card" onClick={() => applyPreset(p)} title={p.desc}>
+                        <div className="diseno-preset-card__strip" style={{ background: "linear-gradient(135deg, " + p.bg + " 50%, " + p.accent + " 100%)" }}>
+                          <span className="diseno-preset-card__emoji">{p.emoji}</span>
                         </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: HERO & CABECERA */}
-            {activeTab === "hero" && (
-              <div className="diseno-fields-group">
-                <h3 className="diseno-group-title">
-                  <Compass size={16} /> Personalización del Hero y Encabezado
-                </h3>
-
-                {/* Gradiente / Fondo de Hero */}
-                <GradientPickerField
-                  label="Fondo del Hero Principal (Gradiente o Color Sólido)"
-                  value={form.heroBg}
-                  onChange={(v) => handleChange("heroBg", v)}
-                  description="Fondo de la portada principal con el carrusel de postres destacados."
-                />
-
-                <ColorPickerField
-                  label="Fondo del Header Glass (Barra de Navegación)"
-                  value={form.heroHeaderBg}
-                  onChange={(v) => handleChange("heroHeaderBg", v)}
-                  placeholder="rgba(255, 255, 255, 0.72)"
-                  description="Efecto cristal translúcido detrás del logotipo y botón de ver menú."
-                />
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label='Botón "Ver Menú" (Fondo)'
-                    value={form.heroCtaBg}
-                    onChange={(v) => handleChange("heroCtaBg", v)}
-                  />
-                  <ColorPickerField
-                    label='Botón "Ver Menú" (Texto)'
-                    value={form.heroCtaText}
-                    onChange={(v) => handleChange("heroCtaText", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Botón Flotante Carrito (Fondo)"
-                    value={form.heroFloatCartBg}
-                    onChange={(v) => handleChange("heroFloatCartBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Botón Flotante Carrito (Texto / Icono)"
-                    value={form.heroFloatCartText}
-                    onChange={(v) => handleChange("heroFloatCartText", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label='Badge "Destacado" en Portada (Fondo)'
-                    value={form.heroBadgeBg}
-                    onChange={(v) => handleChange("heroBadgeBg", v)}
-                    placeholder="rgba(255, 255, 255, 0.92)"
-                  />
-                  <ColorPickerField
-                    label='Badge "Destacado" en Portada (Texto)'
-                    value={form.heroBadgeText}
-                    onChange={(v) => handleChange("heroBadgeText", v)}
-                  />
-                </div>
-              </div>
-            )}
-
-
-
-            {/* TAB 5: MENÚ & TARJETAS */}
-            {activeTab === "menu" && (
-              <div className="diseno-fields-group">
-                <h3 className="diseno-group-title">
-                  <LayoutGrid size={16} /> Estilos del Menú y Tarjetas de Productos
-                </h3>
-
-                {/* Fondo de Menú con GradientPickerField */}
-                <GradientPickerField
-                  label="Fondo de la Sección del Menú"
-                  value={form.bgColor}
-                  onChange={(v) => handleChange("bgColor", v)}
-                  description="Fondo principal que envuelve toda la lista de postres y productos."
-                />
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Fondo de Tarjeta de Producto"
-                    value={form.cardBg}
-                    onChange={(v) => handleChange("cardBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Color de Bordes de Tarjeta"
-                    value={form.borderColor}
-                    onChange={(v) => handleChange("borderColor", v)}
-                    placeholder="rgba(61, 35, 20, 0.08)"
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Color de Títulos y Nombres"
-                    value={form.textPrimary}
-                    onChange={(v) => handleChange("textPrimary", v)}
-                  />
-                  <ColorPickerField
-                    label="Color de Descripciones y Detalles"
-                    value={form.textMuted}
-                    onChange={(v) => handleChange("textMuted", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Boton + Agregar (Fondo)"
-                    value={form.btnPrimaryBg}
-                    onChange={(v) => handleChange("btnPrimaryBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Boton + Agregar (Texto)"
-                    value={form.btnPrimaryText}
-                    onChange={(v) => handleChange("btnPrimaryText", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Etiqueta de Precio (Fondo)"
-                    value={form.priceTagBg}
-                    onChange={(v) => handleChange("priceTagBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Etiqueta de Precio (Texto)"
-                    value={form.priceTagText}
-                    onChange={(v) => handleChange("priceTagText", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Insignia Popular (Fondo)"
-                    value={form.badgePopularBg}
-                    onChange={(v) => handleChange("badgePopularBg", v)}
-                  />
-                  <ColorPickerField
-                    label="Insignia Popular (Texto)"
-                    value={form.badgePopularText}
-                    onChange={(v) => handleChange("badgePopularText", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Barra de Categorías (Fondo)"
-                    value={form.categoryBarBg}
-                    onChange={(v) => handleChange("categoryBarBg", v)}
-                    placeholder="rgba(255, 255, 255, 0.7)"
-                  />
-                  <ColorPickerField
-                    label="Categoría Activa (Fondo Botón)"
-                    value={form.categoryActiveBg}
-                    onChange={(v) => handleChange("categoryActiveBg", v)}
-                  />
-                </div>
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Categoría Activa (Texto Botón)"
-                    value={form.categoryActiveText}
-                    onChange={(v) => handleChange("categoryActiveText", v)}
-                  />
-                  <ColorPickerField
-                    label="Categorías Inactivas (Texto)"
-                    value={form.categoryInactiveText}
-                    onChange={(v) => handleChange("categoryInactiveText", v)}
-                  />
-                </div>
-
-                {/* Disposición y Columnas */}
-                <h4 style={{ fontSize: "0.88rem", color: "var(--acento)", marginTop: "0.5rem", marginBottom: "0.2rem" }}>
-                  📐 Disposición y Estructura de Cuadrícula
-                </h4>
-
-                <div className="diseno-grid-2">
-                  <label className="admin-field">
-                    <span className="admin-field__label">Columnas en Pantalla Grande (Desktop)</span>
-                    <select
-                      value={form.columnsDesktop}
-                      onChange={(e) => handleChange("columnsDesktop", e.target.value)}
-                      className="admin-field__input"
-                    >
-                      <option value="auto">Automático Adaptable (Min 280px)</option>
-                      <option value="2">2 Columnas (Grandes & Destacadas)</option>
-                      <option value="3">3 Columnas (Equilibrado)</option>
-                      <option value="4">4 Columnas (Compacto)</option>
-                    </select>
-                  </label>
-
-                  <label className="admin-field">
-                    <span className="admin-field__label">Columnas en Celular (Mobile)</span>
-                    <select
-                      value={form.columnsMobile}
-                      onChange={(e) => handleChange("columnsMobile", e.target.value)}
-                      className="admin-field__input"
-                    >
-                      <option value="1">1 Columna (Vertical Clásico)</option>
-                      <option value="2">2 Columnas (Vista Catálogo Compacto)</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div className="diseno-grid-2">
-                  <label className="admin-field">
-                    <span className="admin-field__label">Formato de Tarjeta</span>
-                    <select
-                      value={form.cardLayout}
-                      onChange={(e) => handleChange("cardLayout", e.target.value)}
-                      className="admin-field__input"
-                    >
-                      <option value="vertical">Vertical Estándar (Imagen arriba)</option>
-                      <option value="horizontal">Horizontal Compacto (Imagen lateral)</option>
-                    </select>
-                  </label>
-
-                  <label className="admin-field">
-                    <span className="admin-field__label">Proporción de Imagen</span>
-                    <select
-                      value={form.imageAspectRatio}
-                      onChange={(e) => handleChange("imageAspectRatio", e.target.value)}
-                      className="admin-field__input"
-                    >
-                      <option value="4/3">4:3 (Estándar fotográfico)</option>
-                      <option value="1/1">1:1 (Cuadrada)</option>
-                      <option value="16/9">16:9 (Panorámica)</option>
-                      <option value="16/10">16:10 (Compacta)</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 6: FOOTER */}
-            {activeTab === "footer" && (
-              <div className="diseno-fields-group">
-                <h3 className="diseno-group-title">
-                  <Store size={16} /> Estilos del Footer y Pie de Página
-                </h3>
-
-                {/* Gradiente / Fondo de Footer */}
-                <GradientPickerField
-                  label="Fondo del Footer (Gradiente o Color Sólido)"
-                  value={form.footerBg}
-                  onChange={(v) => handleChange("footerBg", v)}
-                  description="Gradiente o color oscuro/claro para la sección final del catálogo."
-                />
-
-                <div className="diseno-grid-2">
-                  <ColorPickerField
-                    label="Color de Textos del Footer"
-                    value={form.footerText}
-                    onChange={(v) => handleChange("footerText", v)}
-                    placeholder="rgba(255, 255, 255, 0.7)"
-                  />
-                  <ColorPickerField
-                    label="Color de Acento / Enlaces / Marca"
-                    value={form.footerAccent}
-                    onChange={(v) => handleChange("footerAccent", v)}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* TAB 7: TIPOGRAFÍA & FONDO GLOBAL */}
-            {activeTab === "typography" && (
-              <div className="diseno-fields-group">
-                <h3 className="diseno-group-title">
-                  <Type size={16} /> Tipografía & Fondo Global de la Tienda
-                </h3>
-
-                <label className="admin-field">
-                  <span className="admin-field__label">Fuente Tipográfica de la Tienda</span>
-                  <select
-                    value={form.fontFamily}
-                    onChange={(e) => handleChange("fontFamily", e.target.value)}
-                    className="admin-field__input"
-                  >
-                    {FONTS.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.label}
-                      </option>
+                        <div className="diseno-preset-card__body">
+                          <strong className="diseno-preset-card__name">{p.name}</strong>
+                          <span className="diseno-preset-card__desc">{p.desc}</span>
+                          <div className="diseno-preset-card__swatches">
+                            <span style={{ background: p.bg }} title="Fondo" />
+                            <span style={{ background: p.accent }} title="Acento" />
+                            <span style={{ background: p.values.textPrimary }} title="Texto" />
+                            <span style={{ background: p.values.cardBg }} title="Tarjeta" />
+                          </div>
+                        </div>
+                      </button>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                </div>
 
-                {/* Fondo Global de la Tienda */}
-                <GradientPickerField
-                  label="Fondo Global de la Aplicación (Body / Tienda Completa)"
-                  value={form.appBg}
-                  onChange={(v) => handleChange("appBg", v)}
-                  description="Color o gradiente base de fondo en todo el viewport."
-                />
+                <div>
+                  <h3 className="diseno-group-title" style={{ marginTop: "0.5rem" }}><Palette size={16} /> Paleta de Marca — 4 Tokens Globales</h3>
+                  <p className="diseno-group-desc">Estos 4 colores controlan toda la tienda. El sistema propaga los cambios automaticamente.</p>
+                  <div className="diseno-tokens-grid">
+                    <div className="diseno-token-card diseno-token-card--accent">
+                      <div className="diseno-token-card__badge">01</div>
+                      <p className="diseno-token-card__role">Color Primario / Acento</p>
+                      <p className="diseno-token-card__hint">Botones, precios, badges, enlaces</p>
+                      <TokenColorField
+                        label="Color acento"
+                        value={form.btnPrimaryBg}
+                        onChange={(v) => {
+                          handleChange("btnPrimaryBg", v);
+                          handleChange("priceTagBg", v);
+                          handleChange("badgePopularBg", v);
+                          handleChange("categoryActiveBg", v);
+                          handleChange("promotionsAccent", v);
+                          handleChange("combosAccent", v);
+                          handleChange("footerAccent", v);
+                          handleChange("heroCtaBg", v);
+                        }}
+                        contrastWith={form.btnPrimaryText}
+                        contrastLabel="sobre boton"
+                      />
+                      <p className="diseno-token-card__subhint">Texto sobre acento:</p>
+                      <TokenColorField
+                        label=""
+                        value={form.btnPrimaryText}
+                        onChange={(v) => {
+                          handleChange("btnPrimaryText", v);
+                          handleChange("priceTagText", v);
+                          handleChange("badgePopularText", v);
+                          handleChange("categoryActiveText", v);
+                          handleChange("heroCtaText", v);
+                        }}
+                        contrastWith={form.btnPrimaryBg}
+                      />
+                    </div>
+                    <div className="diseno-token-card">
+                      <div className="diseno-token-card__badge">02</div>
+                      <p className="diseno-token-card__role">Fondo General</p>
+                      <p className="diseno-token-card__hint">Fondo de toda la tienda y seccion menu</p>
+                      <TokenColorField
+                        label=""
+                        value={form.bgColor}
+                        onChange={(v) => {
+                          handleChange("bgColor", v);
+                          handleChange("appBg", v);
+                          handleChange("promotionsBg", v);
+                          handleChange("combosBg", v);
+                        }}
+                        contrastWith={form.textPrimary}
+                        contrastLabel="texto/fondo"
+                      />
+                    </div>
+                    <div className="diseno-token-card">
+                      <div className="diseno-token-card__badge">03</div>
+                      <p className="diseno-token-card__role">Tarjetas / Superficies</p>
+                      <p className="diseno-token-card__hint">Fondo de tarjetas de productos</p>
+                      <TokenColorField
+                        label=""
+                        value={form.cardBg}
+                        onChange={(v) => {
+                          handleChange("cardBg", v);
+                          handleChange("promotionsCardBg", v);
+                          handleChange("combosCardBg", v);
+                        }}
+                        contrastWith={form.textPrimary}
+                        contrastLabel="texto/tarjeta"
+                      />
+                    </div>
+                    <div className="diseno-token-card">
+                      <div className="diseno-token-card__badge">04</div>
+                      <p className="diseno-token-card__role">Texto Principal</p>
+                      <p className="diseno-token-card__hint">Titulos, nombres de productos</p>
+                      <TokenColorField
+                        label=""
+                        value={form.textPrimary}
+                        onChange={(v) => { handleChange("textPrimary", v); }}
+                        contrastWith={form.bgColor}
+                        contrastLabel="sobre fondo"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* TAB TIPOGRAFIA */}
+            {activeTab === "tipografia" && (
+              <div className="diseno-fields-group">
+                <h3 className="diseno-group-title"><Type size={16} /> Tipografia y Modo Visual</h3>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.75rem" }}>Fuente Pre-emparejada</p>
+                  <div className="diseno-font-grid">
+                    {FONT_PAIRS.map((f) => (
+                      <button
+                        key={f.id} type="button"
+                        className={"diseno-font-card " + (form.fontFamily === f.id ? "diseno-font-card--active" : "")}
+                        onClick={() => handleChange("fontFamily", f.id)}
+                        style={{ fontFamily: f.preview }}
+                      >
+                        <span className="diseno-font-card__label">{f.label}</span>
+                        <span className="diseno-font-card__name">{f.subtitle}</span>
+                        <span className="diseno-font-card__preview">Aa Bb 123</span>
+                        {form.fontFamily === f.id && <span className="diseno-font-card__check"><Check size={12} /></span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.75rem" }}>Estilo Visual de Tarjetas</p>
+                  <div className="diseno-style-grid">
+                    {CARD_STYLES.map((s) => (
+                      <button
+                        key={s.id} type="button"
+                        className={"diseno-style-btn " + (form.cardShadow === s.id ? "diseno-style-btn--active" : "")}
+                        onClick={() => handleChange("cardShadow", s.id)}
+                      >
+                        <span className="diseno-style-btn__icon">{s.icon}</span>
+                        <span className="diseno-style-btn__label">{s.label}</span>
+                        <span className="diseno-style-btn__desc">{s.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.75rem" }}>Borde Redondeado</p>
+                  <div className="diseno-radius-grid">
+                    {RADIUS_OPTIONS.map((r) => (
+                      <button
+                        key={r.id} type="button"
+                        className={"diseno-radius-btn " + (form.cardRadius === r.id ? "diseno-radius-btn--active" : "")}
+                        onClick={() => handleChange("cardRadius", r.id)}
+                      >
+                        <div className="diseno-radius-btn__preview" style={{ borderRadius: r.preview }} />
+                        <span className="diseno-radius-btn__label">{r.label}</span>
+                        <span className="diseno-radius-btn__val">{r.id}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <AccordionSection title="Fondo Global de la Aplicacion" icon={Layers}>
+                  <GradientPickerField
+                    label="Fondo del Body / App Completa"
+                    value={form.appBg}
+                    onChange={(v) => handleChange("appBg", v)}
+                    description="Color o gradiente base visible en todo el viewport."
+                  />
+                </AccordionSection>
+              </div>
+            )}
+
+            {/* TAB LAYOUT */}
+            {activeTab === "layout" && (
+              <div className="diseno-fields-group">
+                <h3 className="diseno-group-title"><LayoutGrid size={16} /> Estructura y Layout del Catalogo</h3>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.6rem" }}>Columnas en Desktop</p>
+                  <div className="diseno-col-grid">
+                    {DESKTOP_COLS.map((c) => (
+                      <button key={c.id} type="button"
+                        className={"diseno-col-btn " + (form.columnsDesktop === c.id ? "diseno-col-btn--active" : "")}
+                        onClick={() => handleChange("columnsDesktop", c.id)}
+                      >
+                        <span className="diseno-col-btn__icon">{c.icon}</span>
+                        <span className="diseno-col-btn__label">{c.label}</span>
+                        <span className="diseno-col-btn__desc">{c.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.6rem" }}>Columnas en Movil</p>
+                  <div className="diseno-col-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                    {MOBILE_COLS.map((c) => (
+                      <button key={c.id} type="button"
+                        className={"diseno-col-btn " + (form.columnsMobile === c.id ? "diseno-col-btn--active" : "")}
+                        onClick={() => handleChange("columnsMobile", c.id)}
+                      >
+                        <span className="diseno-col-btn__icon">{c.icon}</span>
+                        <span className="diseno-col-btn__label">{c.label}</span>
+                        <span className="diseno-col-btn__desc">{c.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.6rem" }}>Formato de Tarjeta</p>
+                  <div className="diseno-col-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                    {CARD_LAYOUTS.map((l) => (
+                      <button key={l.id} type="button"
+                        className={"diseno-col-btn " + (form.cardLayout === l.id ? "diseno-col-btn--active" : "")}
+                        onClick={() => handleChange("cardLayout", l.id)}
+                      >
+                        <span className="diseno-col-btn__icon">{l.icon}</span>
+                        <span className="diseno-col-btn__label">{l.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="diseno-token-card__hint" style={{ marginBottom: "0.6rem" }}>Proporcion de Imagen</p>
+                  <div className="diseno-ratio-grid">
+                    {ASPECT_RATIOS.map((r) => (
+                      <button key={r.id} type="button"
+                        className={"diseno-ratio-btn " + (form.imageAspectRatio === r.id ? "diseno-ratio-btn--active" : "")}
+                        onClick={() => handleChange("imageAspectRatio", r.id)}
+                      >
+                        <div className="diseno-ratio-btn__preview" style={{ aspectRatio: r.id.replace("/", " / ") }} />
+                        <span className="diseno-ratio-btn__label">{r.label}</span>
+                        <span className="diseno-ratio-btn__desc">{r.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB AVANZADO */}
+            {activeTab === "avanzado" && (
+              <div className="diseno-fields-group">
+                <h3 className="diseno-group-title"><Sliders size={16} /> Ajustes Avanzados por Seccion</h3>
+                <p className="diseno-group-desc">Control granular para disenadores. Modifica colores individuales de cada seccion.</p>
+
+                <AccordionSection title="Hero & Cabecera" icon={Compass}>
+                  <GradientPickerField label="Fondo del Hero" value={form.heroBg} onChange={(v) => handleChange("heroBg", v)} description="Fondo de la portada principal." />
+                  <ColorPickerField label="Header Glass (Barra navegacion)" value={form.heroHeaderBg} onChange={(v) => handleChange("heroHeaderBg", v)} placeholder="rgba(255,255,255,0.72)" description="Efecto cristal translucido detras del logotipo." />
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Boton CTA (Fondo)" value={form.heroCtaBg} onChange={(v) => handleChange("heroCtaBg", v)} />
+                    <ColorPickerField label="Boton CTA (Texto)" value={form.heroCtaText} onChange={(v) => handleChange("heroCtaText", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Carrito Flotante (Fondo)" value={form.heroFloatCartBg} onChange={(v) => handleChange("heroFloatCartBg", v)} />
+                    <ColorPickerField label="Carrito Flotante (Texto)" value={form.heroFloatCartText} onChange={(v) => handleChange("heroFloatCartText", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Badge Destacado (Fondo)" value={form.heroBadgeBg} onChange={(v) => handleChange("heroBadgeBg", v)} placeholder="rgba(255,255,255,0.92)" />
+                    <ColorPickerField label="Badge Destacado (Texto)" value={form.heroBadgeText} onChange={(v) => handleChange("heroBadgeText", v)} />
+                  </div>
+                </AccordionSection>
+
+                <AccordionSection title="Menu y Tarjetas" icon={LayoutGrid}>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Fondo Seccion Menu" value={form.bgColor} onChange={(v) => handleChange("bgColor", v)} />
+                    <ColorPickerField label="Fondo de Tarjeta" value={form.cardBg} onChange={(v) => handleChange("cardBg", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Texto Titulos" value={form.textPrimary} onChange={(v) => handleChange("textPrimary", v)} />
+                    <ColorPickerField label="Texto Descripciones" value={form.textMuted} onChange={(v) => handleChange("textMuted", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Boton + Agregar (Fondo)" value={form.btnPrimaryBg} onChange={(v) => handleChange("btnPrimaryBg", v)} />
+                    <ColorPickerField label="Boton + Agregar (Texto)" value={form.btnPrimaryText} onChange={(v) => handleChange("btnPrimaryText", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Precio (Fondo)" value={form.priceTagBg} onChange={(v) => handleChange("priceTagBg", v)} />
+                    <ColorPickerField label="Precio (Texto)" value={form.priceTagText} onChange={(v) => handleChange("priceTagText", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Badge Popular (Fondo)" value={form.badgePopularBg} onChange={(v) => handleChange("badgePopularBg", v)} />
+                    <ColorPickerField label="Badge Popular (Texto)" value={form.badgePopularText} onChange={(v) => handleChange("badgePopularText", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Barra Categorias (Fondo)" value={form.categoryBarBg} onChange={(v) => handleChange("categoryBarBg", v)} placeholder="rgba(255,255,255,0.7)" />
+                    <ColorPickerField label="Categoria Activa (Fondo)" value={form.categoryActiveBg} onChange={(v) => handleChange("categoryActiveBg", v)} />
+                  </div>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Categoria Activa (Texto)" value={form.categoryActiveText} onChange={(v) => handleChange("categoryActiveText", v)} />
+                    <ColorPickerField label="Categorias Inactivas (Texto)" value={form.categoryInactiveText} onChange={(v) => handleChange("categoryInactiveText", v)} />
+                  </div>
+                  <ColorPickerField label="Color de Bordes" value={form.borderColor} onChange={(v) => handleChange("borderColor", v)} placeholder="rgba(61,35,20,0.08)" />
+                </AccordionSection>
+
+                <AccordionSection title="Boton Ver Detalles" icon={Eye}>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Fondo" value={form.btnDetailsBg} onChange={(v) => handleChange("btnDetailsBg", v)} />
+                    <ColorPickerField label="Texto" value={form.btnDetailsText} onChange={(v) => handleChange("btnDetailsText", v)} />
+                  </div>
+                  <ColorPickerField label="Borde" value={form.btnDetailsBorder} onChange={(v) => handleChange("btnDetailsBorder", v)} placeholder="rgba(255,255,255,0.15)" />
+                </AccordionSection>
+
+                <AccordionSection title="Promociones" icon={Tag}>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Fondo Seccion" value={form.promotionsBg} onChange={(v) => handleChange("promotionsBg", v)} />
+                    <ColorPickerField label="Fondo Tarjeta" value={form.promotionsCardBg} onChange={(v) => handleChange("promotionsCardBg", v)} />
+                  </div>
+                  <ColorPickerField label="Color de Acento" value={form.promotionsAccent} onChange={(v) => handleChange("promotionsAccent", v)} />
+                </AccordionSection>
+
+                <AccordionSection title="Combos & Packs" icon={Gift}>
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Fondo Seccion" value={form.combosBg} onChange={(v) => handleChange("combosBg", v)} />
+                    <ColorPickerField label="Fondo Tarjeta" value={form.combosCardBg} onChange={(v) => handleChange("combosCardBg", v)} />
+                  </div>
+                  <ColorPickerField label="Color de Acento" value={form.combosAccent} onChange={(v) => handleChange("combosAccent", v)} />
+                </AccordionSection>
+
+                <AccordionSection title="Footer / Pie de Pagina" icon={Store}>
+                  <GradientPickerField label="Fondo del Footer" value={form.footerBg} onChange={(v) => handleChange("footerBg", v)} description="Gradiente o color para la seccion final." />
+                  <div className="diseno-grid-2">
+                    <ColorPickerField label="Textos del Footer" value={form.footerText} onChange={(v) => handleChange("footerText", v)} placeholder="rgba(255,255,255,0.7)" />
+                    <ColorPickerField label="Acento / Marca" value={form.footerAccent} onChange={(v) => handleChange("footerAccent", v)} />
+                  </div>
+                </AccordionSection>
+              </div>
+            )}
+
           </div>
         </div>
 
-        {/* Columna Derecha: LIVE PREVIEW INTERACTIVO INTEGRAL (CONECTADO A BD) */}
+        {/* PANEL DERECHO: SIMULADOR */}
         <aside className="diseno-preview-panel">
           <div className="diseno-preview-header">
-            <div className="diseno-preview-title">
-              <Eye size={16} />
-              <span>Simulador en Vivo (Datos Reales BD)</span>
-            </div>
-
+            <div className="diseno-preview-title"><Eye size={16} /><span>Vista Previa en Vivo</span></div>
             <div className="diseno-preview-controls-row">
-              {/* Selector de Modo: Sección vs Catálogo Completo */}
               <div className="diseno-mode-toggle">
-                <button
-                  type="button"
-                  className={`diseno-mode-btn ${previewMode === "section" ? "diseno-mode-btn--active" : ""}`}
-                  onClick={() => setPreviewMode("section")}
-                  title="Ver únicamente la sección activa que estás modificando"
-                >
-                  <Focus size={13} /> Sección Activa
+                <button type="button" className={"diseno-mode-btn " + (previewMode === "section" ? "diseno-mode-btn--active" : "")} onClick={() => setPreviewMode("section")} title="Seccion activa">
+                  <Focus size={13} /> Seccion
                 </button>
-                <button
-                  type="button"
-                  className={`diseno-mode-btn ${previewMode === "full" ? "diseno-mode-btn--active" : ""}`}
-                  onClick={() => setPreviewMode("full")}
-                  title="Ver todo el catálogo secuencial con auto-scroll a la sección"
-                >
-                  <Globe size={13} /> Catálogo Completo
+                <button type="button" className={"diseno-mode-btn " + (previewMode === "full" ? "diseno-mode-btn--active" : "")} onClick={() => setPreviewMode("full")} title="Catalogo completo">
+                  <Globe size={13} /> Completo
                 </button>
               </div>
-
-              {/* Selector de Dispositivo: Desktop vs Móvil */}
               <div className="diseno-device-toggle">
-                <button
-                  type="button"
-                  className={`diseno-device-btn ${previewDevice === "desktop" ? "diseno-device-btn--active" : ""}`}
-                  onClick={() => setPreviewDevice("desktop")}
-                  title="Vista Desktop"
-                >
+                <button type="button" className={"diseno-device-btn " + (previewDevice === "desktop" ? "diseno-device-btn--active" : "")} onClick={() => setPreviewDevice("desktop")} title="Desktop">
                   <Monitor size={14} /> Desktop
                 </button>
-                <button
-                  type="button"
-                  className={`diseno-device-btn ${previewDevice === "mobile" ? "diseno-device-btn--active" : ""}`}
-                  onClick={() => setPreviewDevice("mobile")}
-                  title="Vista Móvil"
-                >
-                  <Smartphone size={14} /> Móvil
+                <button type="button" className={"diseno-device-btn " + (previewDevice === "mobile" ? "diseno-device-btn--active" : "")} onClick={() => setPreviewDevice("mobile")} title="Movil">
+                  <Smartphone size={14} /> Movil
                 </button>
               </div>
             </div>
@@ -938,150 +837,49 @@ const Diseno = () => {
 
           <div
             ref={viewportRef}
-            className={`diseno-preview-viewport ${previewDevice === "mobile" ? "diseno-preview-viewport--mobile" : ""}`}
-            style={{
-              backgroundColor: form.appBg || "#fdfbf7",
-              fontFamily: form.fontFamily,
-            }}
+            className={"diseno-preview-viewport " + (previewDevice === "mobile" ? "diseno-preview-viewport--mobile" : "")}
+            style={{ backgroundColor: form.appBg || "#fdfbf7", fontFamily: form.fontFamily }}
           >
-            {/* MODO 1: SECCIÓN ACTIVA ESPECÍFICA */}
             {previewMode === "section" && (
               <div>
-                {activeTab === "hero" && (
+                {(activeTab === "temas" || activeTab === "tipografia") && (
                   <div>
-                    <div className="diseno-section-badge">
-                      <Compass size={14} /> Vista de Sección: Hero & Header Principal
-                    </div>
-                    <Hero
-                      cartCount={2}
-                      onOpenCart={() => {}}
-                      estadoNegocio={estadoNegocio}
-                      design={form}
-                      products={products}
-                      settings={settings}
-                    />
-                  </div>
-                )}
-
-                {activeTab === "promos" && (
-                  <div>
-                    <div className="diseno-section-badge">
-                      <Tag size={14} /> Vista de Sección: Promociones & Ofertas
-                    </div>
-                    {form.showPromotions === false ? (
-                      <div style={{ textAlign: "center", padding: "2.5rem 1rem", background: "rgba(211, 47, 47, 0.08)", borderRadius: "14px", color: "#d32f2f", border: "1px dashed rgba(211, 47, 47, 0.3)" }}>
-                        <Tag size={32} style={{ margin: "0 auto 0.5rem" }} />
-                        <strong style={{ display: "block", fontSize: "0.95rem" }}>Sección de Promociones Oculta</strong>
-                        <span style={{ fontSize: "0.8rem", opacity: 0.85 }}>Activa el interruptor en la pestaña de la izquierda para mostrarla en la tienda.</span>
-                      </div>
-                    ) : (
-                      <Promociones design={form} />
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "combos" && (
-                  <div>
-                    <div className="diseno-section-badge">
-                      <Gift size={14} /> Vista de Sección: Combos & Packs para Compartir
-                    </div>
-                    {form.showCombos === false ? (
-                      <div style={{ textAlign: "center", padding: "2.5rem 1rem", background: "rgba(211, 47, 47, 0.08)", borderRadius: "14px", color: "#d32f2f", border: "1px dashed rgba(211, 47, 47, 0.3)" }}>
-                        <Gift size={32} style={{ margin: "0 auto 0.5rem" }} />
-                        <strong style={{ display: "block", fontSize: "0.95rem" }}>Sección de Combos Oculta</strong>
-                        <span style={{ fontSize: "0.8rem", opacity: 0.85 }}>Activa el interruptor en la pestaña de la izquierda para mostrarla en la tienda.</span>
-                      </div>
-                    ) : (
-                      <Combos design={form} onAddToCart={() => {}} />
-                    )}
-                  </div>
-                )}
-
-                {activeTab === "menu" && (
-                  <div>
-                    <div className="diseno-section-badge">
-                      <LayoutGrid size={14} /> Vista de Sección: Menú Digital & Tarjetas ({products.length} productos reales en BD)
-                    </div>
-                    <Menu
-                      data={products}
-                      categories={categories}
-                      selectedProduct={null}
-                      setSelectedProduct={() => {}}
-                      addToCart={() => {}}
-                      design={form}
-                    />
-                  </div>
-                )}
-
-                {activeTab === "footer" && (
-                  <div>
-                    <div className="diseno-section-badge">
-                      <Store size={14} /> Vista de Sección: Pie de Página (Footer)
-                    </div>
+                    <div className="diseno-section-badge"><Sparkles size={14} /> Vista Global: Tema Completo</div>
+                    <Hero cartCount={1} onOpenCart={() => {}} estadoNegocio={estadoNegocio} design={form} products={products} settings={settings} />
+                    <Menu data={products.slice(0, 4)} categories={categories} selectedProduct={null} setSelectedProduct={() => {}} addToCart={() => {}} design={form} />
                     <Footer settings={settings} design={form} />
                   </div>
                 )}
-
-                {(activeTab === "presets" || activeTab === "typography") && (
+                {activeTab === "layout" && (
                   <div>
-                    <div className="diseno-section-badge">
-                      <Sparkles size={14} /> Vista de Conjunto: {activeTab === "presets" ? "Paleta Global Aplicada" : "Tipografía & Fondo"}
-                    </div>
-                    <Hero
-                      cartCount={1}
-                      onOpenCart={() => {}}
-                      estadoNegocio={estadoNegocio}
-                      design={form}
-                      products={products}
-                      settings={settings}
-                    />
-                    <Menu
-                      data={products.slice(0, 4)}
-                      categories={categories}
-                      selectedProduct={null}
-                      setSelectedProduct={() => {}}
-                      addToCart={() => {}}
-                      design={form}
-                    />
+                    <div className="diseno-section-badge"><LayoutGrid size={14} /> Menu y Tarjetas ({products.length} productos)</div>
+                    <Menu data={products} categories={categories} selectedProduct={null} setSelectedProduct={() => {}} addToCart={() => {}} design={form} />
+                  </div>
+                )}
+                {activeTab === "avanzado" && (
+                  <div>
+                    <div className="diseno-section-badge"><Sliders size={14} /> Vista: Catalogo Completo</div>
+                    <Hero cartCount={2} onOpenCart={() => {}} estadoNegocio={estadoNegocio} design={form} products={products} settings={settings} />
+                    <Menu data={products.slice(0, 6)} categories={categories} selectedProduct={null} setSelectedProduct={() => {}} addToCart={() => {}} design={form} />
                     <Footer settings={settings} design={form} />
                   </div>
                 )}
               </div>
             )}
-
-            {/* MODO 2: CATÁLOGO COMPLETO SECUENCIAL CON AUTO-SCROLL */}
             {previewMode === "full" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <div ref={heroRef} style={{ scrollMarginTop: "15px" }}>
-                  <Hero
-                    cartCount={1}
-                    onOpenCart={() => {}}
-                    estadoNegocio={estadoNegocio}
-                    design={form}
-                    products={products}
-                    settings={settings}
-                  />
+                  <Hero cartCount={1} onOpenCart={() => {}} estadoNegocio={estadoNegocio} design={form} products={products} settings={settings} />
                 </div>
-
                 <div ref={promosRef} style={{ scrollMarginTop: "15px" }}>
                   <Promociones design={form} />
                 </div>
-
                 <div ref={menuRef} style={{ scrollMarginTop: "15px" }}>
-                  <Menu
-                    data={products}
-                    categories={categories}
-                    selectedProduct={null}
-                    setSelectedProduct={() => {}}
-                    addToCart={() => {}}
-                    design={form}
-                  />
+                  <Menu data={products} categories={categories} selectedProduct={null} setSelectedProduct={() => {}} addToCart={() => {}} design={form} />
                 </div>
-
                 <div ref={combosRef} style={{ scrollMarginTop: "15px" }}>
                   <Combos design={form} onAddToCart={() => {}} />
                 </div>
-
                 <div ref={footerRef} style={{ scrollMarginTop: "15px" }}>
                   <Footer settings={settings} design={form} />
                 </div>

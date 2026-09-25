@@ -44,6 +44,55 @@ const resumen = (p) => {
   return texto.length > 44 ? texto.slice(0, 44) + "…" : texto;
 };
 
+// Utilidades para determinar la urgencia del agendamiento
+const getAgendadoDate = (p) => {
+  let text = p.observaciones || "";
+  if (!text.includes("AGENDADO PARA:")) {
+    if (p.items) {
+      const item = p.items.find(i => i.observaciones && i.observaciones.includes("AGENDADO PARA:"));
+      if (item) text = item.observaciones;
+    }
+  }
+  const match = text.match(/AGENDADO PARA: (\d{4}-\d{2}-\d{2})/);
+  if (match) {
+    const [y, m, d] = match[1].split('-');
+    return new Date(y, m - 1, d);
+  }
+  return null;
+};
+
+const getAgendadoInfo = (p) => {
+  const agendadoDate = getAgendadoDate(p);
+  if (!agendadoDate) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Calcular inicio (lunes) y fin (domingo) de esta semana
+  const currentDay = today.getDay(); // 0 = Domingo
+  const distanceToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() + distanceToMonday);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const aDate = new Date(agendadoDate);
+  aDate.setHours(0, 0, 0, 0);
+
+  if (aDate.getTime() === tomorrow.getTime()) {
+    return { clase: "agendado-manana", label: "Para Mañana", color: "#facc15", text: "#111" }; // Amarillo
+  } else if (aDate.getTime() >= startOfWeek.getTime() && aDate.getTime() <= endOfWeek.getTime()) {
+    return { clase: "agendado-semana", label: "Esta Semana", color: "#3b82f6", text: "#fff" }; // Azul
+  } else {
+    return { clase: "agendado-futuro", label: "Más Adelante", color: "#22c55e", text: "#fff" }; // Verde
+  }
+};
+
 //-----------------------------------------
 const Pedidos = () => {
   const [pedidos, setPedidos] = useState(null);
@@ -286,11 +335,13 @@ const Pedidos = () => {
         ) : (
           paginados.map((p) => {
             const paso = SIGUIENTE[p.estado];
+            const isAgendadoStr = p.observaciones?.includes("AGENDADO PARA:") || p.items?.some(i => i.observaciones?.includes("AGENDADO PARA:"));
+            const agendadoInfo = (filtro === "agendados" || isAgendadoStr) ? getAgendadoInfo(p) : null;
 
             return (
               <div
                 key={p.id}
-                className={`adm-ped-card adm-ped-card--clickable ${p.estado === "cancelado" ? "adm-ped-card--cancelado" : ""}`}
+                className={`adm-ped-card adm-ped-card--clickable ${p.estado === "cancelado" ? "adm-ped-card--cancelado" : ""} ${agendadoInfo ? agendadoInfo.clase : ""}`}
                 onClick={() => setDetalle(p)}
               >
                 <div className="adm-ped-card__header">
@@ -299,6 +350,11 @@ const Pedidos = () => {
                     <span className="adm-ped-card__fecha">
                       {new Date(p.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
                     </span>
+                    {agendadoInfo && (
+                      <span className="adm-ped__badge-agendado" style={{ backgroundColor: agendadoInfo.color, color: agendadoInfo.text }}>
+                        <Calendar size={11} style={{ marginRight: '2px' }}/> {agendadoInfo.label}
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '-5px' }}>
                     <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>

@@ -23,15 +23,21 @@ const NotificationBell = () => {
     const unsubscribe = subscribeToOrders((evento, pedido) => {
       if (evento === "insert") {
         setPedidos((prev) => (prev ? [pedido, ...prev] : [pedido]));
-        
-        let isAgendado = pedido.observaciones && pedido.observaciones.includes("AGENDADO PARA:");
-        if (!isAgendado && pedido.items) {
-          isAgendado = pedido.items.some(
-            (item) => item.observaciones && item.observaciones.includes("AGENDADO PARA:")
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const year = tomorrow.getFullYear();
+        const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+        const day = String(tomorrow.getDate()).padStart(2, "0");
+        const searchString = `AGENDADO PARA: ${year}-${month}-${day}`;
+
+        let isAgendadoManana = pedido.observaciones && pedido.observaciones.includes(searchString);
+        if (!isAgendadoManana && pedido.items) {
+          isAgendadoManana = pedido.items.some(
+            (item) => item.observaciones && item.observaciones.includes(searchString)
           );
         }
-        if (isAgendado) {
-          setHasAnimated(false); // Trigger animation & sound only on NEW scheduled orders
+        if (isAgendadoManana) {
+          setHasAnimated(false); // Trigger animation & sound only on NEW scheduled orders for tomorrow
         }
       }
       if (evento === "update") {
@@ -42,17 +48,24 @@ const NotificationBell = () => {
   }, []);
 
   const pendientesAgendados = useMemo(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const day = String(tomorrow.getDate()).padStart(2, "0");
+    const searchString = `AGENDADO PARA: ${year}-${month}-${day}`;
+
     return pedidos.filter((p) => {
       // Ignorar entregados y cancelados
       if (p.estado === "entregado" || p.estado === "cancelado") return false;
       
-      let isAgendado = p.observaciones && p.observaciones.includes("AGENDADO PARA:");
-      if (!isAgendado && p.items) {
-        isAgendado = p.items.some(
-          (item) => item.observaciones && item.observaciones.includes("AGENDADO PARA:")
+      let isAgendadoManana = p.observaciones && p.observaciones.includes(searchString);
+      if (!isAgendadoManana && p.items) {
+        isAgendadoManana = p.items.some(
+          (item) => item.observaciones && item.observaciones.includes(searchString)
         );
       }
-      return isAgendado;
+      return isAgendadoManana;
     });
   }, [pedidos]);
 

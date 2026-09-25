@@ -41,6 +41,7 @@ const NAV_ITEMS = [
 ];
 
 const AdminLayout = () => {
+  const rz = localStorage.getItem("store_razon_social");
   const { session, role } = useAdminSession();
   const { settings } = useCatalog();
   const navigate = useNavigate();
@@ -58,10 +59,10 @@ const AdminLayout = () => {
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   const email = session?.user?.email || "";
-  
+
   // Lógica de bloqueo por falta de pago
   const isSuspended = settings && !settings.isActive;
-  
+
   if (isSuspended && role !== "superadmin") {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", backgroundColor: "#fdf8f5", textAlign: "center", padding: "2rem" }}>
@@ -99,7 +100,7 @@ const AdminLayout = () => {
           </div>
           {!collapsed && (
             <div className="admin-sidebar__brand-text">
-              <span className="admin-sidebar__titulo">Paves Medellin</span>
+              <span className="admin-sidebar__titulo">{rz || "Paves Medellin"}</span>
               <span className="admin-sidebar__subtitulo">Panel Admin</span>
             </div>
           )}
@@ -187,9 +188,9 @@ const AdminLayout = () => {
           <div className="admin-topbar__actions">
             <NotificationBell />
             {email && (
-              <button 
-                type="button" 
-                className="admin-topbar__user-badge" 
+              <button
+                type="button"
+                className="admin-topbar__user-badge"
                 onClick={() => setIsPasswordModalOpen(true)}
                 title="Cambiar contraseña"
                 style={{ background: "none", border: "none", outline: "none", cursor: "pointer", fontFamily: "inherit" }}
@@ -207,10 +208,10 @@ const AdminLayout = () => {
         </main>
       </div>
 
-      <PasswordModal 
-        isOpen={isPasswordModalOpen} 
-        onClose={() => setIsPasswordModalOpen(false)} 
-        email={email} 
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        email={email}
         canChange={settings?.canChangePassword !== false}
       />
     </div>

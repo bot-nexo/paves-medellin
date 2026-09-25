@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  margin-right: 15px;
+
 }
 
 .admin-topbar__bell:hover {
