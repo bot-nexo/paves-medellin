@@ -15,7 +15,8 @@ import {
   Send,
   Clock,
   Store,
-  Check
+  Check,
+  Navigation
 } from "lucide-react";
 import { FaMotorcycle, FaWhatsapp } from "react-icons/fa";
 import "../css/CheckoutModal.css";
@@ -26,6 +27,7 @@ import {
 } from "../utils/price";
 import { info as infoLocal, VALOR_DOMICILIO_DEFAULT } from "../data/menu";
 import { getPaymentMethods } from "../data/dataSource";
+import AddressAutocomplete from "./AddressAutocomplete";
 
 // settings llega del dataSource vía useCatalog (App.jsx); fee/umbral configurables
 const CheckoutModal = ({
@@ -53,6 +55,13 @@ const CheckoutModal = ({
     observaciones: "",
   });
 
+  // ── Estado del delivery dinámico (Mapbox) ─────────────────────────────
+  const [deliveryResult, setDeliveryResult] = useState(null);
+  // deliveryResult = { fee, distanceKm, durationMin, lat, lng, fullAddress, withinCoverage } | null
+
+  const isDynamicDelivery = settings.dynamicDeliveryEnabled &&
+    settings.storeLat && settings.storeLng;
+
   useEffect(() => {
     if (isOpen) {
       getPaymentMethods().then(methods => {
@@ -73,6 +82,7 @@ const CheckoutModal = ({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setDeliveryResult(null);
       try {
         const savedCust = sessionStorage.getItem("paves_customer_info") || localStorage.getItem("paves_customer_info");
         if (savedCust) {
@@ -89,17 +99,42 @@ const CheckoutModal = ({
     }
   }, [isOpen]);
 
+  // Limpiar delivery result cuando cambia de tipo de entrega
+  useEffect(() => {
+    if (!esDomicilio) {
+      setDeliveryResult(null);
+    }
+  }, [esDomicilio]);
+
   if (!isOpen) return null;
+
+  // ── Cálculo del fee efectivo ──────────────────────────────────────────
+  // Si el delivery dinámico está activo y hay resultado, usar ese fee
+  const dynamicFee = (esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage)
+    ? deliveryResult.fee
+    : null;
 
   const {
     subtotal: totalProductos,
     esGratis,
     totalNeto: totalNetoAPagar,
-  } = calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, esDomicilio);
+    effectiveFee,
+  } = calculateOrderSummary(
+    cart,
+    settings?.deliveryFee,
+    settings?.freeDeliveryThreshold,
+    esDomicilio,
+    dynamicFee
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Callback del AddressAutocomplete cuando calcula distancia
+  const handleDeliveryResult = (result) => {
+    setDeliveryResult(result);
   };
 
   const handleNext = (e) => {
@@ -131,12 +166,54 @@ const CheckoutModal = ({
       });
       return;
     }
+
+    // Validar cobertura si delivery dinámico está activo
+    if (esDomicilio && isDynamicDelivery) {
+      if (!deliveryResult) {
+        Swal.fire({
+          title: "Selecciona una dirección",
+          text: "Debes seleccionar una dirección de la lista de sugerencias para calcular el costo del domicilio.",
+          icon: "warning",
+          confirmButtonColor: "#ffcc00",
+          customClass: { popup: "saborio-swal-dark" }
+        });
+        return;
+      }
+      if (!deliveryResult.withinCoverage) {
+        Swal.fire({
+          title: "Fuera de cobertura",
+          html: `Tu dirección está a <strong>${deliveryResult.distanceKm} km</strong> de nuestro local.<br>Nuestro rango máximo de entrega es <strong>${settings.maxDeliveryRadiusKm} km</strong>.`,
+          icon: "error",
+          confirmButtonColor: "#ffcc00",
+          customClass: { popup: "saborio-swal-dark" }
+        });
+        return;
+      }
+    }
+
     setStep(2);
   };
 
   const handleSubmit = () => {
-    onConfirm({ ...formData, observaciones: formData.observaciones || "" });
+    // Incluir metadatos de delivery dinámico en el formData
+    const deliveryMeta = (esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage)
+      ? {
+          lat: deliveryResult.lat,
+          lng: deliveryResult.lng,
+          distanceKm: deliveryResult.distanceKm,
+          durationMin: deliveryResult.durationMin,
+          fullAddress: deliveryResult.fullAddress,
+          calculatedFee: deliveryResult.fee,
+        }
+      : null;
+
+    onConfirm({
+      ...formData,
+      observaciones: formData.observaciones || "",
+      deliveryMeta,
+    });
     setStep(1);
+    setDeliveryResult(null);
     setFormData((prev) => ({
       nombre: "",
       telefono: "",
@@ -147,6 +224,39 @@ const CheckoutModal = ({
       pago: "Efectivo",
       observaciones: "",
     }));
+  };
+
+  // ── Delivery config para el AddressAutocomplete ───────────────────────
+  const deliveryConfig = {
+    storeLat: settings.storeLat,
+    storeLng: settings.storeLng,
+    baseDeliveryFee: settings.baseDeliveryFee,
+    pricePerKm: settings.pricePerKm,
+    maxDeliveryRadiusKm: settings.maxDeliveryRadiusKm,
+    dynamicDeliveryEnabled: settings.dynamicDeliveryEnabled,
+  };
+
+  // ── Texto de domicilio para el resumen ────────────────────────────────
+  const renderDeliveryFeeText = () => {
+    if (!esDomicilio) return <span className="totals-value free">No aplica</span>;
+    if (esGratis) return <span className="totals-value free">GRATIS</span>;
+    
+    if (isDynamicDelivery && deliveryResult?.withinCoverage) {
+      return (
+        <span className="totals-value">
+          {formatCOP(deliveryResult.fee)}
+          <span style={{ fontSize: "0.7rem", color: "#a3a3a3", marginLeft: "0.4rem" }}>
+            ({deliveryResult.distanceKm} km)
+          </span>
+        </span>
+      );
+    }
+    
+    if (isDynamicDelivery && !deliveryResult) {
+      return <span className="totals-value" style={{ color: "#a3a3a3", fontStyle: "italic" }}>Ingresa tu dirección</span>;
+    }
+
+    return <span className="totals-value">{formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT)}</span>;
   };
 
   return (
@@ -262,10 +372,20 @@ const CheckoutModal = ({
                     <>
                       <div className="form-group full-width">
                         <label>Dirección Principal *</label>
-                        <div className="input-with-icon">
-                          <MapPin size={16} className="input-icon" />
-                          <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Ej: Carrera 50 # 49 - 20, Barrio San Pedro" required />
-                        </div>
+                        {isDynamicDelivery ? (
+                          <AddressAutocomplete
+                            value={formData.direccion}
+                            onChange={(text) => setFormData((p) => ({ ...p, direccion: text }))}
+                            onDeliveryResult={handleDeliveryResult}
+                            deliveryConfig={deliveryConfig}
+                            placeholder="Escribe tu dirección y selecciona de la lista"
+                          />
+                        ) : (
+                          <div className="input-with-icon">
+                            <MapPin size={16} className="input-icon" />
+                            <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Ej: Carrera 50 # 49 - 20, Barrio San Pedro" required />
+                          </div>
+                        )}
                       </div>
                       
                       <div className="form-row">
@@ -325,7 +445,11 @@ const CheckoutModal = ({
                   <button type="button" className="btn-volver" onClick={onClose}>
                     <ArrowLeft size={16} /> Volver al Menú
                   </button>
-                  <button type="submit" className="btn-continuar">
+                  <button
+                    type="submit"
+                    className="btn-continuar"
+                    disabled={esDomicilio && isDynamicDelivery && deliveryResult && !deliveryResult.withinCoverage}
+                  >
                     Revisar y Confirmar <ArrowRight size={16} />
                   </button>
                 </div>
@@ -357,6 +481,16 @@ const CheckoutModal = ({
                       {esDomicilio ? `${formData.direccion}${formData.unidad ? `, ${formData.unidad}` : ''}, ${formData.apto}` : textoModalidad}
                     </strong>
                   </div>
+
+                  {/* Mostrar distancia/tiempo si delivery dinámico */}
+                  {esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage && (
+                    <div className="confirm-detail-row">
+                      <span className="detail-label"><Navigation size={14} /> DISTANCIA</span>
+                      <strong className="detail-value" style={{ color: "#25D366" }}>
+                        {deliveryResult.distanceKm} km — ~{deliveryResult.durationMin} min
+                      </strong>
+                    </div>
+                  )}
 
                   <div className="confirm-detail-row">
                     <span className="detail-label"><CreditCard size={14} /> MEDIO DE PAGO</span>
@@ -431,14 +565,26 @@ const CheckoutModal = ({
               </div>
               <div className="totals-row">
                 <span className="totals-label">Domicilio:</span>
-                {!esDomicilio ? (
-                  <span className="totals-value free">No aplica</span>
-                ) : (
-                  <span className={`totals-value ${esGratis ? "free" : ""}`}>
-                    {esGratis ? "GRATIS" : formatCOP(settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT)}
-                  </span>
-                )}
+                {renderDeliveryFeeText()}
               </div>
+
+              {/* Desglose dinámico: tarifa base + km */}
+              {esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage && !esGratis && (
+                <div style={{ paddingLeft: "0.75rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                  <div className="totals-row" style={{ fontSize: "0.78rem" }}>
+                    <span className="totals-label" style={{ fontSize: "0.78rem", color: "#666" }}>Tarifa base:</span>
+                    <span className="totals-value" style={{ fontSize: "0.78rem", color: "#888" }}>{formatCOP(settings.baseDeliveryFee)}</span>
+                  </div>
+                  <div className="totals-row" style={{ fontSize: "0.78rem" }}>
+                    <span className="totals-label" style={{ fontSize: "0.78rem", color: "#666" }}>
+                      {deliveryResult.distanceKm} km × {formatCOP(settings.pricePerKm)}/km:
+                    </span>
+                    <span className="totals-value" style={{ fontSize: "0.78rem", color: "#888" }}>
+                      {formatCOP(Math.round(deliveryResult.distanceKm * settings.pricePerKm / 100) * 100)}
+                    </span>
+                  </div>
+                </div>
+              )}
               
               <div className="totals-divider"></div>
               
@@ -457,6 +603,14 @@ const CheckoutModal = ({
                 <CheckCircle size={12} color="#8a6652" />
                 <span>Pedido seguro por WhatsApp</span>
               </div>
+              {esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage && (
+                <div className="guarantee-item">
+                  <Navigation size={12} color="#25D366" />
+                  <span style={{ color: "#25D366" }}>
+                    Entrega estimada: ~{deliveryResult.durationMin} min
+                  </span>
+                </div>
+              )}
             </div>
 
           </div>

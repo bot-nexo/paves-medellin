@@ -161,14 +161,22 @@ const App = () => {
     const esDomicilio = deliveryData.tipoEntrega === "domicilio";
     const feeBase = settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT;
     const freeThreshold = settings.freeDeliveryThreshold ?? MINIMO_ENVIO_GRATIS_DEFAULT;
-    const summary = calculateOrderSummary(cart, feeBase, freeThreshold, esDomicilio);
+
+    // Si hay delivery dinámico (Mapbox), usar el fee calculado
+    const dynamicFee = (esDomicilio && deliveryData.deliveryMeta?.calculatedFee != null)
+      ? deliveryData.deliveryMeta.calculatedFee
+      : null;
+
+    const summary = calculateOrderSummary(cart, feeBase, freeThreshold, esDomicilio, dynamicFee);
     const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
-      : feeBase;
+      : summary.effectiveFee;
+
     const saved = await createOrder(deliveryData, cart, {
       subtotal: summary.subtotal,
       deliveryFee,
       total: summary.subtotal + deliveryFee,
+      deliveryMeta: deliveryData.deliveryMeta || null,
     });
 
     // Incrementa el contador de compras concretadas del cliente en la BD real de Supabase
@@ -206,6 +214,11 @@ const App = () => {
       message += "• *Direccion:* " + deliveryData.direccion + "\n";
       if (deliveryData.unidad) message += "• *Unidad:* " + deliveryData.unidad + "\n";
       if (deliveryData.apto) message += "• *Apto/Piso:* " + deliveryData.apto + "\n";
+      // Agregar info de distancia si hay delivery dinámico
+      if (deliveryData.deliveryMeta) {
+        message += "• *Distancia:* " + deliveryData.deliveryMeta.distanceKm + " km\n";
+        message += "• *Tiempo est.:* ~" + deliveryData.deliveryMeta.durationMin + " min\n";
+      }
     }
     
     message += "• *Pago:* " + deliveryData.pago + "\n\n";
@@ -262,6 +275,7 @@ const App = () => {
     message +=
       "   Domicilio: " +
       (!esDomicilio ? "No aplica" : esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
+      (esDomicilio && deliveryData.deliveryMeta ? " (" + deliveryData.deliveryMeta.distanceKm + " km)" : "") +
       "\n";
     message += "--------------------------------\n";
     message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";

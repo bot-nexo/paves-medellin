@@ -51,14 +51,19 @@ export const calculateItemUnitPrice = (item) => {
 // ── Full order summary from a cart array ──────────────────────────────────
 // freeThreshold permite inyectar el umbral configurado en el panel admin
 // (settings.freeDeliveryThreshold). Por defecto usa la constante local.
-export const calculateOrderSummary = (cart, valDelivery, freeThreshold, esDomi) => {
+// dynamicFee: si se pasa, usa este valor en vez de valDelivery (domicilio dinámico)
+export const calculateOrderSummary = (cart, valDelivery, freeThreshold, esDomi, dynamicFee = null) => {
   const subtotal = cart.reduce((total, item) => {
     return total + calculateItemUnitPrice(item) * item.quantity;
   }, 0);
 
+  // Si hay un fee dinámico (Mapbox), se usa ese; sino el fijo del admin
+  const effectiveFee = dynamicFee != null ? dynamicFee : valDelivery;
+
   const esGratis = esDomi ? subtotal >= freeThreshold : subtotal;
-  const totalNeto = esGratis ? subtotal : subtotal + valDelivery;
+  const totalNeto = esGratis ? subtotal : subtotal + effectiveFee;
   const faltanteGratis = Math.max(0, freeThreshold - subtotal);
 
-  return { subtotal, esGratis, totalNeto, faltanteGratis };
+  return { subtotal, esGratis, totalNeto, faltanteGratis, effectiveFee };
 };
+

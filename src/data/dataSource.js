@@ -131,6 +131,13 @@ const normalizeSettings = (row) => {
     forceClosed: row.force_closed === true,
     isActive: row.is_active !== false,
     canChangePassword: row.can_change_password !== false,
+    // ── Domicilio Dinámico (Mapbox) ──
+    storeLat: row.store_lat ?? null,
+    storeLng: row.store_lng ?? null,
+    baseDeliveryFee: row.base_delivery_fee ?? 3000,
+    pricePerKm: row.price_per_km ?? 1500,
+    maxDeliveryRadiusKm: row.max_delivery_radius_km ?? 15,
+    dynamicDeliveryEnabled: row.dynamic_delivery_enabled === true,
   };
 };
 
@@ -373,6 +380,13 @@ const buildLocalSettings = () => ({
   forceClosed: false,
   isActive: true,
   canChangePassword: true,
+  // ── Domicilio Dinámico (desactivado por defecto en local) ──
+  storeLat: null,
+  storeLng: null,
+  baseDeliveryFee: 3000,
+  pricePerKm: 1500,
+  maxDeliveryRadiusKm: 15,
+  dynamicDeliveryEnabled: false,
 });
 
 // ── Realtime: refresca el cache cuando el admin cambia algo ──────────────────
@@ -613,12 +627,23 @@ export async function createOrder(deliveryData, cart, totals) {
       p_tipo_entrega: deliveryData.tipoEntrega || "domicilio",
     });
     if (error) throw error;
+
+    // Guardar metadatos de distancia (update no-bloqueante: si falla, no pasa nada)
+    if (numero && totals.deliveryMeta) {
+      supabase.from("orders").update({
+        delivery_lat: totals.deliveryMeta.lat,
+        delivery_lng: totals.deliveryMeta.lng,
+        delivery_distance_km: totals.deliveryMeta.distanceKm,
+        delivery_address_full: totals.deliveryMeta.fullAddress || "",
+      }).eq("numero", numero).then(() => {}).catch(() => {});
+    }
+
     return { ok: true, persisted: true, numero: numero ?? null };
   } catch (eRpc) {
     // 2º intento: insert directo (por si la RPC aún no fue aplicada en la BD).
     // El nº no se conoce aquí, pero el pedido queda registrado igual.
     try {
-      const { error } = await supabase.from("orders").insert({
+      const insertPayload = {
         nombre: deliveryData.nombre,
         telefono: deliveryData.telefono,
         direccion: deliveryData.direccion || "",
@@ -631,7 +656,15 @@ export async function createOrder(deliveryData, cart, totals) {
         delivery_fee: totals.deliveryFee,
         total: totals.total,
         items,
-      });
+      };
+      // Agregar metadatos de distancia si están disponibles
+      if (totals.deliveryMeta) {
+        insertPayload.delivery_lat = totals.deliveryMeta.lat;
+        insertPayload.delivery_lng = totals.deliveryMeta.lng;
+        insertPayload.delivery_distance_km = totals.deliveryMeta.distanceKm;
+        insertPayload.delivery_address_full = totals.deliveryMeta.fullAddress || "";
+      }
+      const { error } = await supabase.from("orders").insert(insertPayload);
       if (error) throw error;
       return { ok: true, persisted: true, numero: null };
     } catch (e2) {
@@ -911,6 +944,13 @@ const COLUMNAS_SETTINGS = {
   canChangePassword: "can_change_password",
   razonSocial: "razon_social",
   slogan: "slogan",
+  // ── Domicilio Dinámico ──
+  storeLat: "store_lat",
+  storeLng: "store_lng",
+  baseDeliveryFee: "base_delivery_fee",
+  pricePerKm: "price_per_km",
+  maxDeliveryRadiusKm: "max_delivery_radius_km",
+  dynamicDeliveryEnabled: "dynamic_delivery_enabled",
 };
 
 /** Actualiza la fila única de settings (upsert: crea la fila si no existe). */
