@@ -210,10 +210,6 @@ const Hero = ({
     }
   };
 
-  useEffect(() => {
-    console.log(settings);
-  }, [settings]);
-
   //******************************* */
   return (
     <section className="saborio-hero-section">

@@ -146,8 +146,6 @@ export async function calculateDistance(storeLat, storeLng, destLat, destLng) {
   const params = new URLSearchParams({
     access_token: MAPBOX_TOKEN,
     annotations: "distance,duration",
-    sources: "0",
-    destinations: "1",
   });
 
   try {
@@ -165,8 +163,10 @@ export async function calculateDistance(storeLat, storeLng, destLat, destLng) {
       return null;
     }
 
-    const distanceMeters = data.distances?.[0]?.[0]; // en metros
-    const durationSeconds = data.durations?.[0]?.[0]; // en segundos
+    // Al no especificar sources/destinations, Mapbox devuelve una matriz 2x2 (A->A, A->B, B->A, B->B)
+    // Queremos la distancia del origen (0) al destino (1)
+    const distanceMeters = data.distances?.[0]?.[1]; // en metros
+    const durationSeconds = data.durations?.[0]?.[1]; // en segundos
 
     if (distanceMeters == null) return null;
 

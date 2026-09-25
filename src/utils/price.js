@@ -60,9 +60,9 @@ export const calculateOrderSummary = (cart, valDelivery, freeThreshold, esDomi, 
   // Si hay un fee dinámico (Mapbox), se usa ese; sino el fijo del admin
   const effectiveFee = dynamicFee != null ? dynamicFee : valDelivery;
 
-  const esGratis = esDomi ? subtotal >= freeThreshold : subtotal;
-  const totalNeto = esGratis ? subtotal : subtotal + effectiveFee;
-  const faltanteGratis = Math.max(0, freeThreshold - subtotal);
+  const esGratis = false;
+  const totalNeto = subtotal + (esDomi ? effectiveFee : 0);
+  const faltanteGratis = 0;
 
   return { subtotal, esGratis, totalNeto, faltanteGratis, effectiveFee };
 };

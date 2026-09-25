@@ -239,7 +239,6 @@ const CheckoutModal = ({
   // ── Texto de domicilio para el resumen ────────────────────────────────
   const renderDeliveryFeeText = () => {
     if (!esDomicilio) return <span className="totals-value free">No aplica</span>;
-    if (esGratis) return <span className="totals-value free">GRATIS</span>;
     
     if (isDynamicDelivery && deliveryResult?.withinCoverage) {
       return (
@@ -569,7 +568,7 @@ const CheckoutModal = ({
               </div>
 
               {/* Desglose dinámico: tarifa base + km */}
-              {esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage && !esGratis && (
+              {esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage && (
                 <div style={{ paddingLeft: "0.75rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                   <div className="totals-row" style={{ fontSize: "0.78rem" }}>
                     <span className="totals-label" style={{ fontSize: "0.78rem", color: "#666" }}>Tarifa base:</span>

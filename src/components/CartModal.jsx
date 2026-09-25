@@ -220,18 +220,6 @@ const CartModal = ({
 
             {/* Footer with Summary */}
             <div className="cart-footer">
-              {settings.offersDelivery !== false && (
-                <div
-                  className={`delivery-badge ${esGratis ? "free" : "pending"}`}
-                >
-                  <FaMotorcycle size={18} />
-                  <span>
-                    {esGratis
-                      ? "¡Si pides a domicilio, el envío es GRATIS! 🎉"
-                      : `Si pides a domicilio, agrega ${formatCOP(faltanteGratis)} más para envío GRATIS`}
-                  </span>
-                </div>
-              )}
 
               <div className="cart-breakdown">
                 <div className="breakdown-row total">
