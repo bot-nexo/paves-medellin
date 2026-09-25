@@ -10,7 +10,6 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
   const [selectedAdiciones, setSelectedAdiciones] = useState({}); // { [id]: item }
   const [selectedSalsas, setSelectedSalsas]       = useState({}); // { [id]: item }
   const [observaciones, setObservaciones]         = useState("");
-
   useEffect(() => {
     if (isOpen && product) {
       if (product.customizations) {

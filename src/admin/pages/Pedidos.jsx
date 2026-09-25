@@ -19,6 +19,7 @@ const ESTADOS = [
   { id: "preparacion", label: "👨‍🍳 En preparación" },
   { id: "camino", label: "🛵 En camino" },
   { id: "entregado", label: "✅ Entregados" },
+  { id: "agendados", label: "📅 Futuros (Agendados)" },
   { id: "cancelado", label: "❌ Cancelados" },
 ];
 
@@ -151,13 +152,19 @@ const Pedidos = () => {
   }, [filtro, filtroMes]);
 
   const conteos = useMemo(() => {
-    const base = { todos: 0 };
+    const base = { todos: 0, agendados: 0 };
     pedidos?.forEach((p) => {
       const d = new Date(p.created_at);
       const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       if (!filtroMes || filtroMes === "todos" || mes === filtroMes) {
         base.todos++;
         base[p.estado] = (base[p.estado] || 0) + 1;
+        
+        let isAgendado = p.observaciones && p.observaciones.includes("AGENDADO PARA:");
+        if (!isAgendado && p.items) {
+          isAgendado = p.items.some(item => item.observaciones && item.observaciones.includes("AGENDADO PARA:"));
+        }
+        if (isAgendado) base.agendados++;
       }
     });
     return base;
@@ -167,7 +174,16 @@ const Pedidos = () => {
     return (pedidos || []).filter((p) => {
       const d = new Date(p.created_at);
       const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const pasaEstado = filtro === "todos" || p.estado === filtro;
+      let pasaEstado = false;
+      if (filtro === "agendados") {
+        pasaEstado = p.observaciones && p.observaciones.includes("AGENDADO PARA:");
+        if (!pasaEstado && p.items) {
+          // Check if any item has "AGENDADO PARA:" in its name or note (since it's appended in buildOrderItems to item's name/notes in legacy versions)
+          pasaEstado = p.items.some(item => item.observaciones && item.observaciones.includes("AGENDADO PARA:"));
+        }
+      } else {
+        pasaEstado = filtro === "todos" || p.estado === filtro;
+      }
       const pasaMes = !filtroMes || filtroMes === "todos" || mes === filtroMes;
       return pasaEstado && pasaMes;
     });
@@ -270,10 +286,10 @@ const Pedidos = () => {
         ) : (
           paginados.map((p) => {
             const paso = SIGUIENTE[p.estado];
-            
+
             return (
-              <div 
-                key={p.id} 
+              <div
+                key={p.id}
                 className={`adm-ped-card adm-ped-card--clickable ${p.estado === "cancelado" ? "adm-ped-card--cancelado" : ""}`}
                 onClick={() => setDetalle(p)}
               >
@@ -284,14 +300,17 @@ const Pedidos = () => {
                       {new Date(p.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '-5px' }}>
                     <span className={`adm-ped__estado adm-ped__estado--${p.estado}`}>
                       {labelEstado(p.estado)}
                     </span>
                     <button
                       type="button"
                       className="admin-btn-ghost"
-                      style={{ padding: '6px', minWidth: 'auto', border: '1px solid rgba(0,0,0,0.1)', background: '#f5f5f5', color: '#333' }}
+                      style={{
+                        padding: '5px', minWidth: 'auto', border: '1px solid rgba(79, 79, 79, 1)',
+                        marginTop: "-7px", background: '#d69f4b', color: '#000000ff'
+                      }}
                       onClick={(e) => { e.stopPropagation(); printTicket(p); }}
                       title="Imprimir Comanda"
                     >

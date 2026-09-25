@@ -143,10 +143,10 @@ const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
             <button
               type="button"
               className="admin-btn-ghost"
-              style={{ color: "#ef4444", borderColor: "transparent" }}
+              style={{ color: "#ef4444", backgroundColor: "#373737ff", borderColor: "transparent" }}
               onClick={() => onCancel(pedido)}
             >
-              Cancelar
+              Cancelar Pedido
             </button>
           )}
 

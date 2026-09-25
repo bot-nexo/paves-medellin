@@ -139,6 +139,7 @@ export const products = [
     precio: 70000,
     imagen: quesilloEntero,
     nota: "LA PUEDES PEDIR CON 24 HORAS DE ANTICIPACIÓN.",
+    tiempo_preparacion_horas: 24,
   },
 
   // --- TORTAS GRANDES / CUMPLEAÑOS ---
@@ -150,6 +151,7 @@ export const products = [
     precio: 65000,
     imagen: tortaGrandeFresa,
     nota: "LA PUEDES PEDIR CON 4 HORAS DE ANTICIPACIÓN.",
+    tiempo_preparacion_horas: 4,
   },
   {
     id: 15,
@@ -159,6 +161,7 @@ export const products = [
     precio: 65000,
     imagen: tortaGrande,
     nota: "LA PUEDES PEDIR CON 4 HORAS DE ANTICIPACIÓN.",
+    tiempo_preparacion_horas: 4,
   },
   {
     id: 16,
@@ -168,6 +171,7 @@ export const products = [
     precio: 90000,
     imagen: tortaTresLeches,
     nota: "LA PUEDES PEDIR CON 24 HORAS DE ANTICIPACIÓN.",
+    tiempo_preparacion_horas: 24,
   },
 
   // --- PAVÉ DE CHOCOLATE ---

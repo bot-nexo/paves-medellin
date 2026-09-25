@@ -580,7 +580,7 @@ export const buildOrderItems = (cart) =>
     salsas: Object.values(item.customizations?.salsas || {}).map(
       (s) => s.nombre || ""
     ),
-    observaciones: item.customizations?.observaciones || "",
+    observaciones: (item.customizations?.deliveryDate ? `AGENDADO PARA: ${item.customizations.deliveryDate} - ${item.customizations.deliveryTime} | ` : '') + (item.customizations?.observaciones || ""),
   }));
 
 /**
@@ -1069,10 +1069,12 @@ export async function submitStoreRating(telefono, rating, comment = "") {
  * Realtime de pedidos para el panel: notifica INSERT (pedido nuevo 🛎️) y
  * UPDATE (cambio de estado desde otro dispositivo). Devuelve unsubscribe.
  */
+let orderSubIdCounter = 0;
 export function subscribeToOrders(fn) {
   if (!isSupabaseConfigured) return () => { };
+  const channelName = `pedidos-changes-${orderSubIdCounter++}`;
   const channel = supabase
-    .channel("pedidos-changes")
+    .channel(channelName)
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "orders" },

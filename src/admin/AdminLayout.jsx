@@ -24,6 +24,7 @@ import { logoutAdmin } from "./sessionStore";
 import { useAdminSession } from "./useAdminSession";
 import useCatalog from "../hooks/useCatalog";
 import PasswordModal from "./PasswordModal";
+import NotificationBell from "./components/NotificationBell";
 import logoImg from "../assets/images/logo.png";
 import "./admin.css";
 
@@ -184,6 +185,7 @@ const AdminLayout = () => {
           </div>
 
           <div className="admin-topbar__actions">
+            <NotificationBell />
             {email && (
               <button 
                 type="button" 

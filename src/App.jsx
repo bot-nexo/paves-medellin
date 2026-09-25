@@ -11,6 +11,7 @@ import Footer from "./components/Footer";
 import BottomNavigation from "./components/BottomNavigation";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
+import CakeScheduleModal from "./components/CakeScheduleModal";
 import CheckoutModal from "./components/CheckoutModal";
 import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
 import ArmaTuPaveModal from "./components/ArmaTuPaveModal";
@@ -243,6 +244,9 @@ const App = () => {
         if (item.customizations.observaciones) {
           message += "   _Nota: " + item.customizations.observaciones + "_\n";
         }
+        if (item.customizations.deliveryDate && item.customizations.deliveryTime) {
+          message += "   *📅 AGENDADO PARA: " + item.customizations.deliveryDate + " - " + item.customizations.deliveryTime + "*\n";
+        }
       }
 
       const subtotal = itemPrice * item.quantity;
@@ -371,12 +375,21 @@ const App = () => {
               settings={settings}
             />
 
-            <CustomizationModal
-              product={productToCustomize}
-              isOpen={isCustomizing}
-              onClose={closeCustomizationModal}
-              onConfirm={confirmCustomization}
-            />
+            {productToCustomize && productToCustomize.tiempo_preparacion_horas > 0 ? (
+              <CakeScheduleModal
+                product={productToCustomize}
+                isOpen={isCustomizing}
+                onClose={closeCustomizationModal}
+                onConfirm={confirmCustomization}
+              />
+            ) : (
+              <CustomizationModal
+                product={productToCustomize}
+                isOpen={isCustomizing}
+                onClose={closeCustomizationModal}
+                onConfirm={confirmCustomization}
+              />
+            )}
 
             <ArmaTuPaveModal
               isOpen={isArmaModalOpen}

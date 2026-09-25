@@ -11,7 +11,6 @@ const CAMPOS_TEXTO = [
   { clave: "phone",      label: "WhatsApp de pedidos",   placeholder: "573157978326", pista: "Con indicativo de país, sin espacios ni '+' (ej: 573157978326). Aquí llegan los pedidos." },
   { clave: "address",    label: "Dirección del negocio",  placeholder: "Cl. 101c #74-40, Pedregal, Medellín" },
   { clave: "mapsGoogle", label: "Enlace de Google Maps",  placeholder: "https://maps.app.goo.gl/…" },
-  { clave: "day1",       label: "Días de atención",       placeholder: "Todos los días" },
   { clave: "instagram",  label: "Instagram (URL)",         placeholder: "https://www.instagram.com/…" },
   { clave: "facebook",   label: "Facebook (URL)",          placeholder: "https://www.facebook.com/…" },
   { clave: "tiktok",     label: "TikTok (URL)",            placeholder: "https://www.tiktok.com/@…" },
@@ -76,6 +75,9 @@ const Empresa = () => {
   // Selectores de hora (estado separado para no mezclar con los campos de texto)
   const [horaApertura, setHoraApertura] = useState("");
   const [horaCierre,   setHoraCierre]   = useState("");
+  // Días de atención
+  const [diasAtencion, setDiasAtencion] = useState([]);
+  
   // Logo
   const [nuevoLogo,   setNuevoLogo]   = useState(null);   // File
   const [vistaPrevia, setVistaPrevia] = useState(null);   // blob URL
@@ -100,6 +102,18 @@ const Empresa = () => {
         const { apertura, cierre } = parsearHorarioASelectores(s.hours1);
         setHoraApertura(apertura);
         setHoraCierre(cierre);
+        
+        // Parsear días de atención (si es un array JSON)
+        try {
+          if (s.day1 && s.day1.startsWith("[")) {
+            setDiasAtencion(JSON.parse(s.day1));
+          } else {
+            setDiasAtencion([1,2,3,4,5,6]); // Default Lunes a Sábado si es un texto legacy
+          }
+        } catch(e) {
+          setDiasAtencion([1,2,3,4,5,6]);
+        }
+
         // Logo actual
         setLogoUrlPrevio(s.logo_url || "");
         setVistaPrevia(s.logo_url || null);
@@ -148,8 +162,9 @@ const Empresa = () => {
     try {
       // Construir el string hours1 desde los selectores
       const hours1 = buildHours1(horaApertura, horaCierre);
+      const day1 = JSON.stringify(diasAtencion);
 
-      const payload = { ...form, hours1 };
+      const payload = { ...form, hours1, day1 };
 
       // Subir logo si hay uno nuevo seleccionado
       if (nuevoLogo) {
@@ -267,6 +282,37 @@ const Empresa = () => {
                 {pista && <span className="adm-modal__precio-hint">{pista}</span>}
               </label>
             ))}
+
+            {/* ── Días de atención (Checkboxes) ───────────────────────── */}
+            <label className="admin-field">
+              <span className="admin-field__label">Días de atención</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "5px" }}>
+                {[
+                  { id: 1, label: "Lunes" },
+                  { id: 2, label: "Martes" },
+                  { id: 3, label: "Miércoles" },
+                  { id: 4, label: "Jueves" },
+                  { id: 5, label: "Viernes" },
+                  { id: 6, label: "Sábado" },
+                  { id: 0, label: "Domingo" },
+                ].map((dia) => (
+                  <label key={dia.id} style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontSize: "0.9rem" }}>
+                    <input
+                      type="checkbox"
+                      checked={diasAtencion.includes(dia.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setDiasAtencion((prev) => [...prev, dia.id]);
+                        } else {
+                          setDiasAtencion((prev) => prev.filter((d) => d !== dia.id));
+                        }
+                      }}
+                    />
+                    {dia.label}
+                  </label>
+                ))}
+              </div>
+            </label>
 
             {/* ── Horario: selectores de apertura y cierre ─────────────── */}
             <label className="admin-field">

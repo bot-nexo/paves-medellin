@@ -281,7 +281,17 @@ const Menu = ({
                   <button
                     key={cat.id}
                     type="button"
-                    onClick={() => setActiveCategory(cat.id)}
+                    onClick={() => {
+                      setActiveCategory(cat.id);
+                      setTimeout(() => {
+                        const el = document.getElementById("catalog-section");
+                        if (el) {
+                          const yOffset = -80; // Ajuste para el header sticky
+                          const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }, 50);
+                    }}
                     className={`universe-card flex flex-col items-center justify-between p-2.5 rounded-2xl transition-all duration-200 w-[102px] min-w-[102px] max-w-[102px] h-[116px] min-h-[116px] flex-shrink-0 border ${isActive
                       ? "universe-card--active border-[#ffcc00] bg-gradient-to-b from-[#ffcc00]/15 to-neutral-900 shadow-[0_0_18px_rgba(255,204,0,0.35)]"
                       : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20"
@@ -356,16 +366,28 @@ const Menu = ({
           design={design}
           onPromoClick={() => {
             setActiveCategory("Promociones especiales");
-            const menuEl = document.getElementById("saborio-menu-tabs");
-            if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
+            setTimeout(() => {
+              const el = document.getElementById("catalog-section");
+              if (el) {
+                const yOffset = -80;
+                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+              }
+            }, 50);
           }}
         />
         <Combos
           design={design}
           onComboClick={() => {
             setActiveCategory("Combos");
-            const menuEl = document.getElementById("saborio-menu-tabs");
-            if (menuEl) menuEl.scrollIntoView({ behavior: "smooth" });
+            setTimeout(() => {
+              const el = document.getElementById("catalog-section");
+              if (el) {
+                const yOffset = -80;
+                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+              }
+            }, 50);
           }}
         />
 
@@ -374,7 +396,7 @@ const Menu = ({
 
 
         {/* ── 4. Catálogo Completo / Productos de la Categoría Seleccionada ── */}
-        <div className="catalog-section">
+        <div id="catalog-section" className="catalog-section">
           <div className="catalog-header">
             <div className="catalog-title-wrap">
               <h2 className="catalog-title">

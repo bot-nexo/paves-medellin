@@ -40,8 +40,9 @@ const ProductFormModal = ({
         destacado: !!producto.destacado,
         disponible: producto.disponible !== false,
         orden: producto.orden ?? "",
+        tiempo_preparacion_horas: producto.tiempo_preparacion_horas ?? "",
       }
-      : { ...VACIO, orden: ordenSugerido },
+      : { ...VACIO, orden: ordenSugerido, tiempo_preparacion_horas: "" },
   );
   const [imagenUrlPrevio, setImagenUrlPrevio] = useState(producto?.imagen_url || "");
   const [vistaPrevia, setVistaPrevia] = useState(producto?.imagen || "");
@@ -124,6 +125,7 @@ const ProductFormModal = ({
         destacado: form.destacado,
         disponible: form.disponible,
         orden: form.orden ? Number(form.orden) : producto?.orden ?? ordenSugerido,
+        tiempo_preparacion_horas: form.tiempo_preparacion_horas ? Number(form.tiempo_preparacion_horas) : null,
       };
 
       if (nuevaImagen) {
@@ -290,6 +292,22 @@ const ProductFormModal = ({
                   />
                 </div>
               </label>
+
+              <label className="admin-field">
+                <span className="admin-field__label">Tiempo Prep. (Horas)</span>
+                <div className="admin-field__input">
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.tiempo_preparacion_horas}
+                    onChange={(e) => set("tiempo_preparacion_horas", e.target.value)}
+                    placeholder="Ej: 24"
+                  />
+                </div>
+              </label>
+            </div>
+
+            <div className="adm-modal__fila">
 
               <label className="admin-field">
                 <span className="admin-field__label">Orden en el menú</span>
