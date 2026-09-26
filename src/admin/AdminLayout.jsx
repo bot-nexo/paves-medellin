@@ -1,33 +1,33 @@
-import { useState } from "react";
-import { NavLink, Outlet, useNavigate, Navigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Dessert,
-  Tags,
-  Tag,
-  Receipt,
-  Store,
-  Settings,
-  LogOut,
-  ExternalLink,
+  AlertOctagon,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
+  Dessert,
+  ExternalLink,
+  LayoutDashboard,
+  LogOut,
   Menu,
-  X,
-  User,
-  Sparkles,
-  ShieldCheck,
-  AlertOctagon,
   Palette,
-  BarChart3,
+  Receipt,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Store,
+  Tag,
+  Tags,
+  User,
+  X,
 } from "lucide-react";
-import { logoutAdmin } from "./sessionStore";
-import { useAdminSession } from "./useAdminSession";
+import { useState } from "react";
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import PasswordModal from "./PasswordModal";
-import NotificationBell from "./components/NotificationBell";
-import logoImg from "../assets/images/logo.png";
 import "./admin.css";
+import NotificationBell from "./components/NotificationBell";
+import { logoutAdmin } from "./sessionStore";
+import { useAdminSession } from "./useAdminSession";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -46,10 +46,10 @@ const AdminLayout = () => {
   const rz = localStorage.getItem("store_razon_social");
   const { session, role } = useAdminSession();
   const { settings } = useCatalog();
+  const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [name, setName] = useState("Dashboard");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -95,8 +95,14 @@ const AdminLayout = () => {
     console.log("No es superadmin", role);
   }
 
+  const activeNavItem = navItemsToShow.find(({ to, end }) =>
+    end
+      ? location.pathname === to
+      : location.pathname === to || location.pathname.startsWith(`${to}/`)
+  );
+
   // Protección de rutas: si intentan entrar por URL a una ruta restringida, enviarlos al dashboard
-  const currentPath = window.location.pathname;
+  const currentPath = location.pathname;
   if (currentPath === "/admin/adiciones" && settings?.plan_adiciones === false) {
     return <Navigate to="/admin" replace />;
   }
@@ -150,7 +156,6 @@ const AdminLayout = () => {
               end={end}
               onClick={() => {
                 setMobileMenuOpen(false);
-                setName(label);
               }}
               className={({ isActive }) =>
                 "admin-nav__item" + (isActive ? " admin-nav__item--active" : "")
@@ -175,13 +180,6 @@ const AdminLayout = () => {
             <ExternalLink size={20} className="admin-nav__icon" />
             {!collapsed && <span className="admin-nav__label">Ver tienda</span>}
           </a>
-
-          {email && !collapsed && (
-            <div className="admin-sidebar__user" title={email}>
-              <User size={16} className="admin-sidebar__user-icon" />
-              <span className="admin-sidebar__email">{email}</span>
-            </div>
-          )}
 
           <button
             type="button"
@@ -209,7 +207,7 @@ const AdminLayout = () => {
           </button>
 
           <div className="admin-topbar__title">
-            <span>Panel {name}</span>
+            <span>Panel {activeNavItem?.label || "Administración"}</span>
           </div>
 
           <div className="admin-topbar__actions">

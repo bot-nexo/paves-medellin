@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback } from "react";
+import { ChevronDown, ChevronUp, Gift, ImageIcon, Plus, Rocket, Save, Tag, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
-import { Tag, Gift, Rocket, Plus, Trash2, Save, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
 import {
-  getCatalogDesign,
-  updateCatalogDesign,
-  subscribeToCatalog,
   DEFAULT_CATALOG_DESIGN,
+  getCatalogDesign,
+  subscribeToCatalog,
+  updateCatalogDesign,
 } from "../../data/dataSource";
-import { uploadProductImage, deleteProductImage } from "../../services/storage";
+import { deleteProductImage, uploadProductImage } from "../../services/storage";
 import "../admin.css";
 
 // ── Factories ───────────────────────────────────────────────────────────────
@@ -54,13 +54,13 @@ const ImageUploader = ({ label, url, onUpload, defaultName }) => {
         {label} {uploading && <span style={{ color: "#ffcc00" }}>Subiendo...</span>}
       </span>
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <input 
-          type="file" 
-          accept="image/*" 
-          onChange={handleFileChange} 
-          disabled={uploading} 
-          className="admin-field__input" 
-          style={{ padding: "0.3rem", fontSize: ".75rem" }} 
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={uploading}
+          className="admin-field__input"
+          style={{ padding: "0.3rem", fontSize: ".75rem" }}
         />
         {url && (
           <img src={url} alt="Preview" style={{ width: "34px", height: "34px", borderRadius: "6px", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }} />
@@ -91,7 +91,7 @@ const PromoCard = ({ promo, idx, onChange, onRemove }) => {
       </div>
       {expanded && (
         <div style={{ padding: ".85rem 1rem", display: "flex", flexDirection: "column", gap: ".6rem" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: ".5rem" }}>
+          <div className="promo-card__title-fields">
             <label className="admin-field" style={{ marginBottom: 0 }}>
               <span className="admin-field__label" style={{ fontSize: ".72rem" }}>Título</span>
               <input type="text" value={promo.titulo || ""} onChange={(e) => onChange(idx, "titulo", e.target.value)} className="admin-field__input" placeholder="Título atractivo" style={{ fontWeight: 700 }} />
@@ -109,15 +109,11 @@ const PromoCard = ({ promo, idx, onChange, onRemove }) => {
             <span className="admin-field__label" style={{ fontSize: ".72rem" }}>Descripción para el cliente</span>
             <input type="text" value={promo.descripcion || ""} onChange={(e) => onChange(idx, "descripcion", e.target.value)} className="admin-field__input" placeholder="Descripción breve de la oferta" />
           </label>
-          <label className="admin-field" style={{ marginBottom: 0 }}>
-            <span className="admin-field__label" style={{ fontSize: ".72rem" }}>Descripción para el cliente</span>
-            <input type="text" value={promo.descripcion || ""} onChange={(e) => onChange(idx, "descripcion", e.target.value)} className="admin-field__input" placeholder="Descripción breve de la oferta" />
-          </label>
-          <ImageUploader 
-            label="Imagen Promocional" 
-            url={promo.imagen} 
-            defaultName={promo.titulo || `promo-${idx}`} 
-            onUpload={(url) => onChange(idx, "imagen", url)} 
+          <ImageUploader
+            label="Imagen Promocional"
+            url={promo.imagen}
+            defaultName={promo.titulo || `promo-${idx}`}
+            onUpload={(url) => onChange(idx, "imagen", url)}
           />
         </div>
       )}
@@ -150,7 +146,7 @@ const ComboCard = ({ combo, idx, onChange, onRemove }) => {
             <span className="admin-field__label" style={{ fontSize: ".72rem" }}>Nombre del Combo</span>
             <input type="text" value={combo.nombre || ""} onChange={(e) => onChange(idx, "nombre", e.target.value)} className="admin-field__input" placeholder="Combo Dúo Pavé + Torta" style={{ fontWeight: 700 }} />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".5rem" }}>
+          <div className="combo-editor__prices">
             <label className="admin-field" style={{ marginBottom: 0 }}>
               <span className="admin-field__label" style={{ fontSize: ".72rem" }}>Precio COP</span>
               <input type="number" value={combo.precio || ""} onChange={(e) => onChange(idx, "precio", Number(e.target.value))} className="admin-field__input" placeholder="32000" />
@@ -179,11 +175,11 @@ const ComboCard = ({ combo, idx, onChange, onRemove }) => {
               style={{ fontSize: ".8rem" }}
             />
           </label>
-          <ImageUploader 
-            label="Imagen del Combo" 
-            url={combo.imagen} 
-            defaultName={combo.nombre || `combo-${idx}`} 
-            onUpload={(url) => onChange(idx, "imagen", url)} 
+          <ImageUploader
+            label="Imagen del Combo"
+            url={combo.imagen}
+            defaultName={combo.nombre || `combo-${idx}`}
+            onUpload={(url) => onChange(idx, "imagen", url)}
           />
         </div>
       )}
@@ -222,7 +218,7 @@ const PromocionesAdmin = () => {
         ...form,
         combosItems: form.combosItems?.map(combo => ({
           ...combo,
-          incluye: typeof combo.incluye === "string" 
+          incluye: typeof combo.incluye === "string"
             ? combo.incluye.split(",").map(s => s.trim()).filter(Boolean)
             : combo.incluye
         })) || []
@@ -256,21 +252,19 @@ const PromocionesAdmin = () => {
   if (cargando || !form) return <LoadingOverlay fullScreen text="Cargando módulo de Promociones…" />;
 
   const TABS = [
-    { id: "promos", label: "Promociones", icon: Tag, color: "#ffcc00" },
-    { id: "event", label: "Banner Evento Especial", icon: Rocket, color: "#ff9800" },
-    { id: "combos", label: "Combos & Packs", icon: Gift, color: "#d92b38" },
+    { id: "promos", label: "Promociones", mobileLabel: "Promos", icon: Tag, color: "#ffcc00" },
+    { id: "event", label: "Banner Evento Especial", mobileLabel: "Evento", icon: Rocket, color: "#ff9800" },
+    { id: "combos", label: "Combos & Packs", mobileLabel: "Combos", icon: Gift, color: "#d92b38" },
   ];
 
   return (
-    <div className="admin-page">
+    <div className="admin-page admin-page--promociones">
       {guardando && <LoadingOverlay text="Guardando cambios…" />}
 
       <header className="admin-page__header">
         <div className="admin-page__header-title-wrap">
           <h1 className="admin-page__titulo">Promociones & Combos</h1>
-          <p className="admin-page__sub">
-            Gestiona las Promos Relámpago del banner, Promociones especiales y Combos que aparecen en tu catálogo en tiempo real.
-          </p>
+          <p className="admin-page__sub">Gestiona promociones, eventos y combos de tu catálogo.</p>
         </div>
         <div className="admin-page__header-actions">
           <button type="button" className="admin-btn-primary admin-btn-primary--compacto" onClick={guardar} disabled={guardando}>
@@ -280,44 +274,44 @@ const PromocionesAdmin = () => {
       </header>
 
       {/* Pestañas */}
-      <div style={{ display: "flex", gap: ".5rem", marginBottom: "1.25rem", borderBottom: "1px solid var(--aborde)", paddingBottom: ".5rem" }}>
-        {TABS.map(({ id, label, icon: Icon, color }) => (
+      <div className="promociones-tabs" role="tablist" aria-label="Secciones de promociones">
+        {TABS.map(({ id, label, mobileLabel, icon: Icon, color }) => (
           <button
             key={id}
             type="button"
             onClick={() => setActiveSection(id)}
-            style={{
-              display: "flex", alignItems: "center", gap: ".4rem", padding: ".45rem .85rem",
-              borderRadius: 8, border: "none", cursor: "pointer", fontSize: ".83rem", fontWeight: 600,
-              transition: "all .15s",
-              background: activeSection === id ? `${color}18` : "transparent",
-              color: activeSection === id ? color : "var(--texto-dim)",
-              borderBottom: activeSection === id ? `2px solid ${color}` : "2px solid transparent",
-            }}
+            className={`promociones-tabs__item${activeSection === id ? " is-active" : ""}`}
+            style={{ "--tab-accent": color }}
+            role="tab"
+            aria-selected={activeSection === id}
+            aria-label={label}
+            title={label}
           >
-            <Icon size={15} /> {label}
+            <Icon size={15} aria-hidden="true" />
+            <span className="promociones-tabs__label-full">{label}</span>
+            <span className="promociones-tabs__label-mobile">{mobileLabel}</span>
           </button>
         ))}
       </div>
 
       {/* ── Promociones Normales ── */}
       {activeSection === "promos" && (
-        <div className="admin-card" style={{ padding: "1.25rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div className="admin-card promo-editor-card">
+          <div className="promo-editor__section-head">
             <div>
               <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--crema)", display: "flex", alignItems: "center", gap: ".45rem" }}><Tag size={16} color="#ffcc00" /> Promociones Especiales</h3>
               <p style={{ margin: ".2rem 0 0", fontSize: ".78rem", color: "var(--texto-dim)" }}>Aparecen en la sección Promociones y como banner en el Menú ("Pide, Disfruta, Repite").</p>
             </div>
-            <label style={{ display: "flex", alignItems: "center", gap: ".5rem", cursor: "pointer", fontSize: ".83rem", color: "var(--acento)", flexShrink: 0 }}>
+            <label className="promo-editor__visibility">
               <input type="checkbox" checked={form.showPromotions !== false} onChange={(e) => setForm((prev) => ({ ...prev, showPromotions: e.target.checked }))} />
               <span>Visible en tienda</span>
             </label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".5rem", marginBottom: "1rem" }}>
+          <div className="promo-editor__fields">
             <label className="admin-field" style={{ marginBottom: 0 }}><span className="admin-field__label">Título de la Sección</span><input type="text" value={form.promotionsTitle || ""} onChange={(e) => setForm((prev) => ({ ...prev, promotionsTitle: e.target.value }))} className="admin-field__input" /></label>
             <label className="admin-field" style={{ marginBottom: 0 }}><span className="admin-field__label">Subtítulo</span><input type="text" value={form.promotionsSubtitle || ""} onChange={(e) => setForm((prev) => ({ ...prev, promotionsSubtitle: e.target.value }))} className="admin-field__input" /></label>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: ".75rem" }}>
+          <div className="promo-editor__list-head">
             <span style={{ fontSize: ".85rem", fontWeight: 700, color: "var(--crema)" }}>Tarjetas activas: {form.promotionsItems?.length || 0}</span>
             <button type="button" className="admin-btn-ghost" onClick={addPromo} style={{ fontSize: ".78rem" }}><Plus size={14} /> Añadir Promo</button>
           </div>
@@ -332,8 +326,8 @@ const PromocionesAdmin = () => {
 
       {/* ── Banner Evento Especial ── */}
       {activeSection === "event" && (
-        <div className="admin-card" style={{ padding: "1.25rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div className="admin-card promo-editor-card">
+          <div className="promo-editor__section-head">
             <div>
               <h3 style={{ margin: "0 0 .25rem", fontSize: "1rem", fontWeight: 700, color: "var(--crema)", display: "flex", alignItems: "center", gap: ".45rem" }}><Rocket size={16} color="#ff9800" /> Banner Evento Especial</h3>
               <p style={{ margin: 0, fontSize: ".78rem", color: "var(--texto-dim)" }}>
@@ -341,10 +335,10 @@ const PromocionesAdmin = () => {
               </p>
             </div>
             <label style={{ display: "flex", alignItems: "center", gap: ".5rem", cursor: "pointer", fontSize: ".83rem", color: "var(--acento)", flexShrink: 0 }}>
-              <input 
-                type="checkbox" 
-                checked={form.specialEvent?.active || false} 
-                onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), active: e.target.checked } }))} 
+              <input
+                type="checkbox"
+                checked={form.specialEvent?.active || false}
+                onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), active: e.target.checked } }))}
               />
               <span>Banner Activado</span>
             </label>
@@ -354,24 +348,24 @@ const PromocionesAdmin = () => {
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <label className="admin-field" style={{ marginBottom: 0 }}>
                 <span className="admin-field__label">Mensaje del Evento</span>
-                <input 
-                  type="text" 
-                  value={form.specialEvent?.texto || ""} 
+                <input
+                  type="text"
+                  value={form.specialEvent?.texto || ""}
                   placeholder="Ej: 🎉 FELIZ DÍA DE LA MADRE - 20% OFF EN POSTRES"
-                  onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), texto: e.target.value } }))} 
-                  className="admin-field__input" 
+                  onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), texto: e.target.value } }))}
+                  className="admin-field__input"
                 />
               </label>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="promos-event__colors">
                 <label className="admin-field" style={{ marginBottom: 0 }}>
                   <span className="admin-field__label">Color de Fondo</span>
                   <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
-                    <input 
-                      type="color" 
-                      value={form.specialEvent?.bgColor || "#d92b38"} 
-                      onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), bgColor: e.target.value } }))} 
-                      style={{ width: 36, height: 36, padding: 0, border: "none", borderRadius: 8, cursor: "pointer" }} 
+                    <input
+                      type="color"
+                      value={form.specialEvent?.bgColor || "#d92b38"}
+                      onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), bgColor: e.target.value } }))}
+                      style={{ width: 36, height: 36, padding: 0, border: "none", borderRadius: 8, cursor: "pointer" }}
                     />
                     <span style={{ fontSize: ".8rem", color: "var(--texto-dim)", fontFamily: "monospace" }}>{form.specialEvent?.bgColor || "#d92b38"}</span>
                   </div>
@@ -380,11 +374,11 @@ const PromocionesAdmin = () => {
                 <label className="admin-field" style={{ marginBottom: 0 }}>
                   <span className="admin-field__label">Color del Texto</span>
                   <div style={{ display: "flex", alignItems: "center", gap: ".5rem" }}>
-                    <input 
-                      type="color" 
-                      value={form.specialEvent?.textColor || "#ffffff"} 
-                      onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), textColor: e.target.value } }))} 
-                      style={{ width: 36, height: 36, padding: 0, border: "none", borderRadius: 8, cursor: "pointer" }} 
+                    <input
+                      type="color"
+                      value={form.specialEvent?.textColor || "#ffffff"}
+                      onChange={(e) => setForm((prev) => ({ ...prev, specialEvent: { ...(prev.specialEvent || {}), textColor: e.target.value } }))}
+                      style={{ width: 36, height: 36, padding: 0, border: "none", borderRadius: 8, cursor: "pointer" }}
                     />
                     <span style={{ fontSize: ".8rem", color: "var(--texto-dim)", fontFamily: "monospace" }}>{form.specialEvent?.textColor || "#ffffff"}</span>
                   </div>
@@ -395,8 +389,8 @@ const PromocionesAdmin = () => {
             {/* Preview */}
             <div style={{ marginTop: "1.5rem" }}>
               <span className="admin-field__label" style={{ marginBottom: ".5rem" }}>Vista Previa en Tienda:</span>
-              <div style={{ 
-                background: form.specialEvent?.bgColor || "#d92b38", 
+              <div style={{
+                background: form.specialEvent?.bgColor || "#d92b38",
                 color: form.specialEvent?.textColor || "#ffffff",
                 padding: "10px 16px",
                 borderRadius: "12px",
@@ -414,8 +408,8 @@ const PromocionesAdmin = () => {
 
       {/* ── Combos ── */}
       {activeSection === "combos" && (
-        <div className="admin-card" style={{ padding: "1.25rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+        <div className="admin-card promo-editor-card">
+          <div className="promo-editor__section-head">
             <div>
               <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "var(--crema)", display: "flex", alignItems: "center", gap: ".45rem" }}><Gift size={16} color="#d92b38" /> Combos & Packs Especiales</h3>
               <p style={{ margin: ".2rem 0 0", fontSize: ".78rem", color: "var(--texto-dim)" }}>Aparecen en la sección Combos y en la categoría "Combos" del menú.</p>
@@ -425,7 +419,7 @@ const PromocionesAdmin = () => {
               <span>Visible en tienda</span>
             </label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ".5rem", marginBottom: "1rem" }}>
+          <div className="promo-editor__fields">
             <label className="admin-field" style={{ marginBottom: 0 }}><span className="admin-field__label">Título de la Sección</span><input type="text" value={form.combosTitle || ""} onChange={(e) => setForm((prev) => ({ ...prev, combosTitle: e.target.value }))} className="admin-field__input" /></label>
             <label className="admin-field" style={{ marginBottom: 0 }}><span className="admin-field__label">Subtítulo</span><input type="text" value={form.combosSubtitle || ""} onChange={(e) => setForm((prev) => ({ ...prev, combosSubtitle: e.target.value }))} className="admin-field__input" /></label>
           </div>

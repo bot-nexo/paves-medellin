@@ -1,7 +1,7 @@
+import { Loader2, MapPin, Navigation, Power, Save, Star, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
-import { Loader2, Save, Truck, Power, Star, MapPin, Navigation } from "lucide-react";
 import { getSettings, updateSettings } from "../../data/dataSource";
 import { formatCOP } from "../../utils/price";
 import "../admin.css";
@@ -192,9 +192,9 @@ const Configuracion = () => {
 
           {/* ═══ DOMICILIO DINÁMICO POR DISTANCIA ═══ */}
           <div className={`adm-cfg__seccion ${form.dynamicDeliveryEnabled ? "adm-cfg__seccion--activa" : ""}`}
-               style={form.dynamicDeliveryEnabled ? { 
-                 borderColor: "rgba(255, 204, 0, 0.3)", 
-                 background: "rgba(255, 204, 0, 0.03)" 
+               style={form.dynamicDeliveryEnabled ? {
+                 borderColor: "rgba(255, 204, 0, 0.3)",
+                 background: "rgba(255, 204, 0, 0.03)"
                } : {}}>
             <div className="adm-cfg__seccion-titulo">
               <Navigation size={15} /> Domicilio dinámico por distancia (estilo Rappi)
@@ -215,9 +215,9 @@ const Configuracion = () => {
             </span>
 
             {form.dynamicDeliveryEnabled && (
-              <div style={{ marginTop: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="adm-cfg__dynamic-fields">
                 {/* Coordenadas del local */}
-                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div className="adm-cfg__field-row">
                   <label className="admin-field" style={{ flex: 1, minWidth: 180 }}>
                     <span className="admin-field__label">
                       <MapPin size={12} style={{ display: "inline", marginRight: 4 }} />
@@ -257,7 +257,7 @@ const Configuracion = () => {
                 </span>
 
                 {/* Tarifa base y precio/km */}
-                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                <div className="adm-cfg__field-row">
                   <label className="admin-field" style={{ flex: 1, minWidth: 180 }}>
                     <span className="admin-field__label">Tarifa base fija (COP)</span>
                     <div className="admin-field__input">

@@ -1,12 +1,36 @@
-import { useState, useEffect } from "react";
-import { useAdminSession } from "../useAdminSession";
-import { getSettings, updateSettings } from "../../data/dataSource";
+import { Building, Loader2, Save, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { ShieldAlert, Loader2, Save, ToggleLeft, ToggleRight, Building } from "lucide-react";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
+import { getSettings, updateSettings } from "../../data/dataSource";
+import { useAdminSession } from "../useAdminSession";
+
+const ACCESS_CONTROLS = [
+  {
+    key: "isActive",
+    label: "Estado de la cuenta",
+    description: "Controla el acceso al panel y la recepción de pedidos.",
+    enabledLabel: "Activa",
+    disabledLabel: "Suspendida",
+  },
+  {
+    key: "canChangePassword",
+    label: "Cambio de contraseña",
+    description: "Permite al administrador actualizar su contraseña.",
+    enabledLabel: "Permitido",
+    disabledLabel: "Bloqueado",
+  },
+];
+
+const MODULE_CONTROLS = [
+  { key: "plan_adiciones", label: "Adiciones y salsas", description: "Opciones extra para productos." },
+  { key: "plan_promociones", label: "Promociones y combos", description: "Ofertas y paquetes especiales." },
+  { key: "plan_diseno", label: "Diseño del menú", description: "Personalización visual del catálogo." },
+  { key: "plan_reportes", label: "Reportes e informes", description: "Analítica de ventas y exportaciones." },
+];
 
 const AdminSuper = () => {
-  const { session, role } = useAdminSession();
+  const { role } = useAdminSession();
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [form, setForm] = useState(null);
@@ -57,9 +81,9 @@ const AdminSuper = () => {
 
   if (role !== "superadmin") {
     return (
-      <div className="admin-card" style={{ padding: "3rem", textAlign: "center" }}>
-        <ShieldAlert size={48} color="#d32f2f" style={{ margin: "0 auto 1rem" }} />
-        <h2>Acceso Denegado</h2>
+      <div className="admin-card admin-super__denied">
+        <ShieldAlert size={36} />
+        <h2>Acceso denegado</h2>
         <p>Esta sección es exclusiva para el superadministrador.</p>
       </div>
     );
@@ -70,91 +94,92 @@ const AdminSuper = () => {
   }
 
   return (
-    <div className="admin-layout__page">
-      <div className="admin-page-header">
-        <h1 className="admin-page-header__titulo">Panel de Superadmin</h1>
-        <p className="admin-page-header__desc">Gestiona el estado y accesos de este inquilino (tenant).</p>
-      </div>
-
-      <div className="admin-card adm-cfg" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <div className="adm-cfg__seccion-titulo" style={{ marginBottom: "1rem" }}>
-          <Building size={16} /> Estado del Negocio
+    <div className="admin-super">
+      <header className="admin-super__header">
+        <span className="admin-super__mark"><ShieldCheck size={20} /></span>
+        <div>
+          <span className="admin-super__eyebrow">Administración del sistema</span>
+          <h1>Controles del negocio</h1>
+          <p>Disponibilidad, seguridad y módulos incluidos en el plan.</p>
         </div>
-        <p className="adm-cfg__alerta-texto" style={{ marginBottom: "2rem" }}>
-          Estos interruptores controlan si el negocio puede operar y si los administradores pueden cambiar su contraseña. Si desactivas el negocio, el catálogo público se bloqueará.
-        </p>
+      </header>
 
-        <form onSubmit={handleSubmit}>
-          <div className="adm-cfg__grid" style={{ gridTemplateColumns: "1fr", gap: "2rem" }}>
-            
-            {/* Toggle Is Active */}
-            <div 
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", backgroundColor: "#f9f9f9", borderRadius: "8px", cursor: "pointer" }}
-              onClick={() => handleChange("isActive")}
-            >
-              <div>
-                <strong style={{ display: "block", fontSize: "1.1rem" }}>Negocio Activo (Mensualidad)</strong>
-                <span style={{ fontSize: "0.85rem", color: "#666" }}>Permite recibir pedidos y acceder al panel.</span>
-              </div>
-              <div style={{ color: form.isActive ? "#4caf50" : "#d32f2f" }}>
-                {form.isActive ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-              </div>
+      <form className="admin-card admin-super__form" onSubmit={handleSubmit}>
+        <section className="admin-super__section" aria-labelledby="admin-super-access-title">
+          <div className="admin-super__section-heading">
+            <Building size={17} />
+            <div>
+              <h2 id="admin-super-access-title">Acceso y seguridad</h2>
+              <p>Controles generales de operación para este negocio.</p>
             </div>
-
-            {/* Toggle Can Change Password */}
-            <div 
-              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", backgroundColor: "#f9f9f9", borderRadius: "8px", cursor: "pointer" }}
-              onClick={() => handleChange("canChangePassword")}
-            >
-              <div>
-                <strong style={{ display: "block", fontSize: "1.1rem" }}>Permitir Cambio de Contraseña</strong>
-                <span style={{ fontSize: "0.85rem", color: "#666" }}>El administrador podrá cambiar su clave desde el perfil.</span>
-              </div>
-              <div style={{ color: form.canChangePassword ? "#4caf50" : "#d32f2f" }}>
-                {form.canChangePassword ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-              </div>
-            </div>
-
           </div>
-
-          <div className="adm-cfg__seccion-titulo" style={{ margin: "2rem 0 1rem" }}>
-            <Building size={16} /> Permisos y Módulos (Plan)
-          </div>
-          <p className="adm-cfg__alerta-texto" style={{ marginBottom: "2rem" }}>
-            Restringe el acceso a funciones premium del panel de administración según el plan del cliente.
-          </p>
-
-          <div className="adm-cfg__grid" style={{ gridTemplateColumns: "1fr", gap: "1rem" }}>
-            {[
-              { key: "plan_adiciones", label: "Módulo de Adiciones & Salsas", desc: "Permite gestionar opciones extra para los productos." },
-              { key: "plan_promociones", label: "Módulo de Promociones & Combos", desc: "Permite crear ofertas especiales y combos." },
-              { key: "plan_diseno", label: "Módulo de Diseño", desc: "Permite personalizar los colores y estilos del menú." },
-              { key: "plan_reportes", label: "Módulo de Reportes e Informes", desc: "Da acceso a analíticas de ventas y exportaciones." },
-            ].map((mod) => (
-              <div 
-                key={mod.key}
-                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", backgroundColor: "#f9f9f9", borderRadius: "8px", cursor: "pointer" }}
-                onClick={() => handleChange(mod.key)}
+          <div className="admin-super__rows">
+            {ACCESS_CONTROLS.map((control) => (
+              <button
+                key={control.key}
+                type="button"
+                className="admin-super__row"
+                onClick={() => handleChange(control.key)}
+                aria-pressed={Boolean(form[control.key])}
               >
-                <div>
-                  <strong style={{ display: "block", fontSize: "1.05rem" }}>{mod.label}</strong>
-                  <span style={{ fontSize: "0.8rem", color: "#666" }}>{mod.desc}</span>
-                </div>
-                <div style={{ color: form[mod.key] ? "#4caf50" : "#d32f2f" }}>
-                  {form[mod.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
-                </div>
-              </div>
+                <span className="admin-super__row-copy">
+                  <strong>{control.label}</strong>
+                  <span>{control.description}</span>
+                </span>
+                <span className="admin-super__row-state">
+                  <span className={`admin-super__status${form[control.key] ? " is-on" : " is-off"}`}>
+                    {form[control.key] ? control.enabledLabel : control.disabledLabel}
+                  </span>
+                  <span className={`admin-super__switch${form[control.key] ? " is-on" : ""}`} aria-hidden="true">
+                    <span />
+                  </span>
+                </span>
+              </button>
             ))}
           </div>
+        </section>
 
-          <div className="adm-cfg__pie" style={{ marginTop: "2rem" }}>
-            <button type="submit" className="admin-btn-primary admin-btn-primary--compacto" disabled={guardando}>
-              {guardando ? <Loader2 size={15} className="adm-spin" /> : <Save size={15} />}
-              {guardando ? "Guardando…" : "Guardar controles"}
-            </button>
+        <section className="admin-super__section" aria-labelledby="admin-super-modules-title">
+          <div className="admin-super__section-heading">
+            <ShieldCheck size={17} />
+            <div>
+              <h2 id="admin-super-modules-title">Módulos del plan</h2>
+              <p>Define las herramientas disponibles en el panel administrativo.</p>
+            </div>
           </div>
-        </form>
-      </div>
+          <div className="admin-super__rows admin-super__rows--modules">
+            {MODULE_CONTROLS.map((control) => (
+              <button
+                key={control.key}
+                type="button"
+                className="admin-super__row"
+                onClick={() => handleChange(control.key)}
+                aria-pressed={Boolean(form[control.key])}
+              >
+                <span className="admin-super__row-copy">
+                  <strong>{control.label}</strong>
+                  <span>{control.description}</span>
+                </span>
+                <span className="admin-super__row-state">
+                  <span className={`admin-super__status${form[control.key] ? " is-on" : " is-off"}`}>
+                    {form[control.key] ? "Incluido" : "Restringido"}
+                  </span>
+                  <span className={`admin-super__switch${form[control.key] ? " is-on" : ""}`} aria-hidden="true">
+                    <span />
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <footer className="admin-super__footer">
+          <button type="submit" className="admin-btn-primary admin-btn-primary--compacto" disabled={guardando}>
+            {guardando ? <Loader2 size={15} className="adm-spin" /> : <Save size={15} />}
+            {guardando ? "Guardando…" : "Guardar controles"}
+          </button>
+        </footer>
+      </form>
     </div>
   );
 };
