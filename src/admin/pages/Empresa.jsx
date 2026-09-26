@@ -283,35 +283,51 @@ const Empresa = () => {
               </label>
             ))}
 
-            {/* ── Días de atención (Checkboxes) ───────────────────────── */}
+            {/* ── Días de atención (Pills) ────────────────────────────── */}
             <label className="admin-field">
               <span className="admin-field__label">Días de atención</span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "5px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "5px" }}>
                 {[
-                  { id: 1, label: "Lunes" },
-                  { id: 2, label: "Martes" },
-                  { id: 3, label: "Miércoles" },
-                  { id: 4, label: "Jueves" },
-                  { id: 5, label: "Viernes" },
-                  { id: 6, label: "Sábado" },
-                  { id: 0, label: "Domingo" },
-                ].map((dia) => (
-                  <label key={dia.id} style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", fontSize: "0.9rem" }}>
-                    <input
-                      type="checkbox"
-                      checked={diasAtencion.includes(dia.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                  { id: 1, label: "Lun" },
+                  { id: 2, label: "Mar" },
+                  { id: 3, label: "Mié" },
+                  { id: 4, label: "Jue" },
+                  { id: 5, label: "Vie" },
+                  { id: 6, label: "Sáb" },
+                  { id: 0, label: "Dom" },
+                ].map((dia) => {
+                  const isSelected = diasAtencion.includes(dia.id);
+                  return (
+                    <button
+                      key={dia.id}
+                      type="button"
+                      onClick={() => {
+                        if (!isSelected) {
                           setDiasAtencion((prev) => [...prev, dia.id]);
                         } else {
                           setDiasAtencion((prev) => prev.filter((d) => d !== dia.id));
                         }
                       }}
-                    />
-                    {dia.label}
-                  </label>
-                ))}
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: "20px",
+                        border: isSelected ? "1px solid #ffcc00" : "1px solid rgba(255,255,255,0.1)",
+                        backgroundColor: isSelected ? "rgba(255,204,0,0.1)" : "rgba(255,255,255,0.02)",
+                        color: isSelected ? "#ffcc00" : "#a3a3a3",
+                        fontWeight: isSelected ? "bold" : "normal",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      {dia.label}
+                    </button>
+                  );
+                })}
               </div>
+              <span className="adm-modal__precio-hint" style={{ marginTop: "8px", display: "block" }}>
+                Selecciona los días en los que tu negocio presta servicio.
+              </span>
             </label>
 
             {/* ── Horario: selectores de apertura y cierre ─────────────── */}

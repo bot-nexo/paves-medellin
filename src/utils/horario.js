@@ -52,11 +52,32 @@ const formatMinutosAHora = (minutosTotales, format24 = true) => {
  */
 const formatearDias = (days) => {
   if (!days) return "";
-  if (Array.isArray(days)) {
-    if (days.length === 7) return "Todos los días";
-    if (days.length === 5 && !days.includes(0) && !days.includes(6)) return "Lun - Vie";
+  
+  let parsedDays = days;
+  if (typeof days === "string") {
+    try {
+      parsedDays = JSON.parse(days);
+    } catch (e) {
+      // Ignorar error, tratar como string normal
+    }
+  }
+
+  if (Array.isArray(parsedDays)) {
+    const arr = [...parsedDays].map(Number);
+    if (arr.length === 7) return "Todos los días";
+    
+    const includesDom = arr.includes(0);
+    const includesSab = arr.includes(6);
+    
+    if (arr.length === 5 && !includesDom && !includesSab) return "Lun - Vie";
+    if (arr.length === 6 && !includesDom) return "Lun - Sáb";
+    
     const map = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 0: "Dom" };
-    return days.map((d) => map[d] || d).join(", ");
+    // Ordenar de Lunes a Domingo
+    const displayOrder = [1, 2, 3, 4, 5, 6, 0];
+    const ordered = displayOrder.filter(d => arr.includes(d));
+    
+    return ordered.map((d) => map[d] || d).join(", ");
   }
   return String(days);
 };
