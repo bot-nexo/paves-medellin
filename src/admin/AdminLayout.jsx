@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, Navigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Dessert,
@@ -80,9 +80,32 @@ const AdminLayout = () => {
     );
   }
 
-  const navItemsToShow = [...NAV_ITEMS];
+  const navItemsToShow = NAV_ITEMS.filter((item) => {
+    // Restricciones basadas en los permisos (por defecto activo si no existe)
+    if (item.to === "/admin/adiciones" && settings?.plan_adiciones === false) return false;
+    if (item.to === "/admin/promociones" && settings?.plan_promociones === false) return false;
+    if (item.to === "/admin/reportes" && settings?.plan_reportes === false) return false;
+    if (item.to === "/admin/diseno" && settings?.plan_diseno === false) return false;
+    return true;
+  });
+
   if (role === "superadmin") {
     navItemsToShow.push({ to: "/admin/super", label: "Superadmin", icon: ShieldCheck });
+  }
+
+  // Protección de rutas: si intentan entrar por URL a una ruta restringida, enviarlos al dashboard
+  const currentPath = window.location.pathname;
+  if (currentPath === "/admin/adiciones" && settings?.plan_adiciones === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/promociones" && settings?.plan_promociones === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/reportes" && settings?.plan_reportes === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/diseno" && settings?.plan_diseno === false) {
+    return <Navigate to="/admin" replace />;
   }
 
   //********************* */

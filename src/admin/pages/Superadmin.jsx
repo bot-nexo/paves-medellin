@@ -18,6 +18,10 @@ const AdminSuper = () => {
         setForm({
           isActive: data.isActive,
           canChangePassword: data.canChangePassword,
+          plan_adiciones: data.plan_adiciones !== false, // Por defecto true para no romper lo actual
+          plan_promociones: data.plan_promociones !== false,
+          plan_reportes: data.plan_reportes !== false,
+          plan_diseno: data.plan_diseno !== false,
         });
       } catch (err) {
         console.error("Error cargando super admin:", err);
@@ -110,7 +114,37 @@ const AdminSuper = () => {
                 {form.canChangePassword ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
               </div>
             </div>
-            
+
+          </div>
+
+          <div className="adm-cfg__seccion-titulo" style={{ margin: "2rem 0 1rem" }}>
+            <Building size={16} /> Permisos y Módulos (Plan)
+          </div>
+          <p className="adm-cfg__alerta-texto" style={{ marginBottom: "2rem" }}>
+            Restringe el acceso a funciones premium del panel de administración según el plan del cliente.
+          </p>
+
+          <div className="adm-cfg__grid" style={{ gridTemplateColumns: "1fr", gap: "1rem" }}>
+            {[
+              { key: "plan_adiciones", label: "Módulo de Adiciones & Salsas", desc: "Permite gestionar opciones extra para los productos." },
+              { key: "plan_promociones", label: "Módulo de Promociones & Combos", desc: "Permite crear ofertas especiales y combos." },
+              { key: "plan_diseno", label: "Módulo de Diseño", desc: "Permite personalizar los colores y estilos del menú." },
+              { key: "plan_reportes", label: "Módulo de Reportes e Informes", desc: "Da acceso a analíticas de ventas y exportaciones." },
+            ].map((mod) => (
+              <div 
+                key={mod.key}
+                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem", backgroundColor: "#f9f9f9", borderRadius: "8px", cursor: "pointer" }}
+                onClick={() => handleChange(mod.key)}
+              >
+                <div>
+                  <strong style={{ display: "block", fontSize: "1.05rem" }}>{mod.label}</strong>
+                  <span style={{ fontSize: "0.8rem", color: "#666" }}>{mod.desc}</span>
+                </div>
+                <div style={{ color: form[mod.key] ? "#4caf50" : "#d32f2f" }}>
+                  {form[mod.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="adm-cfg__pie" style={{ marginTop: "2rem" }}>
