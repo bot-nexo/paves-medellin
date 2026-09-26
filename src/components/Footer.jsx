@@ -3,6 +3,7 @@ import { info } from "../data/menu";
 import { MapPin, Clock, ExternalLink } from "lucide-react";
 import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
+import { formatearDias } from "../utils/horario";
 import "../css/Footer.css";
 
 // settings viene del dataSource vía useCatalog (editable desde el panel admin).
@@ -80,10 +81,10 @@ const Footer = ({ settings = info, design = DEFAULT_CATALOG_DESIGN }) => {
                 <MapPin size={16} />
                 <span>{settings.address}</span>
               </li>
-              <li className="footer-contact-item">
+<li className="footer-contact-item">
                 <Clock size={16} />
                 <div>
-                  <strong>{settings.day1}</strong>
+                  <strong>{formatearDias(settings.day1)}</strong>
                   <span>{settings.hours1}</span>
                 </div>
               </li>

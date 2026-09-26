@@ -16,6 +16,7 @@ import CheckoutModal from "./components/CheckoutModal";
 import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
 import ArmaTuPaveModal from "./components/ArmaTuPaveModal";
 import RatingModal from "./components/RatingModal";
+import ScrollToTopButton from "./components/ScrollToTopButton";
 import { AdminRoutes } from "./admin/AppRoutes";
 import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./data/menu";
 
@@ -213,7 +214,7 @@ const App = () => {
     message += "*DATOS DEL CLIENTE*\n";
     message += "• *Nombre:* " + deliveryData.nombre + "\n";
     message += "• *Telefono:* " + deliveryData.telefono + "\n";
-    
+
     if (esDomicilio) {
       message += "• *Direccion:* " + deliveryData.direccion + "\n";
       if (deliveryData.unidad) message += "• *Unidad:* " + deliveryData.unidad + "\n";
@@ -224,7 +225,7 @@ const App = () => {
         message += "• *Tiempo est.:* ~" + deliveryData.deliveryMeta.durationMin + " min\n";
       }
     }
-    
+
     message += "• *Pago:* " + deliveryData.pago + "\n\n";
     message += "*DETALLE DEL PEDIDO*\n";
 
@@ -353,6 +354,7 @@ const App = () => {
               onOpenArmaModal={() => { setArmaEditItem(null); setIsArmaModalOpen(true); }}
             />
 
+            <ScrollToTopButton />
             <Footer settings={settings} design={design} />
 
             <BottomNavigation
@@ -366,8 +368,8 @@ const App = () => {
               (() => {
                 const badge = getCustomerBadge(customer.pedidos_count || 0);
                 return (
-                  <div 
-                    className="saborio-floating-badge" 
+                  <div
+                    className="saborio-floating-badge"
                     onClick={() => setIsCustomerModalOpen(true)}
                     title={`Nivel ${badge.name}: ${badge.description}`}
                     style={{
@@ -416,20 +418,20 @@ const App = () => {
                 if (isEdit) {
                   setCart((prev) => prev.filter(c => c.customizationKey !== oldKey));
                 }
-                
+
                 // Generar nueva key para el customProduct
                 const adicionesIds = Object.keys(customProduct.customizations.adiciones || {}).sort();
-                const salsasIds    = Object.keys(customProduct.customizations.salsas    || {}).sort();
-                
+                const salsasIds = Object.keys(customProduct.customizations.salsas || {}).sort();
+
                 const newKey = JSON.stringify({
                   productId: customProduct.id,
                   baseId: customProduct.customizations.base.id,
                   adiciones: adicionesIds,
                   salsas: salsasIds,
                 });
-                
+
                 customProduct.customizationKey = newKey;
-                
+
                 setCart((prev) => {
                   const existing = prev.find(c => c.customizationKey === newKey);
                   if (existing) {

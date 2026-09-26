@@ -228,7 +228,7 @@ export const info = {
   tiktok: "",
   phone: "",
   closed: "",
-  day1: "",
+  day1: [],
   hours1: "",
 };
 

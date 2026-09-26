@@ -91,6 +91,8 @@ const AdminLayout = () => {
 
   if (role === "superadmin") {
     navItemsToShow.push({ to: "/admin/super", label: "Superadmin", icon: ShieldCheck });
+  } else {
+    console.log("No es superadmin", role);
   }
 
   // Protección de rutas: si intentan entrar por URL a una ruta restringida, enviarlos al dashboard

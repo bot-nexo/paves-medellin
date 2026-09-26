@@ -20,6 +20,8 @@
 .qg-banner-content {
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 8px;
   color: #ffcc00;
   font-weight: 600;
@@ -100,18 +102,21 @@
 
 .qg-video-container {
   width: 100%;
-  aspect-ratio: 9/16;
-  background: #000;
+  background: transparent;
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 20px;
   border: 1px solid rgba(255, 204, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .qg-gif {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
 }
 
 .qg-steps {

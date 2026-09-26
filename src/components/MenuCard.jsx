@@ -55,12 +55,7 @@ const MenuCard = ({
                 <Flame size={12} className="saborio-badge-icon" />
                 Más popular
               </span>
-            ) : (
-              <span className="saborio-badge-rating">
-                <Star size={11} fill="currentColor" />
-                {product.rating || "4.9"}
-              </span>
-            )}
+            ) : null}
           </div>
         </div>
 

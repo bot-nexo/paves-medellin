@@ -50,7 +50,7 @@ const formatMinutosAHora = (minutosTotales, format24 = true) => {
 /**
  * Parsea el día/array de días en un texto legible
  */
-const formatearDias = (days) => {
+export const formatearDias = (days) => {
   if (!days) return "";
   
   let parsedDays = days;

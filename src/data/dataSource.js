@@ -120,7 +120,7 @@ const normalizeSettings = (row) => {
     facebook: row.facebook || "",
     tiktok: row.tiktok || "",
     closed: localInfo.closed || "",
-    day1: row.day1 || localInfo.day1,
+    day1: (() => { try { return row.day1 ? JSON.parse(row.day1) : (Array.isArray(localInfo.day1) ? localInfo.day1 : []); } catch { return Array.isArray(localInfo.day1) ? localInfo.day1 : []; } })(),
     hours1: row.hours1 || localInfo.hours1,
     logo_url: row.logo_url || "",
     deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO_DEFAULT,
@@ -497,6 +497,7 @@ export async function getSettings() {
     const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
     if (actualRazonSocial) {
       localStorage.setItem("store_razon_social", actualRazonSocial);
+      document.title = actualRazonSocial;
     }
     return cache.settings;
   }
@@ -506,6 +507,7 @@ export async function getSettings() {
     const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
     if (actualRazonSocial) {
       localStorage.setItem("store_razon_social", actualRazonSocial);
+      document.title = actualRazonSocial;
     }
     return cache.settings;
   }
@@ -518,6 +520,8 @@ export async function getSettings() {
       .maybeSingle();
     if (error) throw error;
     cache.settings = data ? normalizeSettings(data) : buildLocalSettings();
+    // const dias= formatearDias(cache.settings.day1);
+    // cache.settings.day1=dias;
   } catch (e) {
     console.warn("[dataSource] settings → fallback local:", e.message);
     cache.settings = buildLocalSettings();
@@ -526,6 +530,7 @@ export async function getSettings() {
   const actualRazonSocial = cache.settings?.razonSocial || cache.settings?.name || cache.settings?.razon_social;
   if (actualRazonSocial) {
     localStorage.setItem("store_razon_social", actualRazonSocial);
+    document.title = actualRazonSocial;
   }
   
   return cache.settings;
@@ -566,7 +571,7 @@ export async function getUserRole(userId) {
       .maybeSingle();
     if (error) throw error;
     const resolvedRole = data?.role || "admin";
-   // console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
+    //console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
     return resolvedRole;
   } catch (err) {
     console.error("[dataSource] Error obteniendo rol:", err.message);

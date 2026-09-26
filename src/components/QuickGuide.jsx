@@ -25,7 +25,7 @@ const QuickGuide = () => {
     <>
       <div className="quick-guide-banner" onClick={openGuide}>
         <div className="qg-banner-content">
-          <span>🎥 ¿Cómo hacer tu pedido en 15 segundos? Ver guía</span>
+          <span>🎥 ¿Cómo pedir fácilmente?</span>
         </div>
         {!hasClickedGuide && <div className="qg-pulsing-badge"></div>}
       </div>

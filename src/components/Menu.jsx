@@ -212,53 +212,6 @@ const Menu = ({
     <section id="menu" className="menu-section bg-neutral-950 text-neutral-100" style={cssVariables}>
       <div className="container mx-auto px-4 max-w-5xl">
 
-        {/* ── 0. Barra de Búsqueda Integrada al Menú ─ */}
-        <div 
-          className="menu-search-wrapper"
-          style={{ top: d.specialEvent?.active ? '75px' : '0' }}
-        >
-          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-            <div className="menu-search-box" style={{ flex: 1 }}>
-              <Search size={17} className="menu-search-icon" />
-              <input
-              id="menu-search-input"
-              type="text"
-              className="menu-search-input"
-              placeholder="¿Qué antojo tienes hoy?"
-              value={searchQuery}
-              onChange={(e) => {
-                if (setSearchQuery) setSearchQuery(e.target.value);
-              }}
-              aria-label="Buscar en el menú"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                className="menu-search-clear"
-                onClick={() => { if (setSearchQuery) setSearchQuery(""); }}
-                aria-label="Limpiar búsqueda"
-              >
-                <X size={15} />
-              </button>
-            )}
-            </div>
-            <button 
-              type="button" 
-              style={{ background: "#ffcc00", color: "#120a06", padding: '0 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '0.85rem' }}
-              onClick={onOpenArmaModal}
-            >
-              <Sparkles size={14} /> Arma tu Pavé
-            </button>
-          </div>
-          {searchQuery && (
-            <p className="menu-search-results-hint">
-              {filteredProducts.length === 0
-                ? "Sin resultados para "
-                : `${filteredProducts.length} resultado${filteredProducts.length !== 1 ? "s" : ""} para `}
-              <strong>"{searchQuery}"</strong>
-            </p>
-          )}
-        </div>
 
         {/* ── Banner de Guía Rápida ── */}
         <QuickGuide />
@@ -395,10 +348,53 @@ const Menu = ({
           }}
         />
 
-        {/* ── 3. Sección Removida por solicitud: Las promos ahora son solo una categoría normal ── */}
-
-
-
+        {/* ── 0. Barra de Búsqueda Integrada al Menú ─ */}
+        <div 
+          className="menu-search-wrapper"
+          style={{ top: d.specialEvent?.active ? '75px' : '0' }}
+        >
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            <div className="menu-search-box" style={{ flex: 1 }}>
+              <Search size={17} className="menu-search-icon" />
+              <input
+              id="menu-search-input"
+              type="text"
+              className="menu-search-input"
+              placeholder="¿Qué antojo tienes hoy?"
+              value={searchQuery}
+              onChange={(e) => {
+                if (setSearchQuery) setSearchQuery(e.target.value);
+              }}
+              aria-label="Buscar en el menú"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="menu-search-clear"
+                onClick={() => { if (setSearchQuery) setSearchQuery(""); }}
+                aria-label="Limpiar búsqueda"
+              >
+                <X size={15} />
+              </button>
+            )}
+            </div>
+            <button 
+              type="button" 
+              style={{ background: "#ffcc00", color: "#120a06", padding: '0 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '0.85rem' }}
+              onClick={onOpenArmaModal}
+            >
+              <Sparkles size={14} /> Arma tu Pavé
+            </button>
+          </div>
+          {searchQuery && (
+            <p className="menu-search-results-hint">
+              {filteredProducts.length === 0
+                ? "Sin resultados para "
+                : `${filteredProducts.length} resultado${filteredProducts.length !== 1 ? "s" : ""} para `}
+              <strong>"{searchQuery}"</strong>
+            </p>
+          )}
+        </div>
         {/* ── 4. Catálogo Completo / Productos de la Categoría Seleccionada ── */}
         <div id="catalog-section" className="catalog-section">
           <div className="catalog-header">

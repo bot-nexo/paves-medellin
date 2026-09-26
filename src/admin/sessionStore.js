@@ -25,6 +25,7 @@ export const setAdminSession = async (newSession) => {
   session = newSession;
   if (newSession?.user) {
     role = await getUserRole(newSession.user.id);
+    //console.log("Rol desde sessionStore", role);
   } else {
     role = null;
   }
