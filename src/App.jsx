@@ -21,6 +21,7 @@ import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./da
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
+
 import { createOrder, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
 import { getCustomerBadge } from "./utils/badges";
 import { estaAbiertoSegunHorario } from "./utils/horario";
@@ -32,6 +33,7 @@ import {
 const App = () => {
   // Catálogo dinámico (Supabase ↔ local): productos, categorías, settings y diseño
   const { categories, products, settings, design } = useCatalog();
+
   const {
     cart,
     cartCount,
@@ -72,6 +74,7 @@ const App = () => {
   });
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
+
 
   // Al cerrar o salir de la página del menú, eliminar la info del cliente de storage para garantizar la seguridad de los datos
   useEffect(() => {

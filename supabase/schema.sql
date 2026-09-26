@@ -448,3 +448,13 @@ ALTER TABLE store_ratings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Ratings public insert" ON store_ratings FOR INSERT WITH CHECK (true);
 CREATE POLICY "Ratings public read" ON store_ratings FOR SELECT USING (true);
 
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  telefono text,
+  endpoint text NOT NULL UNIQUE,
+  p256dh text NOT NULL,
+  auth text NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+

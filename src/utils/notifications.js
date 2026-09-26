@@ -1,39 +1,59 @@
-export const sendEmailResend = async (to, subject, html) => {
-  const apiKey = import.meta.env.VITE_RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn("Falta VITE_RESEND_API_KEY en .env. No se enviará el correo.");
-    return false;
-  }
+import { supabase } from "../services/supabaseClient";
 
+export const sendEmailResend = async (to, subject, html) => {
+  console.log("📨 Iniciando envío de correo vía Edge Function a:", to);
+  
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: "Paves Medellín <pedidos@pavesmedellin.com>", // Requiere un dominio verificado en Resend
-        to: [to],
-        subject: subject,
-        html: html,
-      }),
+    const { data, error } = await supabase.functions.invoke("send-email", {
+      body: { to, subject, html },
     });
 
-    if (!res.ok) {
-      const error = await res.json();
-      console.error("Error enviando email con Resend:", error);
+    if (error) {
+      console.error("❌ Error ejecutando la Edge Function:", error);
       return false;
     }
+    
+    console.log("✅ ¡Correo enviado exitosamente vía Edge Function!");
     return true;
   } catch (error) {
-    console.error("Excepción enviando email:", error);
+    console.error("❌ Excepción llamando a la Edge Function:", error);
     return false;
   }
 };
 
 export const notificarCambioEstado = async (pedido, nuevoEstado) => {
-  if (!pedido.email) return; // Si el cliente no dejó email, omitimos
+  console.log("🔍 Intentando notificar cambio de estado para pedido:", pedido.numero, "a estado:", nuevoEstado);
+  
+  let emailParaEnviar = pedido.email;
+  console.log("📩 Email que viene en el pedido (antes de buscar):", emailParaEnviar);
+
+  // Si el pedido no trae el email, lo buscamos en la tabla clientes usando el teléfono
+  if (!emailParaEnviar && pedido.telefono) {
+    const cleanPhone = String(pedido.telefono).replace(/\D/g, "");
+    console.log("📱 Buscando email en BD para el teléfono:", cleanPhone);
+    try {
+      const { data } = await supabase
+        .from("clientes")
+        .select("email")
+        .eq("telefono", cleanPhone)
+        .maybeSingle();
+        
+      console.log("📂 Resultado de BD:", data);
+      
+      if (data && data.email) {
+        emailParaEnviar = data.email;
+      }
+    } catch (err) {
+      console.warn("⚠️ No se pudo obtener el email del cliente:", err.message);
+    }
+  }
+
+  console.log("📧 Email final a utilizar:", emailParaEnviar);
+
+  if (!emailParaEnviar) {
+    console.warn("⛔ No hay email disponible para el cliente, notificación omitida.");
+    return;
+  }
 
   let subject = "";
   let mensaje = "";
@@ -95,7 +115,7 @@ export const notificarCambioEstado = async (pedido, nuevoEstado) => {
       return;
   }
 
-  await sendEmailResend(pedido.email, subject, mensaje);
+  await sendEmailResend(emailParaEnviar, subject, mensaje);
 };
 
 export const generarMensajeWhatsApp = (pedido, estado) => {

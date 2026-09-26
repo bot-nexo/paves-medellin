@@ -566,7 +566,7 @@ export async function getUserRole(userId) {
       .maybeSingle();
     if (error) throw error;
     const resolvedRole = data?.role || "admin";
-    console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
+   // console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
     return resolvedRole;
   } catch (err) {
     console.error("[dataSource] Error obteniendo rol:", err.message);
@@ -1182,7 +1182,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, 
       .maybeSingle();
 
     if (!selectErr && custData) {
-      console.log("[dataSource] Cliente ya existe en Supabase DB:", custData);
+     // console.log("[dataSource] Cliente ya existe en Supabase DB:", custData);
       const updates = {};
       if (cleanCumple && !custData.fecha_cumple) updates.fecha_cumple = cleanCumple;
       if (cleanNombre && (!custData.nombre || custData.nombre === "Cliente")) updates.nombre = cleanNombre;
@@ -1213,7 +1213,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, 
     });
 
     if (!rpcErr && rpcRes) {
-      console.log("[dataSource] ✅ Cliente registrado via RPC:", rpcRes);
+     // console.log("[dataSource] ✅ Cliente registrado via RPC:", rpcRes);
       return {
         ...rpcRes,
         pedidos_count: rpcRes.pedidos_count ?? rpcRes.cant_pedidos_concretados ?? 0,
@@ -1230,7 +1230,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, 
       fecha_cumple: cleanCumple || null,
     };
 
-    console.log("[dataSource] Insertando nuevo cliente en Supabase DB...", payload);
+    //console.log("[dataSource] Insertando nuevo cliente en Supabase DB...", payload);
 
     const { data: newCust, error: insertErr } = await supabase
       .from("clientes")
@@ -1249,11 +1249,11 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, 
       if (upsertErr) {
         console.error("[dataSource] ❌ Error final registrando cliente en BD Supabase:", upsertErr.message);
       } else if (upsertedCust) {
-        console.log("[dataSource] ✅ Cliente guardado via upsert en BD:", upsertedCust);
+        //console.log("[dataSource] ✅ Cliente guardado via upsert en BD:", upsertedCust);
         return upsertedCust;
       }
     } else if (newCust) {
-      console.log("[dataSource] ✅ Cliente registrado con éxito en BD:", newCust);
+     // console.log("[dataSource] ✅ Cliente registrado con éxito en BD:", newCust);
       return {
         ...newCust,
         pedidos_count: newCust.pedidos_count ?? newCust.cant_pedidos_concretados ?? 0,
