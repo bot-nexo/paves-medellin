@@ -51,8 +51,8 @@ CREATE OR REPLACE FUNCTION "public"."check_single_superadmin"() RETURNS "trigger
 BEGIN
   IF NEW.role = 'superadmin' THEN
     IF EXISTS (
-      SELECT 1 FROM public.user_roles 
-      WHERE role = 'superadmin' 
+      SELECT 1 FROM public.user_roles
+      WHERE role = 'superadmin'
         AND id <> NEW.id
     ) THEN
       RAISE EXCEPTION 'Operación denegada: Ya existe un Superadmin registrado. No está permitido tener más de un Superadmin en el sistema.';
@@ -175,7 +175,7 @@ DECLARE
 BEGIN
     -- Buscar si existe
     SELECT * INTO v_cliente FROM clientes WHERE telefono = p_telefono LIMIT 1;
-    
+
     IF NOT FOUND THEN
         -- Crear si no existe
         INSERT INTO clientes (telefono, nombre, fecha_cumple, email, pedidos_count, cant_pedidos_concretados)
@@ -187,7 +187,7 @@ BEGIN
             UPDATE clientes SET email = p_email WHERE telefono = p_telefono RETURNING * INTO v_cliente;
         END IF;
     END IF;
-    
+
     RETURN v_cliente;
 END;
 $$;
@@ -466,6 +466,10 @@ CREATE TABLE IF NOT EXISTS "public"."settings" (
     "price_per_km" integer DEFAULT 1500 NOT NULL,
     "max_delivery_radius_km" double precision DEFAULT 15 NOT NULL,
     "dynamic_delivery_enabled" boolean DEFAULT false NOT NULL,
+    "plan_adiciones" boolean DEFAULT true NOT NULL,
+    "plan_promociones" boolean DEFAULT true NOT NULL,
+    "plan_reportes" boolean DEFAULT true NOT NULL,
+    "plan_diseno" boolean DEFAULT true NOT NULL,
     "useCustomerBadges" boolean DEFAULT true NOT NULL,
     CONSTRAINT "settings_id_check" CHECK (("id" = 1))
 );

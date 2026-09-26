@@ -8,17 +8,17 @@
 //
 // El shape de los datos es idéntico al que ya consume la tienda
 // (ver src/data/menu.js), así no hay que tocar MenuCard/Menu/etc.
-import { supabase, isSupabaseConfigured } from "../services/supabaseClient";
 import { deleteProductImage } from "../services/storage";
-import {
-  products as localProducts,
-  categories as localCategories,
-  info as localInfo,
-  localImagesByNombre,
-  VALOR_DOMICILIO_DEFAULT,
-  MINIMO_ENVIO_GRATIS_DEFAULT,
-} from "./menu";
+import { isSupabaseConfigured, supabase } from "../services/supabaseClient";
 import { calculateItemUnitPrice } from "../utils/price";
+import {
+    categories as localCategories,
+    localImagesByNombre,
+    info as localInfo,
+    products as localProducts,
+    MINIMO_ENVIO_GRATIS_DEFAULT,
+    VALOR_DOMICILIO_DEFAULT,
+} from "./menu";
 
 // ── Cache en memoria + suscripción a cambios (realtime) ─────────────────────
 const cache = { categories: null, products: null, settings: null, design: null };
@@ -131,6 +131,10 @@ const normalizeSettings = (row) => {
     forceClosed: row.force_closed === true,
     isActive: row.is_active !== false,
     canChangePassword: row.can_change_password !== false,
+    plan_adiciones: row.plan_adiciones !== false,
+    plan_promociones: row.plan_promociones !== false,
+    plan_reportes: row.plan_reportes !== false,
+    plan_diseno: row.plan_diseno !== false,
     // ── Domicilio Dinámico (Mapbox) ──
     storeLat: row.store_lat ?? null,
     storeLng: row.store_lng ?? null,
@@ -380,6 +384,10 @@ const buildLocalSettings = () => ({
   forceClosed: false,
   isActive: true,
   canChangePassword: true,
+  plan_adiciones: true,
+  plan_promociones: true,
+  plan_reportes: true,
+  plan_diseno: true,
   // ── Domicilio Dinámico (desactivado por defecto en local) ──
   storeLat: null,
   storeLng: null,
@@ -526,13 +534,13 @@ export async function getSettings() {
     console.warn("[dataSource] settings → fallback local:", e.message);
     cache.settings = buildLocalSettings();
   }
-  
+
   const actualRazonSocial = cache.settings?.razonSocial || cache.settings?.name || cache.settings?.razon_social;
   if (actualRazonSocial) {
     localStorage.setItem("store_razon_social", actualRazonSocial);
     document.title = actualRazonSocial;
   }
-  
+
   return cache.settings;
 }
 
@@ -966,12 +974,12 @@ export async function updateSettings(cambios) {
   });
   const { error } = await supabase.from("settings").upsert({ id: 1, ...fila });
   if (error) throw error;
-  
+
   const updatedRazonSocial = cambios.razonSocial || cambios.razon_social || fila.razon_social;
   if (updatedRazonSocial) {
     localStorage.setItem("store_razon_social", updatedRazonSocial);
   }
-  
+
   invalidateCatalog(); // la tienda refresca WhatsApp/domicilios en segundos
 }
 
@@ -1053,7 +1061,7 @@ export async function updateCatalogDesign(cambios) {
       fila[COLUMNAS_DESIGN[clave]] = valor;
     }
   });
-  
+
   if (Object.keys(fila).length === 0) return;
 
   const { error } = await supabase.from("catalog_design").upsert({ id: 1, ...fila });
@@ -1089,15 +1097,15 @@ export async function getStoreRatingStats() {
   const { data, error } = await supabase
     .from("store_ratings")
     .select("rating");
-  
+
   if (error) return { average: 5, total: 0 };
-  
+
   if (!data || data.length === 0) return { average: 5, total: 0 };
-  
+
   const total = data.length;
   const sum = data.reduce((acc, curr) => acc + curr.rating, 0);
   const average = Number((sum / total).toFixed(1));
-  
+
   return { average, total };
 }
 
@@ -1105,7 +1113,7 @@ export async function submitStoreRating(telefono, rating, comment = "") {
   const { error } = await supabase
     .from("store_ratings")
     .insert([{ telefono, rating, comment }]);
-    
+
   if (error) throw error;
   return true;
 }

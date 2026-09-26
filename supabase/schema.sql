@@ -51,6 +51,10 @@ create table if not exists public.settings (
   offers_pickup           boolean not null default true,   -- 🏪 recogida en tienda
   offersLocal             boolean not null default true,   -- 🍽️ local
   force_closed            boolean not null default false,  -- cierre de emergencia
+  plan_adiciones          boolean not null default true,
+  plan_promociones        boolean not null default true,
+  plan_reportes           boolean not null default true,
+  plan_diseno             boolean not null default true,
   slogan                  text not null default '',
   razon_social            text not null default '',
   updated_at              timestamptz not null default now()
@@ -209,7 +213,7 @@ create table if not exists public.catalog_design (
   id                    int primary key default 1 check (id = 1),
   app_bg                text not null default '#fdfbf7',
   font_family           text not null default 'Montserrat',
-  
+
   -- Hero
   hero_bg               text not null default 'linear-gradient(180deg, #fdf1f1 0%, #fecdcd 100%)',
   hero_header_bg        text not null default 'rgba(255, 255, 255, 0.72)',
@@ -219,7 +223,7 @@ create table if not exists public.catalog_design (
   hero_badge_text       text not null default '#d92b38',
   hero_float_cart_bg    text not null default '#3d2314',
   hero_float_cart_text  text not null default '#ffffff',
-  
+
   -- Promociones
   show_promotions       boolean not null default true,
   promotions_title      text not null default 'Promociones & Especiales',
@@ -228,7 +232,7 @@ create table if not exists public.catalog_design (
   promotions_card_bg    text not null default '#ffffff',
   promotions_accent     text not null default '#d92b38',
   promotions_items      jsonb not null default '[]'::jsonb,
-  
+
   -- Combos
   show_combos           boolean not null default true,
   combos_title          text not null default 'Combos & Packs para Compartir',
@@ -237,7 +241,7 @@ create table if not exists public.catalog_design (
   combos_card_bg        text not null default '#ffffff',
   combos_accent         text not null default '#d92b38',
   combos_items          jsonb not null default '[]'::jsonb,
-  
+
   -- Menú
   bg_color              text not null default '#fecdcd',
   card_bg               text not null default '#fdfbf7',
@@ -266,12 +270,12 @@ create table if not exists public.catalog_design (
   columns_mobile        text not null default '1',
   card_layout           text not null default 'vertical',
   image_aspect_ratio    text not null default '4/3',
-  
+
   -- Footer
   footer_bg             text not null default 'linear-gradient(180deg, #1a0f08 0%, #0d0705 100%)',
   footer_text           text not null default 'rgba(255, 255, 255, 0.7)',
   footer_accent         text not null default '#d92b38',
-  
+
   updated_at            timestamptz not null default now()
 );
 
