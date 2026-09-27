@@ -21,7 +21,7 @@ import {
 } from "./menu";
 
 // ── Cache en memoria + suscripción a cambios (realtime) ─────────────────────
-const cache = { categories: null, products: null, settings: null, design: null };
+const cache = { categories: null, products: null, settings: null, design: null, badges: null };
 const listeners = new Set();
 
 const notify = () => listeners.forEach((fn) => { try { fn(); } catch { /* noop */ } });
@@ -142,6 +142,10 @@ const normalizeSettings = (row) => {
     pricePerKm: row.price_per_km ?? 1500,
     maxDeliveryRadiusKm: row.max_delivery_radius_km ?? 15,
     dynamicDeliveryEnabled: row.dynamic_delivery_enabled === true,
+    useCustomerBadges: row.use_customer_badges !== false,
+    plan_fidelizacion: row.plan_fidelizacion !== false,
+    plan_configuracion: row.plan_configuracion !== false,
+    plan_domicilio_dinamico: row.plan_domicilio_dinamico !== false,
   };
 };
 
@@ -395,6 +399,10 @@ const buildLocalSettings = () => ({
   pricePerKm: 1500,
   maxDeliveryRadiusKm: 15,
   dynamicDeliveryEnabled: false,
+  useCustomerBadges: true,
+  plan_fidelizacion: true,
+  plan_configuracion: true,
+  plan_domicilio_dinamico: true,
 });
 
 // ── Realtime: refresca el cache cuando el admin cambia algo ──────────────────
@@ -426,6 +434,8 @@ const initRealtime = () => {
       () => invalidate("products", getProducts))
     .on("postgres_changes", { event: "*", schema: "public", table: "catalog_design" },
       () => invalidate("design", getCatalogDesign))
+    .on("postgres_changes", { event: "*", schema: "public", table: "badges" },
+      () => invalidate("badges", getBadges))
     .subscribe((status) => {
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         realtimeInitialized = false; // permite reintento en la próxima lectura
@@ -438,7 +448,7 @@ export const invalidateCatalog = () => {
   cache.categories = null;
   cache.products = null;
   cache.settings = null;
-  cache.design = null;
+  cache.design = null; cache.badges = null;
 };
 
 // ── API pública: getters (siempre async, shape uniforme) ─────────────────────
@@ -964,6 +974,10 @@ const COLUMNAS_SETTINGS = {
   pricePerKm: "price_per_km",
   maxDeliveryRadiusKm: "max_delivery_radius_km",
   dynamicDeliveryEnabled: "dynamic_delivery_enabled",
+  useCustomerBadges: "use_customer_badges",
+  plan_fidelizacion: "plan_fidelizacion",
+  plan_configuracion: "plan_configuracion",
+  plan_domicilio_dinamico: "plan_domicilio_dinamico",
 };
 
 /** Actualiza la fila única de settings (upsert: crea la fila si no existe). */
@@ -1309,4 +1323,32 @@ export async function incrementCustomerOrderCount(telefono, nombre = "") {
   }
 }
 
+// ── Insignias (Badges) ────────────────────────────────────────────────────────
+export async function getBadges() {
+  if (cache.badges) return cache.badges;
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from("badges")
+      .select("*")
+      .order("required_orders", { ascending: true });
+    if (error) throw error;
+    cache.badges = data;
+    return data;
+  } catch (e) {
+    console.warn("[dataSource] badges → fallback local:", e.message);
+    return [];
+  }
+}
 
+export async function upsertBadge(badge) {
+  const { error } = await supabase.from("badges").upsert(badge);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+export async function deleteBadge(id) {
+  const { error } = await supabase.from("badges").delete().eq("id", id);
+  if (error) throw error;
+  invalidateCatalog();
+}

@@ -7,6 +7,7 @@ import {
   DEFAULT_CATALOG_DESIGN,
   subscribeToCatalog,
   invalidateCatalog,
+  getBadges,
 } from "../data/dataSource";
 import {
   categories as localCategories,
@@ -31,20 +32,21 @@ const useCatalog = () => {
     freeDeliveryThreshold: 0,
   });
   const [design, setDesign] = useState(DEFAULT_CATALOG_DESIGN);
+  const [badges, setBadges] = useState([]);
 
   const load = useCallback(async () => {
-    const [cats, prods, sett, dsg] = await Promise.all([
+    const [cats, prods, sett, dsg, bdgs] = await Promise.all([
       getCategories(),
       getProducts(),
       getSettings(),
       getCatalogDesign(),
+      getBadges(),
     ]);
     setCategories(cats);
-    // Los productos agotados (disponible=false, editables desde la BD/panel)
-    // no se muestran en la tienda.
     setProducts(prods.filter((p) => p.disponible !== false));
     setSettings(sett);
     if (dsg) setDesign(dsg);
+    if (bdgs) setBadges(bdgs);
   }, []);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ const useCatalog = () => {
     };
   }, [load]);
 
-  return { categories, products, settings, design, reloadCatalog: load };
+  return { categories, products, settings, design, badges, reloadCatalog: load };
 };
 
 export default useCatalog;

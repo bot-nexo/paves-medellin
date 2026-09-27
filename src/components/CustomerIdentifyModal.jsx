@@ -4,7 +4,7 @@ import "../css/CustomerIdentifyModal.css";
 import { findCustomerByPhone } from "../data/dataSource";
 import { getCustomerBadge } from "../utils/badges";
 
-const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustomer = null, settings }) => {
+const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustomer = null, settings, badges = [] }) => {
   const [step, setStep] = useState(1);
   const [telefono, setTelefono] = useState(currentCustomer?.telefono || "");
   const [nombre, setNombre] = useState(currentCustomer?.nombre || "");
@@ -17,10 +17,18 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
 
   useEffect(() => {
     if (isOpen) {
-      setStep(1);
+      if (currentCustomer && currentCustomer.nombre) {
+        setStep(3);
+        setWelcomeName(currentCustomer.nombre);
+        if (settings?.plan_fidelizacion !== false) {
+          setCustomerBadge(getCustomerBadge(currentCustomer.pedidos_count || 0, badges));
+        }
+      } else {
+        setStep(1);
+        setWelcomeName("");
+        setCustomerBadge(null);
+      }
       setErrorMsg("");
-      setWelcomeName("");
-      setCustomerBadge(null);
       setIsChecking(false);
       setTelefono(currentCustomer?.telefono || "");
       setNombre(currentCustomer?.nombre || "");
@@ -52,8 +60,8 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
         setWelcomeName(dbCust.nombre || "Cliente");
         const count = dbCust.pedidos_count ?? dbCust.cant_pedidos_concretados ?? 0;
         
-        if (settings?.useCustomerBadges !== false) {
-          setCustomerBadge(getCustomerBadge(count));
+        if (settings?.plan_fidelizacion !== false) {
+          setCustomerBadge(getCustomerBadge(count, badges));
         }
         
         const fullCust = {
@@ -129,7 +137,42 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
           </p>
         </div>
 
-        {welcomeName ? (
+        {step === 3 ? (
+          <div className="customer-welcome-banner" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "1rem" }}>
+            <h4 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>¡Hola, {welcomeName}!</h4>
+            <p style={{ color: "#aaa", marginBottom: "1rem" }}>Este es tu perfil y nivel actual.</p>
+            
+            {customerBadge && (
+              <div className="customer-badge-display" style={{ marginTop: "1rem", padding: "1.5rem", backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "10px", textAlign: "center", width: "100%" }}>
+                <Award size={48} color={customerBadge.color} style={{ margin: "0 auto", display: "block", marginBottom: "0.5rem" }} />
+                <strong style={{ color: customerBadge.color, fontSize: "1.2rem", display: "block", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  Nivel {customerBadge.name}
+                </strong>
+                <span style={{ fontSize: "0.9rem", color: "#aaa", display: "block", marginBottom: "1rem" }}>{customerBadge.description}</span>
+                
+                {(customerBadge.discount_percentage > 0 || customerBadge.free_delivery) && (
+                  <div style={{ padding: "10px", background: "rgba(255, 204, 0, 0.1)", borderRadius: "8px", border: "1px dashed rgba(255, 204, 0, 0.4)", marginBottom: "1rem" }}>
+                    <strong style={{ color: "#ffcc00", display: "block", marginBottom: "4px" }}>Tus Beneficios Activos:</strong>
+                    {customerBadge.discount_percentage > 0 && <div style={{ fontSize: "0.9rem" }}>✨ {customerBadge.discount_percentage}% de descuento en tus pedidos</div>}
+                    {customerBadge.free_delivery && <div style={{ fontSize: "0.9rem" }}>🚚 Envío totalmente gratis</div>}
+                  </div>
+                )}
+                
+                <div style={{ textAlign: "left", fontSize: "0.85rem", color: "#888", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "1rem" }}>
+                  <strong>Próximo Nivel:</strong> Acumula más pedidos para subir de nivel y obtener mejores beneficios. <br/>
+                  <em>Tienes {currentCustomer?.pedidos_count || 0} pedidos registrados.</em>
+                </div>
+              </div>
+            )}
+            
+            <button type="button" onClick={onClose} className="customer-submit-btn" style={{ marginTop: "1.5rem" }}>
+              Continuar viendo el menú
+            </button>
+            <button type="button" onClick={() => { localStorage.removeItem("paves_customer_info"); sessionStorage.removeItem("paves_customer_info"); window.location.reload(); }} className="customer-skip-btn" style={{ marginTop: "0.5rem" }}>
+              Cerrar sesión (Cambiar cuenta)
+            </button>
+          </div>
+        ) : welcomeName ? (
           <div className="customer-welcome-banner" style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "2rem 1rem" }}>
             <CheckCircle2 size={48} color="#10b981" style={{ marginBottom: "1rem" }} />
             <div>

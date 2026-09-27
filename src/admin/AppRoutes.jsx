@@ -15,6 +15,8 @@ const AdminConfiguracion = lazy(() => import("./pages/Configuracion"));
 const AdminDiseno       = lazy(() => import("./pages/Diseno"));
 const AdminPromociones  = lazy(() => import("./pages/Promociones"));
 const AdminReportes     = lazy(() => import("./pages/Reportes"));
+const AdminFidelizacion = lazy(() => import("./pages/Fidelizacion"));
+const AdminDomicilios   = lazy(() => import("./pages/Domicilios"));
 const AdminSuper         = lazy(() => import("./pages/Superadmin"));
 
 /** Guard: solo con sesión activa se ve el panel. Mientras carga la sesión, no decide. */
@@ -49,6 +51,8 @@ export const AdminRoutes = () => (
       <Route path="pedidos"       element={<Suspense fallback={<Cargando />}><AdminPedidos /></Suspense>} />
       <Route path="diseno"        element={<Suspense fallback={<Cargando />}><AdminDiseno /></Suspense>} />
       <Route path="promociones"   element={<Suspense fallback={<Cargando />}><AdminPromociones /></Suspense>} />
+      <Route path="fidelizacion"  element={<Suspense fallback={<Cargando />}><AdminFidelizacion /></Suspense>} />
+      <Route path="domicilios"    element={<Suspense fallback={<Cargando />}><AdminDomicilios /></Suspense>} />
       <Route path="reportes"      element={<Suspense fallback={<Cargando />}><AdminReportes /></Suspense>} />
       <Route path="empresa"       element={<Suspense fallback={<Cargando />}><AdminNegocio /></Suspense>} />
       <Route path="configuracion" element={<Suspense fallback={<Cargando />}><AdminConfiguracion /></Suspense>} />

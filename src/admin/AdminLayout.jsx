@@ -18,6 +18,8 @@ import {
   Tags,
   User,
   X,
+  Award,
+  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -36,6 +38,8 @@ const NAV_ITEMS = [
   { to: "/admin/adiciones", label: "Adiciones & Salsas", icon: Sparkles },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
   { to: "/admin/reportes", label: "Reportes e Informes", icon: BarChart3 },
+  { to: "/admin/domicilios", label: "Domicilios", icon: MapPin },
+  { to: "/admin/fidelizacion", label: "Fidelización", icon: Award },
   { to: "/admin/promociones", label: "Promos & Combos", icon: Tag },
   { to: "/admin/diseno", label: "Diseño Menú", icon: Palette },
   { to: "/admin/empresa", label: "Empresa", icon: Store },
@@ -85,6 +89,9 @@ const AdminLayout = () => {
     if (item.to === "/admin/adiciones" && settings?.plan_adiciones === false) return false;
     if (item.to === "/admin/promociones" && settings?.plan_promociones === false) return false;
     if (item.to === "/admin/reportes" && settings?.plan_reportes === false) return false;
+    if (item.to === "/admin/domicilios" && settings?.plan_domicilio_dinamico === false) return false;
+    if (item.to === "/admin/fidelizacion" && settings?.plan_fidelizacion === false) return false;
+    if (item.to === "/admin/configuracion" && settings?.plan_configuracion === false) return false;
     if (item.to === "/admin/diseno" && settings?.plan_diseno === false) return false;
     return true;
   });
@@ -110,6 +117,15 @@ const AdminLayout = () => {
     return <Navigate to="/admin" replace />;
   }
   if (currentPath === "/admin/reportes" && settings?.plan_reportes === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/domicilios" && settings?.plan_domicilio_dinamico === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/fidelizacion" && settings?.plan_fidelizacion === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/configuracion" && settings?.plan_configuracion === false) {
     return <Navigate to="/admin" replace />;
   }
   if (currentPath === "/admin/diseno" && settings?.plan_diseno === false) {

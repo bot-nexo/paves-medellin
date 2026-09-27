@@ -25,6 +25,7 @@ import {
   calculateItemUnitPrice,
   calculateOrderSummary,
 } from "../utils/price";
+import { getCustomerBadge } from "../utils/badges";
 import { info as infoLocal, VALOR_DOMICILIO_DEFAULT } from "../data/menu";
 import { getPaymentMethods } from "../data/dataSource";
 import AddressAutocomplete from "./AddressAutocomplete";
@@ -38,6 +39,8 @@ const CheckoutModal = ({
   settings = infoLocal,
   design = {},
   estadoNegocio = null,
+  badges = [],
+  customer = null,
 }) => {
   const [step, setStep] = useState(1);
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -116,17 +119,26 @@ const CheckoutModal = ({
     ? deliveryResult.fee
     : null;
 
+  // Calcular badge actual del cliente para aplicar beneficios
+  const currentBadge = settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false && customer 
+    ? getCustomerBadge(customer.pedidos_count || 0, badges) 
+    : null;
+
   const {
     subtotal: totalProductos,
     esGratis,
     totalNeto: totalNetoAPagar,
     effectiveFee,
+    descuentoBadge,
+    descuento2x1,
+    beneficiosAplican,
   } = calculateOrderSummary(
     cart,
     settings?.deliveryFee,
     settings?.freeDeliveryThreshold,
     esDomicilio,
-    dynamicFee
+    dynamicFee,
+    currentBadge
   );
 
   const handleChange = (e) => {
@@ -602,6 +614,26 @@ const CheckoutModal = ({
               
               <div className="totals-divider"></div>
               
+              {descuento2x1 > 0 && (
+                <div className="totals-row" style={{ color: "#22c55e" }}>
+                  <span className="totals-label">🎉 2x1 ({currentBadge?.name}):</span>
+                  <span className="totals-value">-{formatCOP(descuento2x1)}</span>
+                </div>
+              )}
+
+              {descuentoBadge > 0 && (
+                <div className="totals-row" style={{ color: "#22c55e" }}>
+                  <span className="totals-label">Descuento ({currentBadge?.name}):</span>
+                  <span className="totals-value">-{formatCOP(descuentoBadge)}</span>
+                </div>
+              )}
+
+              {currentBadge && !beneficiosAplican && (
+                <div className="totals-row" style={{ fontSize: "0.8rem", color: "#f59e0b", fontStyle: "italic" }}>
+                  <span>⚠️ Tu insignia {currentBadge.name} no aplica beneficios hoy.</span>
+                </div>
+              )}
+
               <div className="totals-row grand-total">
                 <span className="totals-label">Total a Pagar:</span>
                 <span className="totals-value highlighted">{formatCOP(totalNetoAPagar)}</span>

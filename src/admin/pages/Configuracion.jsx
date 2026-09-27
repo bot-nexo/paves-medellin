@@ -25,7 +25,6 @@ const Configuracion = () => {
           offersPickup: s.offersPickup !== false,
           offersLocal: s.offersLocal !== false,
           forceClosed: s.forceClosed === true,
-          useCustomerBadges: s.useCustomerBadges !== false,
           // Domicilio Dinámico
           dynamicDeliveryEnabled: s.dynamicDeliveryEnabled === true,
           storeLat: s.storeLat ?? "",
@@ -33,6 +32,8 @@ const Configuracion = () => {
           baseDeliveryFee: s.baseDeliveryFee ?? 3000,
           pricePerKm: s.pricePerKm ?? 1500,
           maxDeliveryRadiusKm: s.maxDeliveryRadiusKm ?? 15,
+          // Permisos del superadmin para la vista
+          _plan_domicilio_dinamico: s.plan_domicilio_dinamico !== false,
         });
       } catch (e) {
         Swal.fire({
@@ -95,7 +96,6 @@ const Configuracion = () => {
           offersDelivery: form.offersDelivery,
           offersPickup: form.offersPickup,
           offersLocal: form.offersLocal,
-          useCustomerBadges: form.useCustomerBadges,
           // Domicilio Dinámico
           dynamicDeliveryEnabled: form.dynamicDeliveryEnabled,
           storeLat: form.storeLat ? Number(form.storeLat) : null,
@@ -190,152 +190,7 @@ const Configuracion = () => {
             </label>
           </div>
 
-          {/* ═══ DOMICILIO DINÁMICO POR DISTANCIA ═══ */}
-          <div className={`adm-cfg__seccion ${form.dynamicDeliveryEnabled ? "adm-cfg__seccion--activa" : ""}`}
-               style={form.dynamicDeliveryEnabled ? {
-                 borderColor: "rgba(255, 204, 0, 0.3)",
-                 background: "rgba(255, 204, 0, 0.03)"
-               } : {}}>
-            <div className="adm-cfg__seccion-titulo">
-              <Navigation size={15} /> Domicilio dinámico por distancia (estilo Rappi)
-            </div>
-            <div className="adm-cfg__checks">
-              <label className="adm-toggle-fila">
-                <input
-                  type="checkbox"
-                  checked={form.dynamicDeliveryEnabled}
-                  onChange={(e) => setForm((f) => ({ ...f, dynamicDeliveryEnabled: e.target.checked }))}
-                />
-                <span>🗺️ Activar cálculo de domicilio basado en distancia real (Mapbox)</span>
-              </label>
-            </div>
-            <span className="adm-modal__precio-hint">
-              Al activar, el cliente escribe su dirección con autocompletado y el costo se calcula en tiempo real
-              según los kilómetros de distancia por carretera.
-            </span>
 
-            {form.dynamicDeliveryEnabled && (
-              <div className="adm-cfg__dynamic-fields">
-                {/* Coordenadas del local */}
-                <div className="adm-cfg__field-row">
-                  <label className="admin-field" style={{ flex: 1, minWidth: 180 }}>
-                    <span className="admin-field__label">
-                      <MapPin size={12} style={{ display: "inline", marginRight: 4 }} />
-                      Latitud del local
-                    </span>
-                    <div className="admin-field__input">
-                      <input
-                        type="number"
-                        step="0.0001"
-                        placeholder="Ej: 6.2442"
-                        value={form.storeLat}
-                        onChange={(e) => setForm((f) => ({ ...f, storeLat: e.target.value }))}
-                      />
-                    </div>
-                  </label>
-                  <label className="admin-field" style={{ flex: 1, minWidth: 180 }}>
-                    <span className="admin-field__label">
-                      <MapPin size={12} style={{ display: "inline", marginRight: 4 }} />
-                      Longitud del local
-                    </span>
-                    <div className="admin-field__input">
-                      <input
-                        type="number"
-                        step="0.0001"
-                        placeholder="Ej: -75.5812"
-                        value={form.storeLng}
-                        onChange={(e) => setForm((f) => ({ ...f, storeLng: e.target.value }))}
-                      />
-                    </div>
-                  </label>
-                </div>
-                <span className="adm-modal__precio-hint">
-                  💡 Para obtener las coordenadas: abre{" "}
-                  <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" style={{ color: "#ffcc00" }}>
-                    Google Maps
-                  </a>, haz clic derecho sobre tu local y copia las coordenadas.
-                </span>
-
-                {/* Tarifa base y precio/km */}
-                <div className="adm-cfg__field-row">
-                  <label className="admin-field" style={{ flex: 1, minWidth: 180 }}>
-                    <span className="admin-field__label">Tarifa base fija (COP)</span>
-                    <div className="admin-field__input">
-                      <input
-                        type="number"
-                        min="0"
-                        step="500"
-                        value={form.baseDeliveryFee}
-                        onChange={(e) => setForm((f) => ({ ...f, baseDeliveryFee: e.target.value }))}
-                      />
-                    </div>
-                    <span className="adm-modal__precio-hint">{formatCOP(Number(form.baseDeliveryFee) || 0)}</span>
-                  </label>
-                  <label className="admin-field" style={{ flex: 1, minWidth: 180 }}>
-                    <span className="admin-field__label">Precio por kilómetro (COP/km)</span>
-                    <div className="admin-field__input">
-                      <input
-                        type="number"
-                        min="0"
-                        step="100"
-                        value={form.pricePerKm}
-                        onChange={(e) => setForm((f) => ({ ...f, pricePerKm: e.target.value }))}
-                      />
-                    </div>
-                    <span className="adm-modal__precio-hint">{formatCOP(Number(form.pricePerKm) || 0)} / km</span>
-                  </label>
-                </div>
-
-                {/* Radio máximo */}
-                <label className="admin-field" style={{ maxWidth: 300 }}>
-                  <span className="admin-field__label">Radio máximo de entrega (km)</span>
-                  <div className="admin-field__input">
-                    <input
-                      type="number"
-                      min="1"
-                      step="0.5"
-                      value={form.maxDeliveryRadiusKm}
-                      onChange={(e) => setForm((f) => ({ ...f, maxDeliveryRadiusKm: e.target.value }))}
-                    />
-                  </div>
-                  <span className="adm-modal__precio-hint">
-                    Pedidos más allá de {form.maxDeliveryRadiusKm} km serán rechazados automáticamente.
-                  </span>
-                </label>
-
-                {/* Simulación en vivo */}
-                <div className="adm-cfg__preview" style={{ marginTop: "0.5rem" }}>
-                  <div className="adm-cfg__preview-titulo">
-                    <Navigation size={15} /> Simulación de tarifas por distancia
-                  </div>
-                  <ul>
-                    {[2, 5, 8, 12].map((km) => {
-                      const baseFee = Number(form.baseDeliveryFee) || 0;
-                      const perKm = Number(form.pricePerKm) || 0;
-                      const maxRadius = Number(form.maxDeliveryRadiusKm) || 15;
-                      const fee = Math.round((baseFee + km * perKm) / 100) * 100;
-                      const fueraDeRango = km > maxRadius;
-                      return (
-                        <li key={km} style={fueraDeRango ? { color: "#ff4d4d" } : {}}>
-                          Cliente a <strong>{km} km</strong> →{" "}
-                          {fueraDeRango ? (
-                            <span style={{ color: "#ff4d4d" }}>❌ Fuera de cobertura</span>
-                          ) : (
-                            <strong>{formatCOP(fee)}</strong>
-                          )}
-                          {!fueraDeRango && (
-                            <span style={{ color: "#888", marginLeft: 6, fontSize: "0.82rem" }}>
-                              ({formatCOP(baseFee)} + {km} × {formatCOP(perKm)})
-                            </span>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              </div>
-            )}
-          </div>
 
           {/* Modalidades de entrega */}
           <div className="adm-cfg__seccion">
@@ -373,27 +228,9 @@ const Configuracion = () => {
             </span>
           </div>
 
-          {/* Fidelización de Clientes */}
-          <div className="adm-cfg__seccion">
-            <div className="adm-cfg__seccion-titulo">
-              <Star size={15} /> Fidelización y Experiencia
-            </div>
-            <div className="adm-cfg__checks">
-              <label className="adm-toggle-fila">
-                <input
-                  type="checkbox"
-                  checked={form.useCustomerBadges}
-                  onChange={(e) => setForm((f) => ({ ...f, useCustomerBadges: e.target.checked }))}
-                />
-                <span>🏆 Usar insignias (Bronce, Plata, Oro, Platino) según pedidos</span>
-              </label>
-            </div>
-            <span className="adm-modal__precio-hint">
-              Si se desactiva, los clientes no verán insignias ni animaciones de nivel en la tienda.
-            </span>
-          </div>
 
-          {/* Cierre de emergencia */}
+
+        {/* Cierre de emergencia */}
           <div className={"adm-cfg__seccion " + (form.forceClosed ? "adm-cfg__seccion--alerta" : "")}>
             <div className="adm-cfg__seccion-titulo">
               <Power size={15} /> Estado del negocio

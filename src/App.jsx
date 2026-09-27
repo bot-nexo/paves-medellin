@@ -33,7 +33,7 @@ import {
 
 const App = () => {
   // Catálogo dinámico (Supabase ↔ local): productos, categorías, settings y diseño
-  const { categories, products, settings, design } = useCatalog();
+  const { categories, products, settings, design, badges } = useCatalog();
 
   const {
     cart,
@@ -352,6 +352,10 @@ const App = () => {
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               onOpenArmaModal={() => { setArmaEditItem(null); setIsArmaModalOpen(true); }}
+              settings={settings}
+              customer={customer}
+              badges={badges}
+              onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
             />
 
             <ScrollToTopButton />
@@ -364,9 +368,9 @@ const App = () => {
             />
 
             {/* Floating Badge */}
-            {customer && customer.nombre && settings?.useCustomerBadges !== false && (
+            {customer && customer.nombre && settings?.plan_fidelizacion !== false && (
               (() => {
-                const badge = getCustomerBadge(customer.pedidos_count || 0);
+                const badge = getCustomerBadge(customer.pedidos_count || 0, badges);
                 return (
                   <div
                     className="saborio-floating-badge"
@@ -452,6 +456,8 @@ const App = () => {
               cart={cart}
               settings={settings}
               estadoNegocio={estadoNegocio}
+              badges={badges}
+              customer={customer}
             />
 
             <CustomerIdentifyModal
@@ -460,6 +466,7 @@ const App = () => {
               onSaveCustomer={handleSaveCustomer}
               currentCustomer={customer}
               settings={settings}
+              badges={badges}
             />
 
             <RatingModal

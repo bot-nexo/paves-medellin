@@ -27,6 +27,9 @@ const MODULE_CONTROLS = [
   { key: "plan_promociones", label: "Promociones y combos", description: "Ofertas y paquetes especiales." },
   { key: "plan_diseno", label: "Diseño del menú", description: "Personalización visual del catálogo." },
   { key: "plan_reportes", label: "Reportes e informes", description: "Analítica de ventas y exportaciones." },
+  { key: "plan_fidelizacion", label: "Fidelización", description: "Módulo de recompensas e insignias." },
+  { key: "plan_configuracion", label: "Configuración básica", description: "Acceso a parámetros de envío y negocio." },
+  { key: "plan_domicilio_dinamico", label: "Domicilio dinámico", description: "Cálculo de envíos por km con Mapbox." },
 ];
 
 const AdminSuper = () => {
@@ -46,6 +49,9 @@ const AdminSuper = () => {
           plan_promociones: data.plan_promociones !== false,
           plan_reportes: data.plan_reportes !== false,
           plan_diseno: data.plan_diseno !== false,
+          plan_fidelizacion: data.plan_fidelizacion !== false,
+          plan_configuracion: data.plan_configuracion !== false,
+          plan_domicilio_dinamico: data.plan_domicilio_dinamico !== false,
         });
       } catch (err) {
         console.error("Error cargando super admin:", err);

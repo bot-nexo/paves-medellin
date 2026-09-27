@@ -3,8 +3,33 @@ import imgPlata from "../assets/images/insig/InsPlata.jpeg";
 import imgOro from "../assets/images/insig/InsOro.jpeg";
 import imgPlatino from "../assets/images/insig/InsPlatino.jpeg";
 
-export const getCustomerBadge = (pedidosCount) => {
+export const getCustomerBadge = (pedidosCount, dynamicBadges = []) => {
   const count = Number(pedidosCount) || 0;
+  
+  if (dynamicBadges && dynamicBadges.length > 0) {
+    const activeBadges = dynamicBadges.filter(b => b.is_active !== false);
+    if (activeBadges.length > 0) {
+      const sortedBadges = activeBadges.sort((a, b) => b.required_orders - a.required_orders);
+      for (const b of sortedBadges) {
+        if (count >= b.required_orders) {
+          return {
+            name: b.name,
+            color: b.color,
+            icon: "Award",
+            image: b.image || null,
+            gradient: `linear-gradient(135deg, ${b.color}, #000000)`,
+            glow: b.glow,
+            description: b.description || b.beneficio || "Cliente Fiel",
+            beneficio: b.beneficio || "",
+            discount_percentage: b.discount_percentage || 0,
+            free_delivery: b.free_delivery || false
+          };
+        }
+      }
+    }
+  }
+
+  // Fallback si no hay insignias en la base de datos
   if (count <= 2) return { name: "Bronce", color: "#d97746", icon: "Medal", image: imgBronce, gradient: "linear-gradient(135deg, #a0522d, #cd7f32)", glow: "rgba(205, 127, 50, 0.4)", description: "Cliente Nuevo" };
   if (count <= 8) return { name: "Plata", color: "#e0e0e0", icon: "Award", image: imgPlata, gradient: "linear-gradient(135deg, #8a8a8a, #e0e0e0)", glow: "rgba(224, 224, 224, 0.4)", description: "Cliente Frecuente" };
   if (count <= 15) return { name: "Oro", color: "#ffdf00", icon: "Trophy", image: imgOro, gradient: "linear-gradient(135deg, #b8860b, #ffdf00)", glow: "rgba(255, 223, 0, 0.5)", description: "Cliente Muy Frecuente" };

@@ -5,6 +5,7 @@ import Promociones from "./Promociones";
 import Combos from "./Combos";
 import QuickGuide from "./QuickGuide";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
+import { getCustomerBadge } from "../utils/badges";
 import "../css/Menu.css";
 
 const Menu = ({
@@ -17,6 +18,10 @@ const Menu = ({
   searchQuery = "",
   setSearchQuery,
   onOpenArmaModal,
+  settings,
+  customer,
+  badges,
+  onOpenCustomerModal,
 }) => {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
@@ -212,6 +217,46 @@ const Menu = ({
     <section id="menu" className="menu-section bg-neutral-950 text-neutral-100" style={cssVariables}>
       <div className="container mx-auto px-4 max-w-5xl">
 
+        {/* ── Banner de Fidelización de Clientes ── */}
+        {settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false && (
+          <div 
+            onClick={onOpenCustomerModal}
+            className="flex items-center justify-between p-3 md:p-4 rounded-2xl cursor-pointer mb-6 transform transition-all active:scale-95 shadow-md"
+            style={{
+              background: `linear-gradient(135deg, ${
+                customer ? getCustomerBadge(customer.pedidos_count || 0, badges)?.color || "#ffcc00" : "#2a2a2a"
+              }20, rgba(0,0,0,0.4))`,
+              border: `1px solid ${
+                customer ? getCustomerBadge(customer.pedidos_count || 0, badges)?.color || "#ffcc00" : "#333"
+              }40`
+            }}
+          >
+            <div className="flex items-center gap-3 md:gap-4">
+              <div 
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: customer ? getCustomerBadge(customer.pedidos_count || 0, badges)?.color || "#ffcc00" : "#444",
+                  boxShadow: customer ? `0 0 15px ${getCustomerBadge(customer.pedidos_count || 0, badges)?.glow || "transparent"}` : "none"
+                }}
+              >
+                <Sparkles size={20} color="#111" />
+              </div>
+              <div>
+                <h3 className="m-0 text-sm md:text-base font-bold text-white">
+                  {customer 
+                    ? `Nivel: ${getCustomerBadge(customer.pedidos_count || 0, badges)?.name}` 
+                    : "Únete a nuestro club"}
+                </h3>
+                <p className="m-0 text-xs md:text-sm text-neutral-400 mt-0.5">
+                  {customer 
+                    ? `Ver mis beneficios y progreso`
+                    : "Identifícate para sumar puntos y ganar beneficios"}
+                </p>
+              </div>
+            </div>
+            <ArrowRight size={20} className="text-neutral-500" />
+          </div>
+        )}
 
         {/* ── Banner de Guía Rápida ── */}
         <QuickGuide />
