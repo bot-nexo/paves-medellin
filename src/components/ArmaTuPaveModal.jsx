@@ -4,7 +4,7 @@ import { getAdditions, getSauces, getBases, getSizes } from "../data/dataSource"
 import { formatCOP } from "../utils/price";
 import "../css/CustomizationModal.css"; // Reuse existing modal styles
 
-const ArmaTuPaveModal = ({ isOpen, onClose, onAddToCart, editItem }) => {
+const ArmaTuPaveModal = ({ isOpen, onClose, onAddToCart, editItem, settings }) => {
   const [step, setStep] = useState(1);
   const [cargando, setCargando] = useState(true);
   

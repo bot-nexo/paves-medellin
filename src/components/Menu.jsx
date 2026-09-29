@@ -32,11 +32,12 @@ const Menu = ({
   //*************************** */
   // Promociones relámpago dinámicas desde la BD (catalog_design.promotions_items)
   const flashPromotions = useMemo(() => {
+    if (settings?.plan_promociones === false) return [];
     if (d.promotionsItems && Array.isArray(d.promotionsItems) && d.promotionsItems.length > 0) {
       return d.promotionsItems;
     }
     return [];
-  }, [d.promotionsItems]);
+  }, [d.promotionsItems, settings?.plan_promociones]);
 
   // Lógica condicional estricta para el Secondary Banner:
   // Si hay más de 1 promoción activa, activar autoplay del carrusel; si hay 1 sola, se muestra estática
@@ -108,29 +109,33 @@ const Menu = ({
       });
 
     // Integración obligatoria de "Promociones especiales" como categoría estándar
-    const yaTienePromos = list.some((c) => c.id.toLowerCase().includes("promo") || c.id.toLowerCase().includes("oferta"));
-    if (!yaTienePromos) {
-      list.push({
-        id: "Promociones especiales",
-        label: "Promociones",
-        emoji: "🏷️",
-        isSpecialPromo: true,
-      });
+    if (d.showPromotions !== false && settings?.plan_promociones !== false) {
+      const yaTienePromos = list.some((c) => c.id.toLowerCase().includes("promo") || c.id.toLowerCase().includes("oferta"));
+      if (!yaTienePromos) {
+        list.push({
+          id: "Promociones especiales",
+          label: "Promociones",
+          emoji: "🏷️",
+          isSpecialPromo: true,
+        });
+      }
     }
 
     // Integración obligatoria de "Combos" como categoría estándar
-    const yaTieneCombos = list.some((c) => c.id.toLowerCase().includes("combo"));
-    if (!yaTieneCombos) {
-      list.push({
-        id: "Combos",
-        label: "Combos",
-        emoji: "🎁",
-        isSpecialCombo: true,
-      });
+    if (d.showCombos !== false && settings?.plan_promociones !== false) {
+      const yaTieneCombos = list.some((c) => c.id.toLowerCase().includes("combo"));
+      if (!yaTieneCombos) {
+        list.push({
+          id: "Combos",
+          label: "Combos",
+          emoji: "🎁",
+          isSpecialCombo: true,
+        });
+      }
     }
 
     return list;
-  }, [categories]);
+  }, [categories, d.showPromotions, d.showCombos, settings?.plan_promociones]);
 
   // Combos de la BD adaptados al shape de producto para cuando se seleccione la categoría Combos
   const dynamicComboProducts = useMemo(() => {
@@ -217,46 +222,7 @@ const Menu = ({
     <section id="menu" className="menu-section bg-neutral-950 text-neutral-100" style={cssVariables}>
       <div className="container mx-auto px-4 max-w-5xl">
 
-        {/* ── Banner de Fidelización de Clientes ── */}
-        {settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false && (
-          <div 
-            onClick={onOpenCustomerModal}
-            className="flex items-center justify-between p-3 md:p-4 rounded-2xl cursor-pointer mb-6 transform transition-all active:scale-95 shadow-md"
-            style={{
-              background: `linear-gradient(135deg, ${
-                customer ? getCustomerBadge(customer.pedidos_count || 0, badges)?.color || "#ffcc00" : "#2a2a2a"
-              }20, rgba(0,0,0,0.4))`,
-              border: `1px solid ${
-                customer ? getCustomerBadge(customer.pedidos_count || 0, badges)?.color || "#ffcc00" : "#333"
-              }40`
-            }}
-          >
-            <div className="flex items-center gap-3 md:gap-4">
-              <div 
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: customer ? getCustomerBadge(customer.pedidos_count || 0, badges)?.color || "#ffcc00" : "#444",
-                  boxShadow: customer ? `0 0 15px ${getCustomerBadge(customer.pedidos_count || 0, badges)?.glow || "transparent"}` : "none"
-                }}
-              >
-                <Sparkles size={20} color="#111" />
-              </div>
-              <div>
-                <h3 className="m-0 text-sm md:text-base font-bold text-white">
-                  {customer 
-                    ? `Nivel: ${getCustomerBadge(customer.pedidos_count || 0, badges)?.name}` 
-                    : "Únete a nuestro club"}
-                </h3>
-                <p className="m-0 text-xs md:text-sm text-neutral-400 mt-0.5">
-                  {customer 
-                    ? `Ver mis beneficios y progreso`
-                    : "Identifícate para sumar puntos y ganar beneficios"}
-                </p>
-              </div>
-            </div>
-            <ArrowRight size={20} className="text-neutral-500" />
-          </div>
-        )}
+
 
         {/* ── Banner de Guía Rápida ── */}
         <QuickGuide />
@@ -364,34 +330,38 @@ const Menu = ({
         )}
 
         {/* ── 2.5 Carruseles de Promos y Combos ── */}
-        <Promociones
-          design={design}
-          onPromoClick={() => {
-            setActiveCategory("Promociones especiales");
-            setTimeout(() => {
-              const el = document.getElementById("catalog-section");
-              if (el) {
-                const yOffset = -80;
-                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-              }
-            }, 50);
-          }}
-        />
-        <Combos
-          design={design}
-          onComboClick={() => {
-            setActiveCategory("Combos");
-            setTimeout(() => {
-              const el = document.getElementById("catalog-section");
-              if (el) {
-                const yOffset = -80;
-                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-              }
-            }, 50);
-          }}
-        />
+        {d.showPromotions !== false && settings?.plan_promociones !== false && (
+          <Promociones
+            design={design}
+            onPromoClick={() => {
+              setActiveCategory("Promociones especiales");
+              setTimeout(() => {
+                const el = document.getElementById("catalog-section");
+                if (el) {
+                  const yOffset = -80;
+                  const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+              }, 50);
+            }}
+          />
+        )}
+        {d.showCombos !== false && settings?.plan_promociones !== false && (
+          <Combos
+            design={design}
+            onComboClick={() => {
+              setActiveCategory("Combos");
+              setTimeout(() => {
+                const el = document.getElementById("catalog-section");
+                if (el) {
+                  const yOffset = -80;
+                  const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                  window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+              }, 50);
+            }}
+          />
+        )}
 
         {/* ── 0. Barra de Búsqueda Integrada al Menú ─ */}
         <div 
@@ -423,13 +393,15 @@ const Menu = ({
               </button>
             )}
             </div>
-            <button 
-              type="button" 
-              style={{ background: "#ffcc00", color: "#120a06", padding: '0 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '0.85rem' }}
-              onClick={onOpenArmaModal}
-            >
-              <Sparkles size={14} /> Arma tu Pavé
-            </button>
+            {settings?.plan_adiciones !== false && (
+              <button 
+                type="button" 
+                style={{ background: "#ffcc00", color: "#120a06", padding: '0 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '0.85rem' }}
+                onClick={onOpenArmaModal}
+              >
+                <Sparkles size={14} /> Arma tu Pavé
+              </button>
+            )}
           </div>
           {searchQuery && (
             <p className="menu-search-results-hint">
@@ -486,6 +458,7 @@ const Menu = ({
                   }
                   onAddToCart={addToCart}
                   design={d}
+                  settings={settings}
                 />
               ))}
             </div>

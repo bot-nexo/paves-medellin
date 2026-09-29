@@ -6,7 +6,7 @@ import "../css/CakeScheduleModal.css";
 import { formatCOP } from "../utils/price";
 import { calculateMinDeliveryDate, getAvailableTimeSlots } from "../utils/scheduleUtils";
 
-const CakeScheduleModal = ({ product, isOpen, onClose, onConfirm }) => {
+const CakeScheduleModal = ({ product, isOpen, onClose, onConfirm, settings }) => {
   const [selectedOptions, setSelectedOptions]     = useState({});
   const [selectedToppings, setSelectedToppings]   = useState([]);
   const [selectedAdiciones, setSelectedAdiciones] = useState({}); // { [id]: item }
@@ -288,7 +288,7 @@ const CakeScheduleModal = ({ product, isOpen, onClose, onConfirm }) => {
             </div>
           )}
 
-          {productToppings.length > 0 && (
+          {settings?.plan_adiciones !== false && productToppings.length > 0 && (
             <div className="custom-section" style={{marginBottom: '15px'}}>
               <h4 style={{ color: '#fff', marginBottom: '10px', fontSize: '1rem' }}>Toppings & Extras</h4>
               <div className="options-grid">

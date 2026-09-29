@@ -63,7 +63,7 @@ const CheckoutModal = ({
   const [deliveryResult, setDeliveryResult] = useState(null);
   // deliveryResult = { fee, distanceKm, durationMin, lat, lng, fullAddress, withinCoverage } | null
 
-  const isDynamicDelivery = settings.dynamicDeliveryEnabled &&
+  const isDynamicDelivery = settings.plan_domicilio_dinamico !== false && settings.dynamicDeliveryEnabled &&
     settings.storeLat && settings.storeLng;
 
   useEffect(() => {
@@ -315,9 +315,13 @@ const CheckoutModal = ({
               <div className="checkout-aviso-cerrado">
                 <Clock size={16} />
                 <span>
-                  <strong>Estamos cerrados ahora.</strong>
-                  {estadoNegocio.horarioTexto
+                  <strong>
+                    {!estadoNegocio.esDiaAbierto ? "Hoy no hay servicio." : "Estamos cerrados ahora."}
+                  </strong>
+                  {estadoNegocio.horarioTexto && estadoNegocio.esDiaAbierto
                     ? ` Horario de atención: ${estadoNegocio.horarioTexto}.`
+                    : !estadoNegocio.esDiaAbierto && estadoNegocio.horarioTexto
+                    ? ` Abrimos: ${estadoNegocio.horarioTexto}.`
                     : ""}
                   {" "}Tu pedido se agendará.
                 </span>

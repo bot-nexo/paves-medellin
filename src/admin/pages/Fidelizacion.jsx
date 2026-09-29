@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from "react";
-import LoadingOverlay from "../../components/common/LoadingOverlay";
+import { Award, CheckCircle2, Settings2, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { getBadges, upsertBadge, getSettings, updateSettings } from "../../data/dataSource";
-import { Award, Settings2, CheckCircle2, XCircle } from "lucide-react";
 import imgBronce from "../../assets/images/insig/InsBronce.jpeg";
-import imgPlata from "../../assets/images/insig/InsPlata.jpeg";
+import imgNuevo from "../../assets/images/insig/InsNuevo.png";
 import imgOro from "../../assets/images/insig/InsOro.jpeg";
+import imgPlata from "../../assets/images/insig/InsPlata.jpeg";
 import imgPlatino from "../../assets/images/insig/InsPlatino.jpeg";
+import LoadingOverlay from "../../components/common/LoadingOverlay";
+import { getBadges, getSettings, updateSettings, upsertBadge } from "../../data/dataSource";
 import "../admin.css";
 
 const timeOut = 1200;
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const FIXED_BADGES = [
+  { key: "nuevo", label: "Nuevo", img: imgNuevo, color: "#8a9ba8", glow: "#8a9ba880" },
   { key: "bronce", label: "Bronce", img: imgBronce, color: "#cd7f32", glow: "#cd7f3280" },
   { key: "plata", label: "Plata", img: imgPlata, color: "#aaaaaa", glow: "#aaaaaa80" },
   { key: "oro", label: "Oro", img: imgOro, color: "#ffdf00", glow: "#ffdf0080" },
@@ -281,7 +283,7 @@ const Fidelizacion = () => {
 
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(5, 1fr)",
           gap: "1.25rem",
           width: "100%",
           maxWidth: "960px",

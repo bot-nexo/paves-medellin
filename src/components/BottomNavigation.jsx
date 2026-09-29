@@ -1,9 +1,9 @@
 import React from "react";
-import { Home, Compass, UtensilsCrossed, MessageCircle, Star } from "lucide-react";
+import { Home, Compass, UtensilsCrossed, MessageCircle, Star, Award } from "lucide-react";
 import Swal from "sweetalert2";
 import "../css/BottomNavigation.css";
 
-const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappNumber }) => {
+const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappNumber, settings, customer, onOpenCustomerModal }) => {
   const handleScrollTo = (elementId) => {
     const el = document.getElementById(elementId);
     if (el) {
@@ -55,7 +55,24 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
         </div>
 
 
-        {/* 4. Calificar */}
+        {/* 4. Nivel del Cliente */}
+        {settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false && (
+          <button
+            type="button"
+            className="saborio-nav-item"
+            onClick={onOpenCustomerModal}
+          >
+            <div className="relative">
+              <Award size={21} className="saborio-nav-icon" />
+              {customer?.nombre && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full animate-pulse border border-neutral-900" />
+              )}
+            </div>
+            <span className="saborio-nav-label">Nivel</span>
+          </button>
+        )}
+
+        {/* 5. Calificar */}
         <button
           type="button"
           className="saborio-nav-item"

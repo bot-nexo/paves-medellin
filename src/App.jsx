@@ -365,27 +365,13 @@ const App = () => {
               cartCount={cartCount}
               onOpenCart={openCart}
               whatsappNumber={whatsappNumber}
+              settings={settings}
+              customer={customer}
+              badges={badges}
+              onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
             />
 
-            {/* Floating Badge */}
-            {customer && customer.nombre && settings?.plan_fidelizacion !== false && (
-              (() => {
-                const badge = getCustomerBadge(customer.pedidos_count || 0, badges);
-                return (
-                  <div
-                    className="saborio-floating-badge"
-                    onClick={() => setIsCustomerModalOpen(true)}
-                    title={`Nivel ${badge.name}: ${badge.description}`}
-                    style={{
-                      boxShadow: `0 0 15px ${badge.glow}, 0 4px 12px rgba(0,0,0,0.5)`,
-                      border: `2px solid ${badge.color}`
-                    }}
-                  >
-                    <img src={badge.image} alt={`Insignia ${badge.name}`} className="saborio-floating-badge-img" />
-                  </div>
-                );
-              })()
-            )}
+
 
             <CartModal
               cart={cart}
@@ -405,6 +391,7 @@ const App = () => {
                 isOpen={isCustomizing}
                 onClose={closeCustomizationModal}
                 onConfirm={confirmCustomization}
+                settings={settings}
               />
             ) : (
               <CustomizationModal
@@ -412,12 +399,14 @@ const App = () => {
                 isOpen={isCustomizing}
                 onClose={closeCustomizationModal}
                 onConfirm={confirmCustomization}
+                settings={settings}
               />
             )}
 
             <ArmaTuPaveModal
               isOpen={isArmaModalOpen}
               onClose={() => { setIsArmaModalOpen(false); setArmaEditItem(null); }}
+              settings={settings}
               onAddToCart={(customProduct, isEdit, oldKey) => {
                 if (isEdit) {
                   setCart((prev) => prev.filter(c => c.customizationKey !== oldKey));

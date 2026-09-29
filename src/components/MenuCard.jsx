@@ -8,7 +8,8 @@ const MenuCard = ({
   isDetailsOpen,
   onToggleDetails,
   onAddToCart,
-  design
+  design,
+  settings
 }) => {
   const formattedPrice = formatCOP(product.precio ?? 0);
   // Precio de referencia original tachado si tiene descuento o calculado sugerido
@@ -118,7 +119,7 @@ const MenuCard = ({
           <div className="menu-card__panel-header">
             <div className="menu-card__panel-title-wrap">
               <h4 className="menu-card__panel-title">Detalles del Postre</h4>
-              {((product.adiciones?.length > 0) || (product.salsas?.length > 0)) && (
+              {settings?.plan_adiciones !== false && ((product.adiciones?.length > 0) || (product.salsas?.length > 0)) && (
                 <span className="menu-card__badge-tag">
                   ✨ Personalizable
                 </span>

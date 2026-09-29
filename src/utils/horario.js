@@ -56,9 +56,14 @@ export const formatearDias = (days) => {
   let parsedDays = days;
   if (typeof days === "string") {
     try {
-      parsedDays = JSON.parse(days);
+      if (days.trim().startsWith("[")) {
+        parsedDays = JSON.parse(days);
+      } else {
+        // Fallback a Lun-Sáb para textos legacy, tal como hace el panel admin
+        parsedDays = [1, 2, 3, 4, 5, 6];
+      }
     } catch (e) {
-      // Ignorar error, tratar como string normal
+      parsedDays = [1, 2, 3, 4, 5, 6];
     }
   }
 
@@ -92,38 +97,66 @@ export const estaAbiertoSegunHorario = (settings = {}) => {
   const horarioTexto = [daysText, settings.hours1].filter(Boolean).join(" · ");
   const p = parseHorario(settings.hours1);
 
+  const ahora = new Date();
+  const todayDay = ahora.getDay(); // 0 is Sunday, 1 is Monday, etc.
+
+  let esDiaAbierto = true;
+  if (settings.day1) {
+    let parsedDays = settings.day1;
+    if (typeof parsedDays === "string") {
+      try {
+        if (parsedDays.trim().startsWith("[")) {
+          parsedDays = JSON.parse(parsedDays);
+        } else {
+          parsedDays = [1, 2, 3, 4, 5, 6];
+        }
+      } catch (e) {
+        parsedDays = [1, 2, 3, 4, 5, 6];
+      }
+    }
+    if (Array.isArray(parsedDays)) {
+      esDiaAbierto = parsedDays.map(Number).includes(todayDay);
+    }
+  }
+
   if (!p.ok) {
-    // Sin horario legible → se asume abierto salvo cierre manual (no bloquear ventas)
-    return { abierto: !fuerzaCierre, fuerzaCierre, dentroHorario: true, horarioTexto, siempreAbierto: false, openHour: "", closeHour: "" };
+    // Sin horario legible → se asume abierto en ese día, salvo cierre manual
+    const abierto = esDiaAbierto && !fuerzaCierre;
+    return { abierto, fuerzaCierre, dentroHorario: esDiaAbierto, horarioTexto, siempreAbierto: false, openHour: "", closeHour: "", esDiaAbierto };
   }
   if (p.siempreAbierto) {
+    const abierto = esDiaAbierto && !fuerzaCierre;
     return {
-      abierto: !fuerzaCierre,
+      abierto,
       fuerzaCierre,
-      dentroHorario: true,
+      dentroHorario: esDiaAbierto,
       horarioTexto: horarioTexto || "24 horas",
       siempreAbierto: true,
       openHour: "8:00 AM",
       closeHour: "10:00 PM",
+      esDiaAbierto
     };
   }
 
-  const ahora = new Date();
   const mins = ahora.getHours() * 60 + ahora.getMinutes();
   const dentro = p.cruzaMedianoche
-    ? mins >= p.apertura || mins < p.cierre
-    : mins >= p.apertura && mins < p.cierre;
+    ? (mins >= p.apertura || mins < p.cierre)
+    : (mins >= p.apertura && mins < p.cierre);
+    
+  const abiertoReal = esDiaAbierto && dentro && !fuerzaCierre;
+
   // Uso con tu objeto:
   const openHourStr = formatMinutosAHora(p.apertura, true);   // Output: "2:00 PM"
   const closeHourStr = formatMinutosAHora(p.cierre, true); // Output: "8:00 PM"
   
   return {
-    abierto: dentro && !fuerzaCierre,
+    abierto: abiertoReal,
     fuerzaCierre,
-    dentroHorario: dentro,
+    dentroHorario: esDiaAbierto && dentro,
     horarioTexto,
     openHour: openHourStr,
     closeHour: closeHourStr,
     siempreAbierto: false,
+    esDiaAbierto
   };
 };

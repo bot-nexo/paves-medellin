@@ -105,7 +105,9 @@ const Empresa = () => {
         
         // Parsear días de atención (si es un array JSON)
         try {
-          if (s.day1 && s.day1.startsWith("[")) {
+          if (Array.isArray(s.day1)) {
+            setDiasAtencion(s.day1);
+          } else if (typeof s.day1 === "string" && s.day1.trim().startsWith("[")) {
             setDiasAtencion(JSON.parse(s.day1));
           } else {
             setDiasAtencion([1,2,3,4,5,6]); // Default Lunes a Sábado si es un texto legacy

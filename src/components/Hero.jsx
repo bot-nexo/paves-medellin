@@ -182,7 +182,11 @@ const Hero = ({
     return (
       <div className="saborio-status-badge saborio-status-badge--closed">
         <span className="saborio-status-dot saborio-status-dot--closed" />
-        <span>Cerrado {estadoNegocio.openHour ? `· Abre ${estadoNegocio.openHour}` : ""}</span>
+        <span>
+          {!estadoNegocio.esDiaAbierto 
+            ? "Hoy no hay servicio" 
+            : `Cerrado ${estadoNegocio.openHour ? `· Abre ${estadoNegocio.openHour}` : ""}`}
+        </span>
       </div>
     );
   };
