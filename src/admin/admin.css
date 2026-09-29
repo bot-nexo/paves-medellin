@@ -129,6 +129,8 @@
 .admin-sidebar__brand-text {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -137,6 +139,8 @@
   font-weight: 700;
   color: var(--crema);
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .admin-sidebar__subtitulo {
@@ -149,7 +153,7 @@
 
 .admin-sidebar__toggle-btn {
   position: absolute;
-  right: -22px;
+  right: -18px;
   top: 14px;
   width: 24px;
   height: 24px;
@@ -162,7 +166,7 @@
   justify-content: center;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, transform 0.15s;
-  z-index: 10;
+  z-index:10;
 }
 
 .admin-sidebar__toggle-btn:hover {
@@ -777,6 +781,148 @@
   text-align: center;
   font-size: 12px;
   color: var(--texto-dim);
+}
+
+/* ── Servicio suspendido ───────────────────────────────────────────────── */
+.admin-suspended {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background:
+    radial-gradient(900px 500px at 15% 0%, rgba(230, 141, 141, 0.08), transparent 60%),
+    radial-gradient(700px 450px at 90% 100%, rgba(214, 158, 74, 0.08), transparent 60%),
+    var(--abg);
+  color: var(--texto);
+}
+
+.admin-suspended__card {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 26px 22px;
+  background: var(--abg-panel);
+  border: 1px solid var(--aborde);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  animation: adminSuspendedIn 0.35s ease-out;
+}
+
+@keyframes adminSuspendedIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-suspended__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  width: 100%;
+  justify-content: center;
+  border-bottom: 1px solid var(--aborde);
+  color: var(--crema);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-suspended__brand img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.admin-suspended__icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: var(--peligro);
+  background: rgba(230, 141, 141, 0.1);
+  border: 1px solid rgba(230, 141, 141, 0.25);
+  margin-bottom: 14px;
+}
+
+.admin-suspended__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--peligro);
+  background: rgba(230, 141, 141, 0.1);
+}
+
+.admin-suspended__title {
+  margin: 12px 0 8px;
+  color: var(--crema);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.admin-suspended__text {
+  margin: 0 0 18px;
+  color: var(--texto-dim);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-suspended__list {
+  list-style: none;
+  width: 100%;
+  margin: 0 0 20px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.admin-suspended__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--aborde);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.018);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.admin-suspended__list svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--acento);
+}
+
+.admin-suspended .admin-btn-primary {
+  gap: 8px;
+}
+
+.admin-suspended__email {
+  margin: 12px 0 0;
+  color: var(--texto-dim);
+  font-size: 11px;
+  word-break: break-all;
 }
 
 /* ── Campos de Formulario ──────────────────────────────────────────────── */

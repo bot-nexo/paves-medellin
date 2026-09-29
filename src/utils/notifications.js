@@ -1,18 +1,46 @@
+import { getSettings } from "../data/dataSource";
 import { supabase } from "../services/supabaseClient";
+import { formatCOP } from "./price";
 
-export const sendEmailResend = async (to, subject, html) => {
+const NOMBRE_POR_DEFECTO = "nuestra tienda";
+
+// getSettings() mantiene este valor actualizado cada vez que se lee o edita la configuración
+const nombreNegocioSync = () => localStorage.getItem("store_razon_social") || NOMBRE_POR_DEFECTO;
+
+const obtenerNegocio = async () => {
+  try {
+    const s = await getSettings();
+    return {
+      nombre: s?.razonSocial || s?.name || nombreNegocioSync(),
+      slogan: s?.slogan || "",
+      telefono: s?.phone || "",
+      direccion: s?.address || "",
+    };
+  } catch {
+    return { nombre: nombreNegocioSync(), slogan: "", telefono: "", direccion: "" };
+  }
+};
+
+const escapeHtml = (v) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+const esRecogida = (pedido) => pedido.tipo_entrega === "recogida" || pedido.tipo_entrega === "local";
+
+const primerNombre = (pedido) => (pedido.nombre || "").trim().split(/\s+/)[0] || "";
+
+export const sendEmailResend = async (to, subject, html, fromName) => {
   console.log("📨 Iniciando envío de correo vía Edge Function a:", to);
-  
+
   try {
     const { data, error } = await supabase.functions.invoke("send-email", {
-      body: { to, subject, html },
+      body: { to, subject, html, fromName },
     });
 
     if (error) {
       console.error("❌ Error ejecutando la Edge Function:", error);
       return false;
     }
-    
+
     console.log("✅ ¡Correo enviado exitosamente vía Edge Function!");
     return true;
   } catch (error) {
@@ -23,7 +51,13 @@ export const sendEmailResend = async (to, subject, html) => {
 
 export const notificarCambioEstado = async (pedido, nuevoEstado) => {
   console.log("🔍 Intentando notificar cambio de estado para pedido:", pedido.numero, "a estado:", nuevoEstado);
-  
+
+  const settings = await getSettings().catch(() => null);
+  if (settings?.plan_emails === false) {
+    console.log("✉️ Correos automáticos desactivados desde superadmin, notificación omitida.");
+    return;
+  }
+
   let emailParaEnviar = pedido.email;
   console.log("📩 Email que viene en el pedido (antes de buscar):", emailParaEnviar);
 
@@ -37,9 +71,9 @@ export const notificarCambioEstado = async (pedido, nuevoEstado) => {
         .select("email")
         .eq("telefono", cleanPhone)
         .maybeSingle();
-        
+
       console.log("📂 Resultado de BD:", data);
-      
+
       if (data && data.email) {
         emailParaEnviar = data.email;
       }
@@ -55,81 +89,129 @@ export const notificarCambioEstado = async (pedido, nuevoEstado) => {
     return;
   }
 
-  let subject = "";
-  let mensaje = "";
-  const nombre = pedido.nombre || "Cliente";
+  const negocio = await obtenerNegocio();
+  const plantilla = PLANTILLAS_EMAIL[nuevoEstado];
+  if (!plantilla) return;
 
-  switch (nuevoEstado) {
-    case "preparacion":
-      subject = `👨‍🍳 ¡Tu pedido #${pedido.numero} se está preparando! - Paves Medellín`;
-      mensaje = `
-        <div style="font-family: sans-serif; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden;">
-          <div style="background-color: #d92b38; padding: 20px; text-align: center;">
-            <h2 style="color: white; margin: 0;">¡Manos a la obra!</h2>
-          </div>
-          <div style="padding: 30px; background-color: #fdfbf7;">
-            <p>Hola <strong>${nombre}</strong>,</p>
-            <p>Hemos recibido y aceptado tu pedido <strong>#${pedido.numero}</strong>. En este momento nuestro equipo de repostería está preparando todo con mucho amor.</p>
-            <p>Te avisaremos en cuanto esté listo para ser despachado.</p>
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
-            <p style="font-size: 12px; color: #666; text-align: center;">Paves Medellín - Postres con amor</p>
-          </div>
-        </div>
-      `;
-      break;
-    case "camino":
-      subject = `🛵 ¡Tu pedido #${pedido.numero} va en camino! - Paves Medellín`;
-      mensaje = `
-        <div style="font-family: sans-serif; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden;">
-          <div style="background-color: #ffcc00; padding: 20px; text-align: center;">
-            <h2 style="color: #111; margin: 0;">¡Tu pedido va en camino!</h2>
-          </div>
-          <div style="padding: 30px; background-color: #fdfbf7;">
-            <p>Hola <strong>${nombre}</strong>,</p>
-            <p>Tu pedido <strong>#${pedido.numero}</strong> ya salió de nuestra tienda y va en camino hacia la dirección de entrega.</p>
-            <p>¡Por favor, mantente muy pendiente para recibir tus postres!</p>
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
-            <p style="font-size: 12px; color: #666; text-align: center;">Paves Medellín - Postres con amor</p>
-          </div>
-        </div>
-      `;
-      break;
-    case "entregado":
-      subject = `✅ Pedido #${pedido.numero} Entregado. ¡Que lo disfrutes!`;
-      mensaje = `
-        <div style="font-family: sans-serif; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden;">
-          <div style="background-color: #4caf50; padding: 20px; text-align: center;">
-            <h2 style="color: white; margin: 0;">¡Entregado!</h2>
-          </div>
-          <div style="padding: 30px; background-color: #fdfbf7;">
-            <p>Hola <strong>${nombre}</strong>,</p>
-            <p>Tu pedido <strong>#${pedido.numero}</strong> ha sido entregado.</p>
-            <p>Esperamos que disfrutes muchísimo tus Paves. Si te gustaron, ¡no olvides recomendarnos!</p>
-            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
-            <p style="font-size: 12px; color: #666; text-align: center;">Paves Medellín - Postres con amor</p>
-          </div>
-        </div>
-      `;
-      break;
-    default:
-      return;
-  }
+  const contenido = plantilla(pedido, negocio);
+  const html = construirEmail({ ...contenido, pedido, negocio });
+  const subject = `${contenido.asunto} · ${negocio.nombre}`;
 
-  await sendEmailResend(emailParaEnviar, subject, mensaje);
+  await sendEmailResend(emailParaEnviar, subject, html, negocio.nombre);
 };
 
+// ── Plantillas de email por estado ────────────────────────────────────────────────────────
+
+const PLANTILLAS_EMAIL = {
+  preparacion: (p) => ({
+    asunto: `👨‍🍳 Estamos preparando tu pedido #${p.numero}`,
+    color: "#d69e4a",
+    titulo: "¡Tu pedido está en preparación!",
+    parrafos: [
+      `Confirmamos tu pedido <strong>#${p.numero}</strong> y ya estamos preparándolo con todo el cuidado que merece.`,
+      esRecogida(p)
+        ? "Te avisaremos en cuanto esté listo para que pases a recogerlo."
+        : "Te avisaremos en cuanto salga hacia tu dirección.",
+    ],
+  }),
+  camino: (p) =>
+    esRecogida(p)
+      ? {
+          asunto: `🛍️ Tu pedido #${p.numero} está listo para recoger`,
+          color: "#3b82f6",
+          titulo: "¡Tu pedido está listo!",
+          parrafos: [
+            `Tu pedido <strong>#${p.numero}</strong> ya está listo y te espera en nuestro punto de venta.`,
+            "Al llegar, menciona tu número de pedido para entregarlo más rápido.",
+          ],
+        }
+      : {
+          asunto: `🛵 Tu pedido #${p.numero} va en camino`,
+          color: "#3b82f6",
+          titulo: "¡Tu pedido va en camino!",
+          parrafos: [
+            `Tu pedido <strong>#${p.numero}</strong> ya salió y va rumbo a tu dirección.`,
+            "Por favor mantente atento al teléfono para recibirlo sin contratiempos.",
+          ],
+        },
+  entregado: (p) => ({
+    asunto: `✅ Pedido #${p.numero} entregado`,
+    color: "#16a34a",
+    titulo: "¡Pedido entregado!",
+    parrafos: [
+      `Tu pedido <strong>#${p.numero}</strong> fue entregado con éxito.`,
+      "Esperamos que lo disfrutes muchísimo. Gracias por elegirnos; si te gustó, ¡nos encantaría que nos recomendaras!",
+    ],
+  }),
+  cancelado: (p) => ({
+    asunto: `Tu pedido #${p.numero} fue cancelado`,
+    color: "#dc2626",
+    titulo: "Pedido cancelado",
+    parrafos: [
+      `Te informamos que tu pedido <strong>#${p.numero}</strong> fue cancelado.`,
+      "Si tienes alguna duda o crees que se trata de un error, contáctanos y con gusto te ayudamos.",
+    ],
+  }),
+};
+
+const construirEmail = ({ color, titulo, parrafos, pedido, negocio }) => {
+  const nombreCliente = escapeHtml(primerNombre(pedido));
+  const nombreNegocio = escapeHtml(negocio.nombre);
+  const contacto = [negocio.telefono && `📞 ${escapeHtml(negocio.telefono)}`, negocio.direccion && `📍 ${escapeHtml(negocio.direccion)}`]
+    .filter(Boolean)
+    .join(" &nbsp;·&nbsp; ");
+
+  return `
+  <div style="background:#f4f1ec;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e8e2d8;">
+      <div style="background:#1a1410;padding:18px 24px;text-align:center;">
+        <span style="color:#f5efe6;font-size:18px;font-weight:700;letter-spacing:.3px;">${nombreNegocio}</span>
+      </div>
+      <div style="height:4px;background:${color};"></div>
+      <div style="padding:28px 28px 8px;color:#2b2622;">
+        <h2 style="margin:0 0 16px;font-size:21px;color:#1a1410;">${titulo}</h2>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola${nombreCliente ? ` <strong>${nombreCliente}</strong>` : ""},</p>
+        ${parrafos.map((t) => `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${t}</p>`).join("")}
+      </div>
+      <div style="margin:8px 28px 24px;padding:14px 16px;background:#faf7f2;border:1px solid #eee6da;border-radius:10px;font-size:14px;color:#4a433c;">
+        <table role="presentation" width="100%" style="border-collapse:collapse;">
+          <tr><td>Pedido</td><td align="right"><strong>#${escapeHtml(pedido.numero)}</strong></td></tr>
+          <tr><td>Entrega</td><td align="right">${esRecogida(pedido) ? "Recoger en tienda" : "Domicilio"}</td></tr>
+          ${pedido.total ? `<tr><td>Total</td><td align="right"><strong>${formatCOP(pedido.total)}</strong></td></tr>` : ""}
+        </table>
+      </div>
+      <div style="padding:16px 24px;border-top:1px solid #eee6da;text-align:center;font-size:12px;color:#8a8178;line-height:1.6;">
+        <strong style="color:#4a433c;">${nombreNegocio}</strong>${negocio.slogan ? ` — ${escapeHtml(negocio.slogan)}` : ""}<br/>
+        ${contacto}
+      </div>
+    </div>
+  </div>`;
+};
+
+// ── WhatsApp ───────────────────────────────────────────────────────────────────────────
+
 export const generarMensajeWhatsApp = (pedido, estado) => {
-  const nombre = pedido.nombre || "Cliente";
+  const nombre = primerNombre(pedido);
+  const saludo = nombre ? `Hola ${nombre}` : "Hola";
+  const negocio = nombreNegocioSync();
+  const num = `#${pedido.numero}`;
+  const total = pedido.total ? `\nTotal: *${formatCOP(pedido.total)}*` : "";
   let texto = "";
 
-  if (estado === "camino") {
-    texto = `Hola ${nombre}! 🛵 Tu pedido #${pedido.numero} de Paves Medellín ya va en camino hacia tu dirección. ¡Estar muy pendiente!`;
+  if (estado === "nuevo") {
+    texto = `${saludo} 👋, te saludamos de *${negocio}*.\n\nRecibimos tu pedido *${num}* y en breve lo confirmamos.${total}\n\n¡Gracias por tu compra!`;
   } else if (estado === "preparacion") {
-    texto = `Hola ${nombre}! 👨‍🍳 Hemos comenzado a preparar tu pedido #${pedido.numero}. Te avisaremos cuando salga en camino.`;
+    texto = `${saludo} 👨‍🍳, te saludamos de *${negocio}*.\n\nTu pedido *${num}* ya está en preparación. ${esRecogida(pedido) ? "Te avisaremos cuando esté listo para recoger." : "Te avisaremos cuando salga hacia tu dirección."}${total}`;
+  } else if (estado === "camino") {
+    texto = esRecogida(pedido)
+      ? `${saludo} 🛍️, te saludamos de *${negocio}*.\n\nTu pedido *${num}* ya está listo para recoger. Al llegar, menciona tu número de pedido.${total}`
+      : `${saludo} 🛵, te saludamos de *${negocio}*.\n\nTu pedido *${num}* ya va en camino. Por favor mantente atento al teléfono para recibirlo.${total}`;
   } else if (estado === "entregado") {
-    texto = `Hola ${nombre}! ✅ Tu pedido #${pedido.numero} ha sido entregado. ¡Esperamos que lo disfrutes muchísimo!`;
+    texto = `${saludo} ✅, te saludamos de *${negocio}*.\n\nTu pedido *${num}* fue entregado. ¡Esperamos que lo disfrutes!\n\nGracias por elegirnos 💛`;
+  } else if (estado === "cancelado") {
+    texto = `${saludo}, te saludamos de *${negocio}*.\n\nTe informamos que tu pedido *${num}* fue cancelado. Si tienes alguna duda, responde este mensaje y con gusto te ayudamos.`;
   } else {
-    texto = `Hola ${nombre}, te escribimos de Paves Medellín respecto a tu pedido #${pedido.numero}.`;
+    texto = `${saludo}, te saludamos de *${negocio}* respecto a tu pedido *${num}*.`;
   }
 
   let phone = pedido.telefono || "";

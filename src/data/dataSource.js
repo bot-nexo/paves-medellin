@@ -146,6 +146,7 @@ const normalizeSettings = (row) => {
     plan_fidelizacion: row.plan_fidelizacion !== false,
     plan_configuracion: row.plan_configuracion !== false,
     plan_domicilio_dinamico: row.plan_domicilio_dinamico !== false,
+    plan_emails: row.plan_emails !== false,
   };
 };
 
@@ -978,6 +979,7 @@ const COLUMNAS_SETTINGS = {
   plan_fidelizacion: "plan_fidelizacion",
   plan_configuracion: "plan_configuracion",
   plan_domicilio_dinamico: "plan_domicilio_dinamico",
+  plan_emails: "plan_emails",
 };
 
 /** Actualiza la fila única de settings (upsert: crea la fila si no existe). */
@@ -1097,6 +1099,39 @@ export async function getOrders(limite = 200) {
     .limit(limite);
   if (error) throw error;
   return data.map(normalizeOrder);
+}
+
+/**
+ * Todos los pedidos entre dos fechas locales YYYY-MM-DD (inclusive), paginando
+ * para no quedar limitado por el máximo de filas por consulta de Supabase.
+ * Fechas vacías = sin límite en ese extremo.
+ */
+export async function getOrdersByRange(desde, hasta) {
+  const PAGINA = 1000;
+  const todos = [];
+
+  for (let offset = 0; ; offset += PAGINA) {
+    let query = supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(offset, offset + PAGINA - 1);
+
+    if (desde) query = query.gte("created_at", new Date(`${desde}T00:00:00`).toISOString());
+    if (hasta) {
+      const finExclusivo = new Date(`${hasta}T00:00:00`);
+      finExclusivo.setDate(finExclusivo.getDate() + 1);
+      query = query.lt("created_at", finExclusivo.toISOString());
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    todos.push(...data);
+    if (data.length < PAGINA) break;
+  }
+
+  return todos.map(normalizeOrder);
 }
 
 /** Cambia el estado de un pedido (flujo del negocio). */

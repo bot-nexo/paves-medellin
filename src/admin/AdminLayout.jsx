@@ -1,12 +1,16 @@
 import {
   AlertOctagon,
+  Award,
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   Dessert,
   ExternalLink,
   LayoutDashboard,
+  Lock,
   LogOut,
+  MapPin,
   Menu,
   Palette,
   Receipt,
@@ -18,8 +22,6 @@ import {
   Tags,
   User,
   X,
-  Award,
-  MapPin,
 } from "lucide-react";
 import { useState } from "react";
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -67,19 +69,53 @@ const AdminLayout = () => {
   const email = session?.user?.email || "";
 
   // Lógica de bloqueo por falta de pago
-  const isSuspended = settings && !settings.isActive;
+  // useCatalog arranca con settings por defecto sin isActive: esperar a los reales
+  if (settings?.isActive === undefined) {
+    return <div className="admin-suspended" />;
+  }
+
+  const isSuspended = settings.isActive === false;
 
   if (isSuspended && role !== "superadmin") {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", backgroundColor: "#fdf8f5", textAlign: "center", padding: "2rem" }}>
-        <AlertOctagon size={64} color="#d32f2f" style={{ marginBottom: "1rem" }} />
-        <h1 style={{ color: "#3D2314", fontSize: "2rem", marginBottom: "1rem" }}>Servicio Suspendido</h1>
-        <p style={{ color: "#666", fontSize: "1.1rem", maxWidth: "400px", marginBottom: "2rem" }}>
-          Tu acceso al panel de administración ha sido bloqueado temporalmente. Por favor, contacta con el administrador del sistema para regularizar el estado de tu cuenta.
-        </p>
-        <button onClick={handleLogout} className="admin-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-          <LogOut size={18} /> Cerrar Sesión
-        </button>
+      <div className="admin-suspended">
+        <div className="admin-suspended__card">
+          <div className="admin-suspended__brand">
+            <img src={settings?.logo_url || logoImg} alt="Logo" />
+            <span>{rz || "Paves Medellin"}</span>
+          </div>
+
+          <div className="admin-suspended__icon">
+            <Lock size={28} />
+          </div>
+
+          <span className="admin-suspended__badge">
+            <AlertOctagon size={12} /> Cuenta suspendida
+          </span>
+
+          <h1 className="admin-suspended__title">Acceso temporalmente restringido</h1>
+          <p className="admin-suspended__text">
+            El panel de administración se encuentra inactivo por un pago pendiente del plan.
+            Tu información y la de tus clientes está segura y no se ha perdido.
+          </p>
+
+          <ul className="admin-suspended__list">
+            <li>
+              <ShieldCheck size={16} />
+              <span>Tus productos, pedidos y configuración se conservan intactos.</span>
+            </li>
+            <li>
+              <CreditCard size={16} />
+              <span>Regulariza el pago con el proveedor del sistema para reactivar el servicio.</span>
+            </li>
+          </ul>
+
+          <button type="button" onClick={handleLogout} className="admin-btn-primary admin-btn-primary--full">
+            <LogOut size={16} /> Cerrar sesión
+          </button>
+
+          {email && <p className="admin-suspended__email">Sesión iniciada como {email}</p>}
+        </div>
       </div>
     );
   }
@@ -149,7 +185,7 @@ const AdminLayout = () => {
           </div>
           {!collapsed && (
             <div className="admin-sidebar__brand-text">
-              <span className="admin-sidebar__titulo">{rz || "Paves Medellin"}</span>
+              <span className="admin-sidebar__titulo" title={rz || "Paves Medellin"}>{rz || "Paves Medellin"}</span>
               <span className="admin-sidebar__subtitulo">Panel Admin</span>
             </div>
           )}

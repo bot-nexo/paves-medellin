@@ -1,14 +1,26 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { 
-  FileText, Download, Printer, Calendar, TrendingUp, DollarSign, 
-  ShoppingBag, CreditCard, BarChart3, Filter, Award, AlertTriangle,
-  RefreshCw, CheckCircle2, ChevronRight, Layers, ArrowUpRight
+import {
+    AlertTriangle,
+    Award,
+    BarChart3,
+    Calendar,
+    CheckCircle2,
+    CreditCard,
+    DollarSign,
+    Download,
+    FileText,
+    Filter,
+    Layers,
+    Printer,
+    RefreshCw,
+    ShoppingBag,
+    TrendingUp
 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
-import { getOrders, getProducts } from "../../data/dataSource";
-import { formatCOP } from "../../utils/price";
 import "../../css/Reportes.css";
+import { getOrdersByRange, getProducts } from "../../data/dataSource";
+import { formatCOP } from "../../utils/price";
 
 const PRESET_FILTERS = [
   { id: "hoy", label: "Hoy" },
@@ -20,31 +32,43 @@ const PRESET_FILTERS = [
   { id: "custom", label: "Rango Personalizado" },
 ];
 
+// YYYY-MM-DD en hora local (toISOString usa UTC y corre el día después de las 7pm en Colombia)
+const fechaLocal = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 const Reportes = () => {
   const [cargando, setCargando] = useState(true);
   const [pedidosRaw, setPedidosRaw] = useState([]);
   const [productosRaw, setProductosRaw] = useState([]);
-  
-  // Filtros de fecha
+
+  // Filtros de fecha (arranca en "Este Mes" para no descargar todo el historial al entrar)
   const [preset, setPreset] = useState("mes");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  
+  const [fechaInicio, setFechaInicio] = useState(() => {
+    const ahora = new Date();
+    return fechaLocal(new Date(ahora.getFullYear(), ahora.getMonth(), 1));
+  });
+  const [fechaFin, setFechaFin] = useState(() => fechaLocal(new Date()));
+
   // Pestaña o Tipo de Reporte activo
   const [tipoReporte, setTipoReporte] = useState("financiero"); // 'financiero' | 'pedidos' | 'productos'
   const reportRef = useRef(null);
+  const cargaIdRef = useRef(0);
 
-  // Cargar datos
+  // Cargar datos del rango directamente desde la BD
   const cargarDatos = async () => {
+    const cargaId = ++cargaIdRef.current;
     setCargando(true);
     try {
       const [ordersData, productsData] = await Promise.all([
-        getOrders(1000),
+        getOrdersByRange(fechaInicio, fechaFin),
         getProducts()
       ]);
+      // Ignorar respuestas de un rango anterior si el usuario ya cambió el filtro
+      if (cargaId !== cargaIdRef.current) return;
       setPedidosRaw(ordersData || []);
       setProductosRaw(productsData || []);
     } catch (err) {
+      if (cargaId !== cargaIdRef.current) return;
       console.error("Error al cargar datos para reportes:", err);
       Swal.fire({
         icon: "error",
@@ -53,42 +77,60 @@ const Reportes = () => {
         confirmButtonColor: "#3D2314"
       });
     } finally {
-      setCargando(false);
+      if (cargaId === cargaIdRef.current) setCargando(false);
     }
   };
 
   useEffect(() => {
     cargarDatos();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fechaInicio, fechaFin]);
+
+  const seleccionarPreset = async (id) => {
+    if (id === "todos" && preset !== "todos") {
+      const { isConfirmed } = await Swal.fire({
+        icon: "warning",
+        title: "¿Cargar todo el historial?",
+        text: "Se descargarán todos los pedidos registrados. Con mucho historial puede tardar varios segundos. Para consultas habituales usa un rango de fechas.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cargar todo",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#3D2314",
+        reverseButtons: true,
+      });
+      if (!isConfirmed) return;
+    }
+    setPreset(id);
+  };
 
   // Manejador de cambio de Preset
   useEffect(() => {
     const ahora = new Date();
     const hoyInicio = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    
+
     if (preset === "hoy") {
-      setFechaInicio(hoyInicio.toISOString().split("T")[0]);
-      setFechaFin(ahora.toISOString().split("T")[0]);
+      setFechaInicio(fechaLocal(hoyInicio));
+      setFechaFin(fechaLocal(ahora));
     } else if (preset === "ayer") {
       const ayer = new Date(hoyInicio);
       ayer.setDate(ayer.getDate() - 1);
-      setFechaInicio(ayer.toISOString().split("T")[0]);
-      setFechaFin(ayer.toISOString().split("T")[0]);
+      setFechaInicio(fechaLocal(ayer));
+      setFechaFin(fechaLocal(ayer));
     } else if (preset === "semana") {
       const primerDiaSemana = new Date(hoyInicio);
       const day = primerDiaSemana.getDay() || 7; // 1 (Lun) a 7 (Dom)
       primerDiaSemana.setDate(primerDiaSemana.getDate() - day + 1);
-      setFechaInicio(primerDiaSemana.toISOString().split("T")[0]);
-      setFechaFin(ahora.toISOString().split("T")[0]);
+      setFechaInicio(fechaLocal(primerDiaSemana));
+      setFechaFin(fechaLocal(ahora));
     } else if (preset === "mes") {
       const primerDiaMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
-      setFechaInicio(primerDiaMes.toISOString().split("T")[0]);
-      setFechaFin(ahora.toISOString().split("T")[0]);
+      setFechaInicio(fechaLocal(primerDiaMes));
+      setFechaFin(fechaLocal(ahora));
     } else if (preset === "30dias") {
       const hace30 = new Date(hoyInicio);
       hace30.setDate(hace30.getDate() - 30);
-      setFechaInicio(hace30.toISOString().split("T")[0]);
-      setFechaFin(ahora.toISOString().split("T")[0]);
+      setFechaInicio(fechaLocal(hace30));
+      setFechaFin(fechaLocal(ahora));
     } else if (preset === "todos") {
       setFechaInicio("");
       setFechaFin("");
@@ -101,7 +143,7 @@ const Reportes = () => {
 
     return pedidosRaw.filter((p) => {
       if (!p.created_at) return true;
-      const fechaPedido = p.created_at.split("T")[0];
+      const fechaPedido = fechaLocal(new Date(p.created_at));
 
       if (fechaInicio && fechaPedido < fechaInicio) return false;
       if (fechaFin && fechaPedido > fechaFin) return false;
@@ -124,7 +166,7 @@ const Reportes = () => {
     const porHora = Array(24).fill(0);
     // Distribución por día de la semana (0=Dom, 1=Lun... 6=Sáb)
     const porDiaSemana = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-    
+
     // Conteo de productos
     const conteoProductos = {};
 
@@ -153,7 +195,7 @@ const Reportes = () => {
         p.items.forEach((it) => {
           const nombre = it.nombre || it.title || "Producto";
           const cant = Number(it.cantidad || it.qty || 1);
-          const subt = Number(it.precio || it.price || 0) * cant;
+          const subt = Number(it.precio_unitario || it.precio || it.price || 0) * cant;
 
           if (!conteoProductos[nombre]) {
             conteoProductos[nombre] = { unidades: 0, ingresos: 0 };
@@ -264,7 +306,7 @@ const Reportes = () => {
 
   return (
     <div className="rep-container" ref={reportRef}>
-      
+
       {/* HEADER DE LA PÁGINA */}
       <div className="rep-header no-print">
         <div>
@@ -292,7 +334,7 @@ const Reportes = () => {
             <button
               key={f.id}
               className={`rep-chip ${preset === f.id ? "active" : ""}`}
-              onClick={() => setPreset(f.id)}
+              onClick={() => seleccionarPreset(f.id)}
             >
               {f.label}
             </button>
@@ -305,7 +347,9 @@ const Reportes = () => {
             <input
               type="date"
               value={fechaInicio}
+              max={fechaFin || undefined}
               onChange={(e) => {
+                if (!e.target.value) return; // vacío = sin límite: solo vía "Todo el Historial"
                 setPreset("custom");
                 setFechaInicio(e.target.value);
               }}
@@ -316,7 +360,9 @@ const Reportes = () => {
             <input
               type="date"
               value={fechaFin}
+              min={fechaInicio || undefined}
               onChange={(e) => {
+                if (!e.target.value) return;
                 setPreset("custom");
                 setFechaFin(e.target.value);
               }}
@@ -376,7 +422,7 @@ const Reportes = () => {
           {/* ────────────────────────────────────────────────────────────────────────── */}
           {(tipoReporte === "financiero" || window.matchMedia("print").matches) && (
             <div className="rep-section animate-fade-in">
-              
+
               {/* METRICAS CLAVE (KPIS) */}
               <div className="rep-kpi-grid">
                 <div className="rep-kpi-card">
@@ -426,7 +472,7 @@ const Reportes = () => {
 
               {/* FILA 2: METODOS DE PAGO Y TIPOS DE ENTREGA */}
               <div className="rep-grid-2">
-                
+
                 {/* Desglose Métodos de Pago */}
                 <div className="rep-card">
                   <h3 className="rep-card-title">
@@ -583,7 +629,7 @@ const Reportes = () => {
           {/* ────────────────────────────────────────────────────────────────────────── */}
           {(tipoReporte === "productos" || window.matchMedia("print").matches) && (
             <div className="rep-section animate-fade-in" style={{ marginTop: window.matchMedia("print").matches ? "2rem" : 0 }}>
-              
+
               <div className="rep-grid-2">
                 {/* Top 10 Productos Más Vendidos */}
                 <div className="rep-card">
@@ -634,7 +680,7 @@ const Reportes = () => {
                   <p style={{ color: "#a3a3a3", fontSize: "0.85rem", marginBottom: "1rem" }}>
                     Productos en tu catálogo que no han registrado ventas en el rango seleccionado. Considera promocionarlos o replantear su visibilidad.
                   </p>
-                  
+
                   <div className="rep-list">
                     {metricas.productosSinVentas.length === 0 ? (
                       <div className="rep-empty-good">
