@@ -209,7 +209,7 @@ const Pedidos = () => {
       if (!filtroMes || filtroMes === "todos" || mes === filtroMes) {
         base.todos++;
         base[p.estado] = (base[p.estado] || 0) + 1;
-        
+
         let isAgendado = p.observaciones && p.observaciones.includes("AGENDADO PARA:");
         if (!isAgendado && p.items) {
           isAgendado = p.items.some(item => item.observaciones && item.observaciones.includes("AGENDADO PARA:"));
@@ -252,9 +252,42 @@ const Pedidos = () => {
         prev.map((p) => (p.id === pedido.id ? { ...p, estado: nuevoEstado } : p)),
       );
       setDetalle((d) => (d?.id === pedido.id ? { ...d, estado: nuevoEstado } : d));
-      
-      // Notificar al cliente (Email automático)
-      notificarCambioEstado(pedido, nuevoEstado).catch(console.error);
+
+      try {
+        const resultadoEmail = await notificarCambioEstado(pedido, nuevoEstado);
+        if (resultadoEmail.sent) {
+          Swal.fire({
+            icon: "success",
+            title: "Correo enviado al cliente",
+            toast: true,
+            position: "top-end",
+            timer: 2400,
+            showConfirmButton: false,
+          });
+        } else {
+          const sinEmail = resultadoEmail.reason === "cliente-sin-email";
+          Swal.fire({
+            icon: sinEmail ? "warning" : "info",
+            title: sinEmail
+              ? "Estado actualizado; cliente sin correo"
+              : "Estado actualizado; correo no enviado",
+            text: sinEmail
+              ? "Verifica que el cliente tenga un correo registrado."
+              : "Revisa la configuración del correo automático.",
+            toast: true,
+            position: "top-end",
+            timer: 4000,
+            showConfirmButton: false,
+          });
+        }
+      } catch (e) {
+        Swal.fire({
+          title: "Estado actualizado; correo no enviado",
+          text: e.message,
+          icon: "error",
+          confirmButtonColor: "#3D2314",
+        });
+      }
     } catch (e) {
       Swal.fire({
         title: "No se pudo actualizar",
@@ -294,6 +327,7 @@ const Pedidos = () => {
             <Calendar size={15} />
             <select
               value={filtroMes}
+
               onChange={(e) => setFiltroMes(e.target.value)}
               className="adm-ped__select-mes"
             >

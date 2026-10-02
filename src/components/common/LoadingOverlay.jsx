@@ -11,7 +11,7 @@ const LoadingOverlay = ({
   minTime = 1000,
   settings = null
 }) => {
-  const logoSrc = "/favicon.ico";
+  const logoSrc = "/logo.png";
   const [mostrar, setMostrar] = useState(true);
 
   useEffect(() => {

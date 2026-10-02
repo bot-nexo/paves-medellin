@@ -142,7 +142,7 @@ const normalizeSettings = (row) => {
     pricePerKm: row.price_per_km ?? 1500,
     maxDeliveryRadiusKm: row.max_delivery_radius_km ?? 15,
     dynamicDeliveryEnabled: row.dynamic_delivery_enabled === true,
-    useCustomerBadges: row.use_customer_badges !== false,
+    useCustomerBadges: row.useCustomerBadges !== false,
     plan_fidelizacion: row.plan_fidelizacion !== false,
     plan_configuracion: row.plan_configuracion !== false,
     plan_domicilio_dinamico: row.plan_domicilio_dinamico !== false,
@@ -975,7 +975,7 @@ const COLUMNAS_SETTINGS = {
   pricePerKm: "price_per_km",
   maxDeliveryRadiusKm: "max_delivery_radius_km",
   dynamicDeliveryEnabled: "dynamic_delivery_enabled",
-  useCustomerBadges: "use_customer_badges",
+  useCustomerBadges: "useCustomerBadges",
   plan_fidelizacion: "plan_fidelizacion",
   plan_configuracion: "plan_configuracion",
   plan_domicilio_dinamico: "plan_domicilio_dinamico",
@@ -1248,7 +1248,7 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, 
       const updates = {};
       if (cleanCumple && !custData.fecha_cumple) updates.fecha_cumple = cleanCumple;
       if (cleanNombre && (!custData.nombre || custData.nombre === "Cliente")) updates.nombre = cleanNombre;
-      if (cleanEmail && !custData.email) updates.email = cleanEmail;
+      if (cleanEmail && custData.email !== cleanEmail) updates.email = cleanEmail;
 
       if (Object.keys(updates).length > 0) {
         const { data: updatedCust } = await supabase
@@ -1339,22 +1339,25 @@ export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, 
  * Incrementa el contador de pedidos concretados en la tabla 'clientes' de Supabase DB al realizar una compra.
  */
 export async function incrementCustomerOrderCount(telefono, nombre = "") {
-  if (!telefono || !isSupabaseConfigured) return;
+  if (!telefono || !isSupabaseConfigured) return null;
   const cleanPhone = String(telefono).replace(/\D/g, "");
 
   try {
     const cust = await getOrCreateCustomer(nombre, cleanPhone);
     const newCount = (cust?.pedidos_count ?? 0) + 1;
 
-    await supabase
+    const { error } = await supabase
       .from("clientes")
       .update({
         pedidos_count: newCount,
         cant_pedidos_concretados: newCount,
       })
       .eq("telefono", cleanPhone);
+    if (error) throw error;
+    return newCount;
   } catch (err) {
     console.warn("Error incrementando compras en Supabase DB:", err);
+    return null;
   }
 }
 

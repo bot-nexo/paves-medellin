@@ -160,7 +160,7 @@ const Menu = ({
     return d.promotionsItems.map((p, i) => ({
       id: p.id || `promo-${i}`,
       nombre: p.titulo || "Promoción Especial",
-      precio: p.precio || null, 
+      precio: p.precio || null,
       precioOriginal: p.precioOriginal || null,
       descuento: p.descuento || p.tag,
       imagen: p.imagen,
@@ -221,8 +221,6 @@ const Menu = ({
   return (
     <section id="menu" className="menu-section bg-neutral-950 text-neutral-100" style={cssVariables}>
       <div className="container mx-auto px-4 max-w-5xl">
-
-
 
         {/* ── Banner de Guía Rápida ── */}
         <QuickGuide />
@@ -322,7 +320,7 @@ const Menu = ({
               }
             `}</style>
             <div className="absolute inset-0 opacity-20  rounded-full" style={{ background: "linear-gradient(45deg, transparent 20%, white 50%, transparent 80%)", backgroundSize: "200% 200%", animation: "shimmer 3s infinite linear" }} />
-            <h3 className="relative z-10 text-[0.8rem] md:text-[0.9rem] 
+            <h3 className="relative z-10 text-[0.8rem] md:text-[0.9rem]
             tracking-widest uppercase m-0 leading-none drop-shadow-md">
               {d.specialEvent.texto}
             </h3>
@@ -364,7 +362,7 @@ const Menu = ({
         )}
 
         {/* ── 0. Barra de Búsqueda Integrada al Menú ─ */}
-        <div 
+        <div
           className="menu-search-wrapper"
           style={{ top: d.specialEvent?.active ? '75px' : '0' }}
         >
@@ -394,8 +392,8 @@ const Menu = ({
             )}
             </div>
             {settings?.plan_adiciones !== false && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 style={{ background: "#ffcc00", color: "#120a06", padding: '0 12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '0.85rem' }}
                 onClick={onOpenArmaModal}
               >

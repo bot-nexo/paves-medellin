@@ -21,6 +21,7 @@ const FIXED_BADGES = [
   { key: "platino", label: "Platino", img: imgPlatino, color: "#e5e4e2", glow: "#e5e4e280" },
 ];
 
+
 const matchBadge = (dbBadges, key) =>
   dbBadges.find((b) => b.name?.toLowerCase().includes(key));
 
@@ -66,6 +67,7 @@ const BadgeRulesModal = ({ isOpen, onClose, onSave, fixed, dbBadge, diasLaborale
     });
   };
 
+  //******************************** */
   return (
     <div className="adm-modal__overlay" onClick={onClose}>
       <form className="adm-modal" onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}>
@@ -155,7 +157,7 @@ const BadgeRulesModal = ({ isOpen, onClose, onSave, fixed, dbBadge, diasLaborale
                 Dias en que aplican estos beneficios
               </span>
               <span className="adm-modal__precio-hint" style={{ marginBottom: "8px", display: "block" }}>
-                Solo se muestran los dias laborales del negocio. Si no seleccionas ninguno, aplican todos los dias.
+                Solo se muestran los dias laborales del negocio. Los beneficios aplican unicamente en los dias seleccionados; si no seleccionas ninguno, no se aplican.
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {(diasLaborales.length > 0 ? diasLaborales : TODOS_LOS_DIAS).map((dia) => {
@@ -188,8 +190,8 @@ const BadgeRulesModal = ({ isOpen, onClose, onSave, fixed, dbBadge, diasLaborale
         </div>
 
         <footer className="adm-modal__pie">
-          <button type="button" className="adm-btn adm-btn--ghost" onClick={onClose}>Cancelar</button>
-          <button type="submit" className="adm-btn adm-btn--primary">Guardar cambios</button>
+          <button type="button" className="adm-btn admin-btn-ghost" onClick={onClose}>Cancelar</button>
+          <button type="submit" className="adm-btn admin-btn-primary">Guardar cambios</button>
         </footer>
       </form>
     </div>

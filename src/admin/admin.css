@@ -1612,7 +1612,7 @@ select.adm-prod__select:focus {
 }
 
 .adm-ped__select-mes {
-  background: transparent;
+  background: var(--abg-elev);
   border: none;
   color: var(--crema);
   font-size: 13px;

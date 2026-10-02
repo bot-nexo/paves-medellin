@@ -146,6 +146,16 @@ export const getCustomerBadge = (pedidosCount, dynamicBadges = []) => {
   };
 };
 
+/** Fidelización activa: permiso del superadmin (plan_fidelizacion) y interruptor del admin (useCustomerBadges). */
+export const isLoyaltyEnabled = (settings) =>
+  settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false;
+
+/** Insignia vigente del cliente para aplicar beneficios, o null si el módulo está desactivado. */
+export const resolveCustomerBadge = (settings, customer, badges) =>
+  isLoyaltyEnabled(settings) && customer
+    ? getCustomerBadge(customer.pedidos_count || 0, badges)
+    : null;
+
 export const getCustomerBadgeFromDB = async (pedidosCount) => {
   const dbBadges = await fetchBadgesFromDB();
   return getCustomerBadge(pedidosCount, dbBadges);

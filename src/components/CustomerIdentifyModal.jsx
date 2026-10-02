@@ -1,8 +1,9 @@
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, Loader2, Phone, Sparkles, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import "../css/CustomerIdentifyModal.css";
 import { findCustomerByPhone } from "../data/dataSource";
-import { getCustomerBadge } from "../utils/badges";
+import { getCustomerBadge, isLoyaltyEnabled } from "../utils/badges";
+import { formatApplyDays } from "../utils/price";
+import "../css/CustomerIdentifyModal.css";
 
 const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustomer = null, settings, badges = [] }) => {
   const [step, setStep] = useState(1);
@@ -23,9 +24,9 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
         setStep(3);
         setWelcomeName(currentCustomer.nombre);
         setPedidosCount(currentCustomer.pedidos_count || 0);
-        if (settings?.plan_fidelizacion !== false) {
-          setCustomerBadge(getCustomerBadge(currentCustomer.pedidos_count || 0, badges));
-        }
+        setCustomerBadge(
+          isLoyaltyEnabled(settings) ? getCustomerBadge(currentCustomer.pedidos_count || 0, badges) : null
+        );
       } else {
         setStep(1);
         setWelcomeName("");
@@ -39,9 +40,10 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
       setEmail(currentCustomer?.email || "");
       setFechaCumple(currentCustomer?.fecha_cumple || "");
     }
-  }, [isOpen, currentCustomer]);
+  }, [isOpen, currentCustomer, settings?.plan_fidelizacion, settings?.useCustomerBadges, badges]);
 
   if (!isOpen) return null;
+  const loyaltyOn = isLoyaltyEnabled(settings);
 
   // Paso 1: Validar únicamente el teléfono en Supabase DB
   const handleVerifyPhone = async (e) => {
@@ -65,9 +67,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
         const count = dbCust.pedidos_count ?? dbCust.cant_pedidos_concretados ?? 0;
         setPedidosCount(count);
 
-        if (settings?.plan_fidelizacion !== false) {
-          setCustomerBadge(getCustomerBadge(count, badges));
-        }
+        setCustomerBadge(isLoyaltyEnabled(settings) ? getCustomerBadge(count, badges) : null);
 
         const fullCust = {
           nombre: dbCust.nombre,
@@ -116,7 +116,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
 
   //*************************************** */
   return (
-    <div className="customer-modal-backdrop" onClick={onClose}>
+    <div className="customer-modal-backdrop"  onClick={onClose}>
       <div className="customer-modal-card" onClick={(e) => e.stopPropagation()}>
         {onClose && (
           <button
@@ -135,12 +135,20 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
             <Sparkles size={24} className="text-[#ffcc00]" />
           </div>
           <h2 className="customer-modal-title">
-            {step === 1 ? `¡Bienvenido a ${settings?.razonSocial || "nuestro menú"}! 🍰` : "¡Es tu primera vez con nosotros! 🎉"}
+            {step === 1
+              ? `¡Bienvenido a ${settings?.razonSocial || "nuestro menú"}! 🍰`
+              : step === 3
+                ? `¡Bienvenido de nuevo! 🎉`
+                : "¡Es tu primera vez con nosotros! 🎉"}
           </h2>
           <p className="customer-modal-subtitle">
             {step === 1
-              ? "Ingresa tu número de WhatsApp para consultar tu perfil o ingresar al menú."
-              : "No encontramos registros previos con este número. Completa tu nombre para crear tu perfil."}
+              ? loyaltyOn
+                ? "Ingresa tu número de WhatsApp para consultar tu perfil o ingresar al menú."
+                : "Ingresa tu número de WhatsApp para identificarte e ingresar al menú."
+              : step === 3
+                ? loyaltyOn ? "Estos son tus beneficios y tu nivel actual." : "Ya estás identificado, puedes hacer tu pedido."
+                : "No encontramos registros previos con este número. Completa tu nombre para crear tu perfil."}
           </p>
         </div>
 
@@ -148,7 +156,6 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
           <div className="customer-welcome-banner" style={{ display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box", padding: "1rem" }}>
             <div style={{ textAlign: "center", marginBottom: "1.5rem", width: "100%" }}>
               <h4 style={{ fontSize: "1.6rem", fontWeight: "700", marginBottom: "0.25rem", color: "#fff" }}>¡Hola, {welcomeName}!</h4>
-              <p style={{ color: "#aaa", fontSize: "0.95rem" }}>Bienvenido a tu panel de fidelidad</p>
             </div>
 
             {customerBadge && (
@@ -184,8 +191,13 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
                     <p style={{ color: "#e2e8f0", fontSize: "0.95rem", margin: 0, lineHeight: 1.5 }}>
                       {customerBadge.description}
                     </p>
-                    {(customerBadge.discount_percentage > 0 || customerBadge.free_delivery) && (
+                    {(customerBadge.discount_percentage > 0 || customerBadge.free_delivery || customerBadge.has_2x1) && (
                       <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%", boxSizing: "border-box" }}>
+                        {customerBadge.has_2x1 && (
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", color: "#ffcc00", fontSize: "0.9rem", fontWeight: "600" }}>
+                            <Sparkles size={16} /> <span>2x1 en tus productos</span>
+                          </div>
+                        )}
                         {customerBadge.discount_percentage > 0 && (
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", color: "#ffcc00", fontSize: "0.9rem", fontWeight: "600" }}>
                             <Sparkles size={16} /> <span>{customerBadge.discount_percentage}% descuento automático</span>
@@ -196,6 +208,11 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
                             <CheckCircle2 size={16} /> <span>Envío totalmente gratis</span>
                           </div>
                         )}
+                        <div style={{ textAlign: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
+                          {formatApplyDays(customerBadge.apply_days)
+                            ? "Válido: " + formatApplyDays(customerBadge.apply_days)
+                            : "Beneficios sin días habilitados por ahora"}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -248,7 +265,7 @@ const CustomerIdentifyModal = ({ isOpen, onClose, onSaveCustomer, currentCustome
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "2rem", width: "100%", boxSizing: "border-box" }}>
               <button type="button" onClick={onClose} className="customer-submit-btn" style={{ padding: "0.85rem", fontSize: "1.05rem", fontWeight: "600", letterSpacing: "0.5px", width: "100%", boxSizing: "border-box" }}>
-                Comprar ahora y usar mis beneficios
+                {loyaltyOn ? "Comprar ahora y usar mis beneficios" : "Ir al menú"}
               </button>
               <button type="button" onClick={() => { localStorage.removeItem("paves_customer_info"); sessionStorage.removeItem("paves_customer_info"); window.location.reload(); }} className="customer-skip-btn" style={{ fontSize: "0.85rem", opacity: 0.7, width: "100%", boxSizing: "border-box" }}>
                 Cerrar sesión (Cambiar cuenta)

@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Flame, Search, SlidersHorizontal, User, Star, Medal, Award, Trophy, Crown } from "lucide-react";
+import {  User, Star} from "lucide-react";
 import Swal from "sweetalert2";
 import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import { DEFAULT_CATALOG_DESIGN, getStoreRatingStats, submitStoreRating } from "../data/dataSource";
 import { products as localProducts } from "../data/menu";
-import { getCustomerBadge } from "../utils/badges";
 import "../css/Hero.css";
 
 const Hero = ({
@@ -183,8 +182,8 @@ const Hero = ({
       <div className="saborio-status-badge saborio-status-badge--closed">
         <span className="saborio-status-dot saborio-status-dot--closed" />
         <span>
-          {!estadoNegocio.esDiaAbierto 
-            ? "Hoy no hay servicio" 
+          {!estadoNegocio.esDiaAbierto
+            ? "Hoy no hay servicio"
             : `Cerrado ${estadoNegocio.openHour ? `· Abre ${estadoNegocio.openHour}` : ""}`}
         </span>
       </div>

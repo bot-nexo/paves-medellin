@@ -29,24 +29,32 @@ const esRecogida = (pedido) => pedido.tipo_entrega === "recogida" || pedido.tipo
 const primerNombre = (pedido) => (pedido.nombre || "").trim().split(/\s+/)[0] || "";
 
 export const sendEmailResend = async (to, subject, html, fromName) => {
-  console.log("📨 Iniciando envío de correo vía Edge Function a:", to);
+  const { data, error } = await supabase.functions.invoke("send-email", {
+    body: { to, subject, html, fromName },
+  });
 
-  try {
-    const { data, error } = await supabase.functions.invoke("send-email", {
-      body: { to, subject, html, fromName },
-    });
-
-    if (error) {
-      console.error("❌ Error ejecutando la Edge Function:", error);
-      return false;
+  if (error) {
+    let detail = "";
+    if (error.context instanceof Response) {
+      try {
+        const responseData = await error.context.clone().json();
+        const responseError = responseData?.error;
+        detail = typeof responseError === "string" ? responseError : responseError?.message || "";
+      } catch {
+        detail = "";
+      }
     }
-
-    console.log("✅ ¡Correo enviado exitosamente vía Edge Function!");
-    return true;
-  } catch (error) {
-    console.error("❌ Excepción llamando a la Edge Function:", error);
-    return false;
+    throw new Error(detail || `No se pudo enviar el correo: ${error.message}`);
   }
+  if (data?.error) {
+    const detail = typeof data.error === "string" ? data.error : data.error.message;
+    throw new Error(detail || "Resend rechazó el envío del correo");
+  }
+  if (data?.skipped) {
+    return { sent: false, reason: data.reason || "envio-omitido" };
+  }
+
+  return { sent: true };
 };
 
 export const notificarCambioEstado = async (pedido, nuevoEstado) => {
@@ -54,50 +62,43 @@ export const notificarCambioEstado = async (pedido, nuevoEstado) => {
 
   const settings = await getSettings().catch(() => null);
   if (settings?.plan_emails === false) {
-    console.log("✉️ Correos automáticos desactivados desde superadmin, notificación omitida.");
-    return;
+    return { sent: false, reason: "emails-desactivados" };
   }
 
   let emailParaEnviar = pedido.email;
-  console.log("📩 Email que viene en el pedido (antes de buscar):", emailParaEnviar);
 
   // Si el pedido no trae el email, lo buscamos en la tabla clientes usando el teléfono
   if (!emailParaEnviar && pedido.telefono) {
     const cleanPhone = String(pedido.telefono).replace(/\D/g, "");
-    console.log("📱 Buscando email en BD para el teléfono:", cleanPhone);
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("clientes")
         .select("email")
         .eq("telefono", cleanPhone)
         .maybeSingle();
-
-      console.log("📂 Resultado de BD:", data);
+      if (error) throw error;
 
       if (data && data.email) {
         emailParaEnviar = data.email;
       }
     } catch (err) {
-      console.warn("⚠️ No se pudo obtener el email del cliente:", err.message);
+      throw new Error(`No se pudo consultar el correo del cliente: ${err.message}`);
     }
   }
 
-  console.log("📧 Email final a utilizar:", emailParaEnviar);
-
   if (!emailParaEnviar) {
-    console.warn("⛔ No hay email disponible para el cliente, notificación omitida.");
-    return;
+    return { sent: false, reason: "cliente-sin-email" };
   }
 
   const negocio = await obtenerNegocio();
   const plantilla = PLANTILLAS_EMAIL[nuevoEstado];
-  if (!plantilla) return;
+  if (!plantilla) return { sent: false, reason: "estado-sin-plantilla" };
 
   const contenido = plantilla(pedido, negocio);
   const html = construirEmail({ ...contenido, pedido, negocio });
   const subject = `${contenido.asunto} · ${negocio.nombre}`;
 
-  await sendEmailResend(emailParaEnviar, subject, html, negocio.nombre);
+  return sendEmailResend(emailParaEnviar, subject, html, negocio.nombre);
 };
 
 // ── Plantillas de email por estado ────────────────────────────────────────────────────────

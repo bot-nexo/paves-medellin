@@ -2,6 +2,7 @@ import React from "react";
 import { Home, Compass, UtensilsCrossed, MessageCircle, Star, Award } from "lucide-react";
 import Swal from "sweetalert2";
 import "../css/BottomNavigation.css";
+import { isLoyaltyEnabled } from "../utils/badges";
 
 const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappNumber, settings, customer, onOpenCustomerModal }) => {
   const handleScrollTo = (elementId) => {
@@ -56,7 +57,7 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
 
 
         {/* 4. Nivel del Cliente */}
-        {settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false && (
+        {isLoyaltyEnabled(settings) && (
           <button
             type="button"
             className="saborio-nav-item"

@@ -75,6 +75,11 @@ Deno.serve(async (req) => {
       throw new Error("RESEND_API_KEY is missing");
     }
 
+    const fromEmail = Deno.env.get("RESEND_FROM_EMAIL")?.trim();
+    if (!fromEmail || !EMAIL_RE.test(fromEmail)) {
+      throw new Error("RESEND_FROM_EMAIL must be a valid address from your verified domain");
+    }
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -82,18 +87,25 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: `${remitente} <onboarding@resend.dev>`, // O tu dominio verificado
+        from: `${remitente} <${fromEmail}>`,
         to: [destinatario],
         subject: asunto,
         html: String(html || ""),
       }),
     });
 
-    const data = await res.json();
+    const responseBody = await res.text();
+    let data: unknown;
+    try {
+      data = responseBody ? JSON.parse(responseBody) : {};
+    } catch {
+      data = { message: responseBody || "Resend returned an empty response" };
+    }
 
-    if (!res.ok) return json({ error: data }, 400);
+    if (!res.ok) return json({ error: data }, 502);
     return json(data, 200);
   } catch (error) {
-    return json({ error: (error as Error).message }, 500);
+    const message = error instanceof Error ? error.message : "Error inesperado enviando el correo";
+    return json({ error: message }, 500);
   }
 });

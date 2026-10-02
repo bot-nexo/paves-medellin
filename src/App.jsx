@@ -24,7 +24,7 @@ import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
 
 import { createOrder, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
-import { getCustomerBadge } from "./utils/badges";
+import { resolveCustomerBadge } from "./utils/badges";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
@@ -172,21 +172,55 @@ const App = () => {
       ? deliveryData.deliveryMeta.calculatedFee
       : null;
 
-    const summary = calculateOrderSummary(cart, feeBase, freeThreshold, esDomicilio, dynamicFee);
-    const deliveryFee = (!esDomicilio || summary.esGratis)
-      ? 0
-      : summary.effectiveFee;
+    const currentBadge = resolveCustomerBadge(settings, customer, badges);
+    const summary = calculateOrderSummary(cart, feeBase, freeThreshold, esDomicilio, dynamicFee, currentBadge);
+    const deliveryFee = summary.deliveryFee;
 
-    const saved = await createOrder(deliveryData, cart, {
+    const beneficios = [];
+    if (summary.descuento2x1 > 0) beneficios.push("2x1 -$" + summary.descuento2x1);
+    if (summary.descuentoBadge > 0) beneficios.push(summary.porcentaje + "% -$" + summary.descuentoBadge);
+    if (esDomicilio && summary.esGratis) beneficios.push("envio gratis");
+    const notaBeneficios = beneficios.length
+      ? "INSIGNIA " + currentBadge.name + ": " + beneficios.join(", ")
+      : "";
+    const orderData = notaBeneficios
+      ? {
+          ...deliveryData,
+          observaciones: [deliveryData.observaciones, notaBeneficios].filter(Boolean).join(" | "),
+        }
+      : deliveryData;
+
+    if (deliveryData.telefono) {
+      await getOrCreateCustomer(
+        deliveryData.nombre,
+        deliveryData.telefono,
+        null,
+        deliveryData.email,
+      );
+    }
+
+    const saved = await createOrder(orderData, cart, {
       subtotal: summary.subtotal,
       deliveryFee,
-      total: summary.subtotal + deliveryFee,
+      total: summary.totalNeto,
       deliveryMeta: deliveryData.deliveryMeta || null,
     });
 
     // Incrementa el contador de compras concretadas del cliente en la BD real de Supabase
     if (deliveryData.telefono) {
-      incrementCustomerOrderCount(deliveryData.telefono, deliveryData.nombre);
+      incrementCustomerOrderCount(deliveryData.telefono, deliveryData.nombre).then((nuevoConteo) => {
+        if (nuevoConteo == null) return;
+        setCustomer((prev) => {
+          if (!prev) return prev;
+          const actualizado = { ...prev, pedidos_count: nuevoConteo };
+          try {
+            sessionStorage.setItem("paves_customer_info", JSON.stringify(actualizado));
+          } catch {
+            /* noop */
+          }
+          return actualizado;
+        });
+      });
     }
 
     // 2) Armar el mensaje de WhatsApp (idéntico al actual + nº de pedido si existe)
@@ -273,10 +307,16 @@ const App = () => {
     });
 
     const esGratis = !esDomicilio || summary.esGratis;
-    const totalFinal = summary.subtotal + deliveryFee;
+    const totalFinal = summary.totalNeto;
 
     message += "--------------------------------\n";
     message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
+    if (summary.descuento2x1 > 0) {
+      message += "   🎉 2x1 (" + currentBadge.name + "): -$" + (summary.descuento2x1 / 1000).toLocaleString() + " K\n";
+    }
+    if (summary.descuentoBadge > 0) {
+      message += "   Descuento " + summary.porcentaje + "% (" + currentBadge.name + "): -$" + (summary.descuentoBadge / 1000).toLocaleString() + " K\n";
+    }
     message +=
       "   Domicilio: " +
       (!esDomicilio ? "No aplica" : esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +

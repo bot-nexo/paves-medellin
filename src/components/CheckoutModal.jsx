@@ -25,7 +25,7 @@ import {
   calculateItemUnitPrice,
   calculateOrderSummary,
 } from "../utils/price";
-import { getCustomerBadge } from "../utils/badges";
+import { resolveCustomerBadge } from "../utils/badges";
 import { info as infoLocal, VALOR_DOMICILIO_DEFAULT } from "../data/menu";
 import { getPaymentMethods } from "../data/dataSource";
 import AddressAutocomplete from "./AddressAutocomplete";
@@ -120,9 +120,7 @@ const CheckoutModal = ({
     : null;
 
   // Calcular badge actual del cliente para aplicar beneficios
-  const currentBadge = settings?.plan_fidelizacion !== false && settings?.useCustomerBadges !== false && customer 
-    ? getCustomerBadge(customer.pedidos_count || 0, badges) 
-    : null;
+  const currentBadge = resolveCustomerBadge(settings, customer, badges);
 
   const {
     subtotal: totalProductos,
@@ -131,6 +129,8 @@ const CheckoutModal = ({
     effectiveFee,
     descuentoBadge,
     descuento2x1,
+    porcentaje,
+    tieneBeneficios,
     beneficiosAplican,
   } = calculateOrderSummary(
     cart,
@@ -256,6 +256,10 @@ const CheckoutModal = ({
   const renderDeliveryFeeText = () => {
     if (!esDomicilio) return <span className="totals-value free">No aplica</span>;
     
+    if (esGratis && (!isDynamicDelivery || deliveryResult?.withinCoverage)) {
+      return <span className="totals-value free">🎁 GRATIS ({currentBadge?.name})</span>;
+    }
+
     if (isDynamicDelivery && deliveryResult?.withinCoverage) {
       return (
         <span className="totals-value">
@@ -627,12 +631,12 @@ const CheckoutModal = ({
 
               {descuentoBadge > 0 && (
                 <div className="totals-row" style={{ color: "#22c55e" }}>
-                  <span className="totals-label">Descuento ({currentBadge?.name}):</span>
+                  <span className="totals-label">Descuento {porcentaje}% ({currentBadge?.name}):</span>
                   <span className="totals-value">-{formatCOP(descuentoBadge)}</span>
                 </div>
               )}
 
-              {currentBadge && !beneficiosAplican && (
+              {currentBadge && tieneBeneficios && !beneficiosAplican && (
                 <div className="totals-row" style={{ fontSize: "0.8rem", color: "#f59e0b", fontStyle: "italic" }}>
                   <span>⚠️ Tu insignia {currentBadge.name} no aplica beneficios hoy.</span>
                 </div>

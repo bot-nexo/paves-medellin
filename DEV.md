@@ -338,6 +338,22 @@ VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu-anon-key
 ```
 
+### Correos de cambio de estado
+Los correos se envían desde la Edge Function `send-email` con Resend. Configura
+la dirección remitente en un dominio verificado de Resend y guarda las variables
+solo como secretos de Supabase (nunca con prefijo `VITE_`). En el Dashboard de
+Supabase, agrega `RESEND_API_KEY` y `RESEND_FROM_EMAIL` en los secretos de Edge
+Functions; luego despliega la función:
+
+```powershell
+supabase functions deploy send-email
+```
+
+La dirección de `RESEND_FROM_EMAIL` debe pertenecer al dominio verificado. El
+checkout guarda el correo indicado por el cliente en su ficha; el panel informa
+si el envío se completó o si Resend rechazó el correo. En Supabase, verifica
+también que `plan_emails` esté habilitado para la tienda.
+
 ### Asignar un Superadministrador:
 1. En Supabase Auth, registrar el usuario administrador.
 2. Copiar su `User UID`.
