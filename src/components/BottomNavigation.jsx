@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import "../css/BottomNavigation.css";
 import { isLoyaltyEnabled } from "../utils/badges";
 
-const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappNumber, settings, customer, onOpenCustomerModal }) => {
+const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappNumber, settings, customer, onOpenCustomerModal, mesaMode = false }) => {
   const handleScrollTo = (elementId) => {
     const el = document.getElementById(elementId);
     if (el) {
@@ -57,7 +57,7 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
 
 
         {/* 4. Nivel del Cliente */}
-        {isLoyaltyEnabled(settings) && (
+        {!mesaMode && isLoyaltyEnabled(settings) && (
           <button
             type="button"
             className="saborio-nav-item"
@@ -74,6 +74,7 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
         )}
 
         {/* 5. Calificar */}
+        {!mesaMode && (
         <button
           type="button"
           className="saborio-nav-item"
@@ -82,6 +83,7 @@ const BottomNavigation = ({ cartCount = 0, onOpenCart, onNavigateMenu, whatsappN
           <Star size={21} className="saborio-nav-icon" />
           <span className="saborio-nav-label">Calificar</span>
         </button>
+        )}
         {/* 5. Contacto */}
         <button
           type="button"

@@ -18,6 +18,7 @@ const Hero = ({
   onSearchChange,
   customer = null,
   onOpenCustomerModal,
+  badgeLabel = "",
 }) => {
   const catalog = useCatalog();
   const products = propProducts !== undefined ? propProducts : catalog.products || [];
@@ -239,7 +240,11 @@ const Hero = ({
 
           <div className="saborio-top-bar__right">
             {renderEstadoNegocio()}
-            {customer && customer.nombre ? (
+            {badgeLabel ? (
+              <span className="saborio-user-badge-btn" style={{ cursor: "default" }}>
+                <span className="saborio-user-badge-name">{badgeLabel}</span>
+              </span>
+            ) : customer && customer.nombre ? (
               <button
                 type="button"
                 onClick={onOpenCustomerModal}

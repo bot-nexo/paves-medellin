@@ -1,6 +1,7 @@
 import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote, Printer } from "lucide-react";
 import { formatCOP } from "../utils/price";
 import { printTicket } from "../utils/printTicket";
+import { esPedidoLocal, etiquetaEntrega } from "../utils/entrega";
 import "./admin.css";
 
 const labelEstado = (estado) =>
@@ -63,19 +64,27 @@ const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
               <p>
                 <strong>{pedido.nombre}</strong>
               </p>
-              <p>
-                <Phone size={13} /> {pedido.telefono}
-              </p>
-              <p>
-                <MapPin size={13} /> {pedido.direccion}
-                {pedido.unidad ? `, ${pedido.unidad}` : ""}
-                {pedido.apto ? `, ${pedido.apto}` : ""}
-              </p>
+              {pedido.telefono && (
+                <p>
+                  <Phone size={13} /> {pedido.telefono}
+                </p>
+              )}
+              {pedido.direccion && (
+                <p>
+                  <MapPin size={13} /> {pedido.direccion}
+                  {pedido.unidad ? `, ${pedido.unidad}` : ""}
+                  {pedido.apto ? `, ${pedido.apto}` : ""}
+                </p>
+              )}
               <p>
                 <CreditCard size={13} /> {pedido.pago || "—"}
               </p>
               <p>
-                {pedido.tipo_entrega === "recogida" ? "🏪 Recoge en tienda (sin domicilio)" : "🛵 Entrega a domicilio"}
+                {pedido.tipo_entrega === "recogida"
+                  ? "🏪 Recoge en tienda (sin domicilio)"
+                  : esPedidoLocal(pedido)
+                    ? `🍽️ ${etiquetaEntrega(pedido)}`
+                    : "🛵 Entrega a domicilio"}
               </p>
               {pedido.observaciones && (
                 <p className="adm-det__nota">
@@ -114,7 +123,7 @@ const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
                 <span>Subtotal:</span>
                 <span>{formatCOP(pedido.subtotal)}</span>
               </div>
-              {pedido.tipo_entrega !== "recogida" && (
+              {pedido.tipo_entrega !== "recogida" && !esPedidoLocal(pedido) && (
                 <div>
                   <span>Domicilio:</span>
                   <span>
@@ -135,9 +144,11 @@ const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
             <Printer size={15} /> Imprimir Comanda
           </button>
 
+          {pedido.telefono && (
           <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
             <MessageCircle size={15} /> WhatsApp
           </button>
+          )}
 
           {pedido.estado !== "cancelado" && pedido.estado !== "entregado" && onCancel && (
             <button

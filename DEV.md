@@ -381,3 +381,14 @@ on conflict (id) do update set role = 'superadmin';
 1. **Módulo de Comandas / Impresión térmica:** Generación de ticket para impresoras POS Bluetooth o USB (58mm/80mm).
 2. **Exportación de reportes de ventas:** Botón en el Dashboard para descargar pedidos en formato Excel/CSV por rango de fechas.
 3. **Pasarela de pago en línea (opcional):** Botón Wompi o Mercado Pago para clientes que prefieran pagar en línea antes del despacho.
+
+
+## Colaboradores (punto de venta) y mesas con QR
+
+1. Ejecuta `supabase/migration_colaboradores_mesas.sql` en el SQL Editor de Supabase.
+   - Endurece RLS: `user_roles` queda de solo lectura desde el cliente y las políticas `authenticated` excluyen a los colaboradores.
+2. Despliega la función: `supabase functions deploy manage-collaborators --no-verify-jwt`.
+3. En Superadmin activa **Colaboradores** y/o **Mesas con QR** para el negocio.
+4. El admin crea colaboradores en `/admin/colaboradores` (entran por `/admin/login` con su usuario; el sistema los lleva a `/pos`) y mesas en `/admin/mesas` (QR a `/?mesa=N`).
+5. Los pedidos quedan con `tipo_entrega = 'local'` y `origen` = `colaborador` o `mesa`. Los de mesa no se envían por WhatsApp: se despachan desde Pedidos.
+6. Los colaboradores piden cambio de contraseña desde el login o el POS; el admin lo ve en Colaboradores y la cambia ahí.

@@ -4,10 +4,12 @@ import { supabase } from "../services/supabaseClient";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { useNavigate } from "react-router-dom";
 import useCatalog from "../hooks/useCatalog";
+import Swal from "sweetalert2";
+import { loginEmailFromIdentifier, solicitarCambioPassword } from "../data/dataSource";
 
 // Mensajes de error de Supabase → texto claro para el dueño del negocio
 const ERRORES = {
-  "Invalid login credentials": "Correo o contraseña incorrectos.",
+  "Invalid login credentials": "Usuario/correo o contraseña incorrectos.",
   "Email not confirmed": "El correo aún no está confirmado. Revisa tu bandeja.",
   "Too many requests": "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
 };
@@ -24,13 +26,30 @@ const AdminLogin = () => {
   const timeOut = 1500;
   const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  const handleOlvide = async () => {
+    const identificador = email.trim();
+    if (!identificador || identificador.includes("@")) {
+      setError("Escribe tu usuario de colaborador para pedir el cambio de contraseña.");
+      return;
+    }
+    try {
+      await solicitarCambioPassword(identificador);
+      Swal.fire({
+        icon: "success",
+        title: "Solicitud enviada",
+        text: "El administrador recibirá tu solicitud y te asignará una nueva contraseña.",
+      });
+    } catch {
+      setError("No se pudo enviar la solicitud. Intenta de nuevo.");
+    }
+  };
   //*********************** */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     if (!email.trim() || !password) {
-      setError("Completa el correo y la contraseña.");
+      setError("Completa el usuario o correo y la contraseña.");
       return;
     }
 
@@ -39,7 +58,7 @@ const AdminLogin = () => {
       // ✅ Ejecutamos la autenticación y la espera en paralelo
       const [{ error: err }] = await Promise.all([
         supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: loginEmailFromIdentifier(email),
           password,
         }),
         esperar(timeOut),
@@ -86,15 +105,16 @@ const AdminLogin = () => {
         )}
 
         <label className="admin-field">
-          <span className="admin-field__label">Correo</span>
+          <span className="admin-field__label">Correo o usuario</span>
           <div className="admin-field__input">
             <Mail size={16} className="admin-field__icon" />
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tucorreo@ejemplo.com"
-              autoComplete="email"
+              placeholder="tucorreo@ejemplo.com o usuario"
+              autoComplete="username"
+              autoCapitalize="none"
               autoFocus
             />
           </div>
@@ -124,6 +144,14 @@ const AdminLogin = () => {
 
         <button type="submit" className="admin-btn-primary" disabled={cargando}>
           {cargando ? "Ingresando…" : "Ingresar"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleOlvide}
+          style={{ background: "none", border: 0, color: "inherit", opacity: 0.75, cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
+        >
+          Soy colaborador y olvidé mi contraseña
         </button>
 
         <p className="admin-login__nota">

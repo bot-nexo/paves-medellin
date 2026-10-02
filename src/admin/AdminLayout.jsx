@@ -13,6 +13,7 @@ import {
   MapPin,
   Menu,
   Palette,
+  QrCode,
   Receipt,
   Settings,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
   Tag,
   Tags,
   User,
+  Users,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -39,6 +41,8 @@ const NAV_ITEMS = [
   { to: "/admin/categorias", label: "Categorías", icon: Tags },
   { to: "/admin/adiciones", label: "Adiciones & Salsas", icon: Sparkles },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
+  { to: "/admin/mesas", label: "Mesas & QR", icon: QrCode },
+  { to: "/admin/colaboradores", label: "Colaboradores", icon: Users },
   { to: "/admin/reportes", label: "Reportes e Informes", icon: BarChart3 },
   { to: "/admin/domicilios", label: "Domicilios", icon: MapPin },
   { to: "/admin/fidelizacion", label: "Fidelización", icon: Award },
@@ -72,6 +76,11 @@ const AdminLayout = () => {
   // useCatalog arranca con settings por defecto sin isActive: esperar a los reales
   if (settings?.isActive === undefined) {
     return <div className="admin-suspended" />;
+  }
+
+  // Los colaboradores solo usan el punto de venta
+  if (role === "colaborador") {
+    return <Navigate to="/pos" replace />;
   }
 
   const isSuspended = settings.isActive === false;
@@ -129,6 +138,8 @@ const AdminLayout = () => {
     if (item.to === "/admin/fidelizacion" && settings?.plan_fidelizacion === false) return false;
     if (item.to === "/admin/configuracion" && settings?.plan_configuracion === false) return false;
     if (item.to === "/admin/diseno" && settings?.plan_diseno === false) return false;
+    if (item.to === "/admin/colaboradores" && settings?.plan_colaboradores !== true) return false;
+    if (item.to === "/admin/mesas" && settings?.plan_mesas !== true) return false;
     return true;
   });
 
@@ -165,6 +176,13 @@ const AdminLayout = () => {
     return <Navigate to="/admin" replace />;
   }
   if (currentPath === "/admin/diseno" && settings?.plan_diseno === false) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (currentPath === "/admin/colaboradores" && settings?.plan_colaboradores !== true) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/mesas" && settings?.plan_mesas !== true) {
     return <Navigate to="/admin" replace />;
   }
 

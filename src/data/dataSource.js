@@ -147,6 +147,9 @@ const normalizeSettings = (row) => {
     plan_configuracion: row.plan_configuracion !== false,
     plan_domicilio_dinamico: row.plan_domicilio_dinamico !== false,
     plan_emails: row.plan_emails !== false,
+    // Módulos opcionales: apagados salvo que el superadmin los habilite
+    plan_colaboradores: row.plan_colaboradores === true,
+    plan_mesas: row.plan_mesas === true,
   };
 };
 
@@ -1389,4 +1392,130 @@ export async function deleteBadge(id) {
   const { error } = await supabase.from("badges").delete().eq("id", id);
   if (error) throw error;
   invalidateCatalog();
+}
+
+
+// ── Pedidos en local: colaboradores (punto de venta) y mesas con QR ─────────
+
+// Los colaboradores inician sesión con un "usuario"; Supabase Auth exige un correo,
+// así que internamente es usuario@dominio. Debe coincidir con la Edge Function.
+export const COLAB_EMAIL_DOMAIN = "colaboradores.paves.app";
+
+/** Acepta un correo (admin) o un usuario simple (colaborador) y devuelve el correo de login. */
+export const loginEmailFromIdentifier = (value) => {
+  const v = String(value || "").trim();
+  return v.includes("@") ? v : `${v.toLowerCase()}@${COLAB_EMAIL_DOMAIN}`;
+};
+
+async function errorFromFunction(error) {
+  let detail = "";
+  if (error?.context instanceof Response) {
+    try {
+      const body = await error.context.clone().json();
+      detail = typeof body?.error === "string" ? body.error : body?.error?.message || "";
+    } catch {
+      detail = "";
+    }
+  }
+  return new Error(detail || error?.message || "Error inesperado");
+}
+
+/** Crea, edita, activa/desactiva, cambia contraseña o elimina colaboradores (Edge Function). */
+export async function manageCollaborator(action, payload = {}) {
+  const { data, error } = await supabase.functions.invoke("manage-collaborators", {
+    body: { action, ...payload },
+  });
+  if (error) throw await errorFromFunction(error);
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
+export async function getColaboradores() {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .select("id, nombre, usuario, activo, solicitud_password_at, created_at")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Perfil del colaborador con sesión activa (null si no existe). */
+export async function getMyColaborador(userId) {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .select("id, nombre, usuario, activo")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** El colaborador pide al admin que le cambie la contraseña (no requiere sesión). */
+export async function solicitarCambioPassword(usuario) {
+  const { error } = await supabase.rpc("solicitar_cambio_password", { p_usuario: usuario });
+  if (error) throw error;
+}
+
+export async function getMesas() {
+  const { data, error } = await supabase
+    .from("mesas")
+    .select("id, numero, activa")
+    .order("numero", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Crea las mesas indicadas (números enteros); ignora las que ya existen. */
+export async function createMesas(numeros) {
+  const filas = numeros.map((numero) => ({ numero }));
+  const { error } = await supabase.from("mesas").upsert(filas, { onConflict: "numero", ignoreDuplicates: true });
+  if (error) throw error;
+}
+
+export async function updateMesa(id, cambios) {
+  const { error } = await supabase.from("mesas").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteMesa(id) {
+  const { error } = await supabase.from("mesas").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** Valida desde la tienda (anon) que la mesa del QR existe y está activa. */
+export async function getMesaActiva(numero) {
+  if (!isSupabaseConfigured || !Number.isInteger(numero) || numero <= 0) return null;
+  const { data, error } = await supabase
+    .from("mesas")
+    .select("numero, activa")
+    .eq("numero", numero)
+    .eq("activa", true)
+    .maybeSingle();
+  if (error) {
+    console.warn("[dataSource] mesa:", error.message);
+    return null;
+  }
+  return data;
+}
+
+/**
+ * Registra un pedido en el local (tipo_entrega = "local") sin dirección ni teléfono.
+ * origen "colaborador": lo toma un colaborador; "mesa": lo pide el cliente desde el QR.
+ * Lanza error si no se pudo guardar (aquí no hay WhatsApp de respaldo).
+ * @returns {Promise<number>} número de pedido
+ */
+export async function createLocalOrder({ origen, mesa = null, nombre = "", pago = "", observaciones = "" }, cart) {
+  const subtotal = Math.round(cart.reduce((t, i) => t + calculateItemUnitPrice(i) * i.quantity, 0));
+  const { data, error } = await supabase.rpc("crear_pedido_local", {
+    p_origen: origen,
+    p_mesa: mesa,
+    p_nombre: nombre,
+    p_observaciones: observaciones,
+    p_pago: pago,
+    p_subtotal: subtotal,
+    p_total: subtotal,
+    p_items: buildOrderItems(cart),
+  });
+  if (error) throw new Error(error.message);
+  return data;
 }

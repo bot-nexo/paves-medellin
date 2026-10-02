@@ -28,6 +28,7 @@ const CartModal = ({
   onAddOneMore,
   onCheckout,
   settings,
+  checkoutLabel = "Datos de entrega",
 }) => {
   if (!isOpen) return null;
 
@@ -242,7 +243,7 @@ const CartModal = ({
                     onClick={onCheckout}
                     type="button"
                   >
-                    Datos de entrega <ArrowRight size={18} />
+                    {checkoutLabel} <ArrowRight size={18} />
                   </button>
                 )}
               </div>

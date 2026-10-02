@@ -11,6 +11,7 @@ import {
 import { formatCOP } from "../../utils/price";
 import { Eye, RefreshCw, Calendar, Printer, MessageCircle } from "lucide-react";
 import { printTicket } from "../../utils/printTicket";
+import { esPedidoLocal, etiquetaEntrega } from "../../utils/entrega";
 import { notificarCambioEstado, generarMensajeWhatsApp } from "../../utils/notifications";
 import "../admin.css";
 
@@ -442,6 +443,8 @@ const Pedidos = () => {
                     <span className="adm-ped-card__info">
                       {p.tipo_entrega === "recogida" ? (
                         <strong>💁‍♂️ Recoger en tienda</strong>
+                      ) : esPedidoLocal(p) ? (
+                        <strong>🍽️ {etiquetaEntrega(p)}</strong>
                       ) : (
                         <>🏍️ Domicilio</>
                       )}

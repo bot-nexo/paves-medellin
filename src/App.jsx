@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import AOS from "aos";
 import Swal from "sweetalert2";
@@ -13,6 +13,7 @@ import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
 import CakeScheduleModal from "./components/CakeScheduleModal";
 import CheckoutModal from "./components/CheckoutModal";
+import LocalCheckoutModal from "./components/LocalCheckoutModal";
 import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
 import ArmaTuPaveModal from "./components/ArmaTuPaveModal";
 import RatingModal from "./components/RatingModal";
@@ -23,13 +24,35 @@ import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./da
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
 
-import { createOrder, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
+import { createLocalOrder, createOrder, getMesaActiva, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
 import { resolveCustomerBadge } from "./utils/badges";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
   calculateOrderSummary
 } from "./utils/price";
+
+const PosPage = lazy(() => import("./pos/PosPage"));
+
+// Modo mesa: el QR abre la tienda con ?mesa=N; se recuerda durante la sesión del navegador
+const leerMesaInicial = () => {
+  try {
+    const param = new URLSearchParams(window.location.search).get("mesa");
+    if (param !== null) {
+      const n = Number(param);
+      if (Number.isInteger(n) && n > 0) {
+        sessionStorage.setItem("paves_mesa", String(n));
+        return n;
+      }
+      sessionStorage.removeItem("paves_mesa");
+      return null;
+    }
+    const guardada = Number(sessionStorage.getItem("paves_mesa"));
+    return Number.isInteger(guardada) && guardada > 0 ? guardada : null;
+  } catch {
+    return null;
+  }
+};
 
 const App = () => {
   // Catálogo dinámico (Supabase ↔ local): productos, categorías, settings y diseño
@@ -59,6 +82,7 @@ const App = () => {
     setIsArmaModalOpen,
     armaEditItem,
     setArmaEditItem,
+    addArmaToCart,
   } = useCart();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -75,6 +99,41 @@ const App = () => {
   });
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
+
+  const [mesa, setMesa] = useState(leerMesaInicial);
+  const [mesaOk, setMesaOk] = useState(null); // null = validando
+  const [enviandoMesa, setEnviandoMesa] = useState(false);
+  const mesaMode = mesa !== null && mesaOk === true;
+
+  // Valida la mesa del QR: módulo habilitado por el superadmin y mesa activa
+  useEffect(() => {
+    if (mesa === null || settings.isActive === undefined) return;
+    let cancelado = false;
+    const invalidar = () => {
+      sessionStorage.removeItem("paves_mesa");
+      setMesa(null);
+      setMesaOk(null);
+      Swal.fire({
+        icon: "info",
+        title: "Mesa no disponible",
+        text: "Este código QR no está activo. Puedes hacer tu pedido normalmente.",
+        confirmButtonColor: "#3D2314",
+      });
+      setIsCustomerModalOpen(true);
+    };
+    if (settings.plan_mesas !== true) {
+      invalidar();
+      return;
+    }
+    getMesaActiva(mesa).then((m) => {
+      if (cancelado) return;
+      if (m) setMesaOk(true);
+      else invalidar();
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [mesa, settings.plan_mesas, settings.isActive]);
 
 
   // Al cerrar o salir de la página del menú, eliminar la info del cliente de storage para garantizar la seguridad de los datos
@@ -110,7 +169,7 @@ const App = () => {
 
   useEffect(() => {
     // Si al ingresar a la tienda el cliente aún no se ha identificado, abrir el modal automáticamente
-    if (!customer || !customer.telefono) {
+    if (mesa === null && (!customer || !customer.telefono)) {
       setIsCustomerModalOpen(true);
     }
   }, []);
@@ -344,9 +403,35 @@ const App = () => {
     closeCart();
   };
 
+  // Pedido desde la mesa: va directo a la BD (sin WhatsApp) y se despacha desde Pedidos
+  const sendMesaOrder = async ({ pago, nombre, observaciones }) => {
+    setEnviandoMesa(true);
+    try {
+      const numero = await createLocalOrder({ origen: "mesa", mesa, nombre, pago, observaciones }, cart);
+      setCart([]);
+      setIsCheckoutOpen(false);
+      closeCart();
+      Swal.fire({
+        icon: "success",
+        title: "¡Pedido recibido!",
+        html: `<div>Tu número de pedido</div><div style="font-size:3.5rem;font-weight:800;line-height:1.1">${Number(numero)}</div><div>Mesa ${mesa}. En breve te lo llevamos.</div>`,
+        confirmButtonColor: "#3D2314",
+      });
+    } catch (e) {
+      Swal.fire({ icon: "error", title: "No se pudo enviar el pedido", text: e.message, confirmButtonColor: "#3D2314" });
+    } finally {
+      setEnviandoMesa(false);
+    }
+  };
+
   //***************************** */
   return (
     <Routes>
+      {/* Punto de venta de colaboradores (privado) */}
+      {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
+        <Route path="/pos/*" element={<Suspense fallback={null}><PosPage /></Suspense>} />
+      )}
+
       {/* Panel de administración (privado) */}
       {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
         <Route path="/admin/*" element={<AdminRoutes />} />
@@ -380,6 +465,7 @@ const App = () => {
               onAddToCart={addToCart}
               customer={customer}
               onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
+              badgeLabel={mesaMode ? `Mesa ${mesa}` : ""}
             />
 
             <Menu
@@ -409,6 +495,7 @@ const App = () => {
               customer={customer}
               badges={badges}
               onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
+              mesaMode={mesaMode}
             />
 
 
@@ -423,6 +510,7 @@ const App = () => {
               onAddOneMore={addOneMore}
               onCheckout={openCheckout}
               settings={settings}
+              checkoutLabel={mesaMode ? "Confirmar pedido" : undefined}
             />
 
             {productToCustomize && productToCustomize.tiempo_preparacion_horas > 0 ? (
@@ -447,50 +535,36 @@ const App = () => {
               isOpen={isArmaModalOpen}
               onClose={() => { setIsArmaModalOpen(false); setArmaEditItem(null); }}
               settings={settings}
-              onAddToCart={(customProduct, isEdit, oldKey) => {
-                if (isEdit) {
-                  setCart((prev) => prev.filter(c => c.customizationKey !== oldKey));
-                }
-
-                // Generar nueva key para el customProduct
-                const adicionesIds = Object.keys(customProduct.customizations.adiciones || {}).sort();
-                const salsasIds = Object.keys(customProduct.customizations.salsas || {}).sort();
-
-                const newKey = JSON.stringify({
-                  productId: customProduct.id,
-                  baseId: customProduct.customizations.base.id,
-                  adiciones: adicionesIds,
-                  salsas: salsasIds,
-                });
-
-                customProduct.customizationKey = newKey;
-
-                setCart((prev) => {
-                  const existing = prev.find(c => c.customizationKey === newKey);
-                  if (existing) {
-                    return prev.map(c => c.customizationKey === newKey ? { ...c, quantity: c.quantity + (isEdit ? armaEditItem.quantity : 1) } : c);
-                  } else {
-                    return [...prev, { ...customProduct, quantity: isEdit ? armaEditItem.quantity : 1 }];
-                  }
-                });
-              }}
+              onAddToCart={addArmaToCart}
               editItem={armaEditItem}
             />
 
 
-            <CheckoutModal
-              isOpen={isCheckoutOpen}
-              onClose={closeCheckout}
-              onConfirm={sendOrderToWhatsApp}
-              cart={cart}
-              settings={settings}
-              estadoNegocio={estadoNegocio}
-              badges={badges}
-              customer={customer}
-            />
+            {mesaMode ? (
+              <LocalCheckoutModal
+                isOpen={isCheckoutOpen}
+                onClose={closeCheckout}
+                onConfirm={sendMesaOrder}
+                cart={cart}
+                title={`Pedido mesa ${mesa}`}
+                askName
+                submitting={enviandoMesa}
+              />
+            ) : (
+              <CheckoutModal
+                isOpen={isCheckoutOpen}
+                onClose={closeCheckout}
+                onConfirm={sendOrderToWhatsApp}
+                cart={cart}
+                settings={settings}
+                estadoNegocio={estadoNegocio}
+                badges={badges}
+                customer={customer}
+              />
+            )}
 
             <CustomerIdentifyModal
-              isOpen={isCustomerModalOpen}
+              isOpen={isCustomerModalOpen && !mesaMode}
               onClose={() => setIsCustomerModalOpen(false)}
               onSaveCustomer={handleSaveCustomer}
               currentCustomer={customer}

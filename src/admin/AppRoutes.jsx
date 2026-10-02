@@ -18,6 +18,8 @@ const AdminReportes     = lazy(() => import("./pages/Reportes"));
 const AdminFidelizacion = lazy(() => import("./pages/Fidelizacion"));
 const AdminDomicilios   = lazy(() => import("./pages/Domicilios"));
 const AdminSuper         = lazy(() => import("./pages/Superadmin"));
+const AdminColaboradores = lazy(() => import("./pages/Colaboradores"));
+const AdminMesas         = lazy(() => import("./pages/Mesas"));
 
 /** Guard: solo con sesión activa se ve el panel. Mientras carga la sesión, no decide. */
 const RequiereSesion = ({ children }) => {
@@ -56,6 +58,8 @@ export const AdminRoutes = () => (
       <Route path="reportes"      element={<Suspense fallback={<Cargando />}><AdminReportes /></Suspense>} />
       <Route path="empresa"       element={<Suspense fallback={<Cargando />}><AdminNegocio /></Suspense>} />
       <Route path="configuracion" element={<Suspense fallback={<Cargando />}><AdminConfiguracion /></Suspense>} />
+      <Route path="colaboradores" element={<Suspense fallback={<Cargando />}><AdminColaboradores /></Suspense>} />
+      <Route path="mesas"         element={<Suspense fallback={<Cargando />}><AdminMesas /></Suspense>} />
       <Route path="super"         element={<Suspense fallback={<Cargando />}><AdminSuper /></Suspense>} />
       {/* Ruta desconocida dentro del panel → al dashboard */}
       <Route path="*" element={<Navigate to="" replace />} />

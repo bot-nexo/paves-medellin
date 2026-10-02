@@ -31,7 +31,9 @@ const MODULE_CONTROLS = [
   { key: "plan_configuracion", label: "Configuración básica", description: "Acceso a parámetros de envío y negocio." },
   { key: "plan_domicilio_dinamico", label: "Domicilio dinámico", description: "Cálculo de envíos por km con Mapbox." },
   { key: "plan_emails", label: "Correos automáticos", description: "Email al cliente cuando cambia el estado de su pedido." },
-];
+    { key: "plan_colaboradores", label: "Colaboradores (punto de venta)", description: "Permite al admin crear usuarios que toman pedidos en el local." },
+    { key: "plan_mesas", label: "Mesas con QR", description: "Permite al admin crear mesas y códigos QR para pedir desde la mesa." },
+  ];
 
 const AdminSuper = () => {
   const { role } = useAdminSession();
@@ -54,6 +56,8 @@ const AdminSuper = () => {
           plan_configuracion: data.plan_configuracion !== false,
           plan_domicilio_dinamico: data.plan_domicilio_dinamico !== false,
           plan_emails: data.plan_emails !== false,
+          plan_colaboradores: data.plan_colaboradores === true,
+          plan_mesas: data.plan_mesas === true,
         });
       } catch (err) {
         console.error("Error cargando super admin:", err);

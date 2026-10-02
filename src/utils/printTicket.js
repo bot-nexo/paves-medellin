@@ -1,4 +1,5 @@
 import { formatCOP } from "./price";
+import { esPedidoLocal, etiquetaEntrega } from "./entrega";
 import { info as fallbackInfo } from "../data/menu";
 
 export const printTicket = (pedido, settings = null) => {
@@ -33,7 +34,7 @@ export const printTicket = (pedido, settings = null) => {
   }).join('');
 
   const subtotalHtml = `<div class="totals-row"><span>Subtotal:</span><span>${formatCOP(pedido.subtotal)}</span></div>`;
-  const deliveryHtml = pedido.tipo_entrega !== "recogida"
+  const deliveryHtml = pedido.tipo_entrega !== "recogida" && !esPedidoLocal(pedido)
     ? `<div class="totals-row"><span>Domicilio:</span><span>${pedido.delivery_fee === 0 ? "GRATIS" : formatCOP(pedido.delivery_fee)}</span></div>`
     : '';
   const totalHtml = `<div class="totals-row total-final"><span>TOTAL:</span><span>${formatCOP(pedido.total)}</span></div>`;
@@ -94,7 +95,7 @@ export const printTicket = (pedido, settings = null) => {
           <div class="date-time">${fecha} - ${hora}</div>
           
           <div class="order-number">PEDIDO #${pedido.numero}</div>
-          <h2>${pedido.tipo_entrega === "recogida" ? "RECOGER EN TIENDA" : "DOMICILIO"}</h2>
+          <h2>${pedido.tipo_entrega === "recogida" ? "RECOGER EN TIENDA" : esPedidoLocal(pedido) ? etiquetaEntrega(pedido).toUpperCase() : "DOMICILIO"}</h2>
         </div>
         
         <div class="divider"></div>
@@ -104,11 +105,11 @@ export const printTicket = (pedido, settings = null) => {
             <span class="info-label">Cliente:</span>
             <span class="info-value"><strong>${pedido.nombre}</strong></span>
           </div>
-          <div class="info-line">
+          ${pedido.telefono ? `<div class="info-line">
             <span class="info-label">Tel:</span>
             <span class="info-value">${pedido.telefono}</span>
-          </div>
-          ${pedido.tipo_entrega !== "recogida" ? `
+          </div>` : ""}
+          ${pedido.tipo_entrega !== "recogida" && !esPedidoLocal(pedido) ? `
           <div class="info-line">
             <span class="info-label">Dir:</span>
             <span class="info-value"><strong>${pedido.direccion}</strong> ${pedido.unidad ? '<br/>' + pedido.unidad : ''} ${pedido.apto ? '<br/>' + pedido.apto : ''}</span>

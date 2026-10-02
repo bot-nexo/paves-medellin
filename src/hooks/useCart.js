@@ -124,6 +124,30 @@ const useCart = () => {
     setIsCartOpen(false);
   }, []);
 
+  // Agrega o edita una creación de "Arma tu Pavé" (compartido por tienda y punto de venta)
+  const addArmaToCart = (customProduct, isEdit, oldKey) => {
+    if (isEdit) {
+      setCart((prev) => prev.filter((c) => c.customizationKey !== oldKey));
+    }
+    const adicionesIds = Object.keys(customProduct.customizations.adiciones || {}).sort();
+    const salsasIds = Object.keys(customProduct.customizations.salsas || {}).sort();
+    const newKey = JSON.stringify({
+      productId: customProduct.id,
+      baseId: customProduct.customizations.base.id,
+      adiciones: adicionesIds,
+      salsas: salsasIds,
+    });
+    customProduct.customizationKey = newKey;
+    const qty = isEdit ? armaEditItem.quantity : 1;
+    setCart((prev) => {
+      const existing = prev.find((c) => c.customizationKey === newKey);
+      if (existing) {
+        return prev.map((c) => (c.customizationKey === newKey ? { ...c, quantity: c.quantity + qty } : c));
+      }
+      return [...prev, { ...customProduct, quantity: qty }];
+    });
+  };
+
   // ── Cart mutations ───────────────────────────────────────────────────
   const removeItemByStoreKey = (storeKey) => {
     setCart((prevCart) =>
@@ -170,7 +194,8 @@ const useCart = () => {
     setIsArmaModalOpen,
     armaEditItem,
     setArmaEditItem,
-    
+    addArmaToCart,
+
     removeItemByStoreKey,
     updateQuantity,
     setCart,
