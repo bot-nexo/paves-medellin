@@ -4621,33 +4621,8 @@ select.adm-prod__select:focus {
 }
 
 /* Cuentas de transferencia (Configuración) */
-.adm-cfg__seccion-titulo--acciones {
-  justify-content: space-between;
-}
-.adm-cfg__seccion-titulo--acciones > span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.adm-cfg__cuenta {
-  position: relative;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-}
-.adm-cfg__cuenta--vacia {
-  text-align: center;
-  font-size: 13px;
-  opacity: 0.7;
-  border-style: dashed;
-}
-.adm-cfg__cuenta-quitar {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: transparent;
-  border: 0;
-  color: #e5484d;
-  cursor: pointer;
-  z-index: 1;
-}
+.adm-cfg__seccion-titulo--acciones { justify-content: space-between; }
+.adm-cfg__seccion-titulo--acciones > span { display: flex; align-items: center; gap: 8px; }
+.adm-cfg__cuenta { position: relative; padding: 12px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; }
+.adm-cfg__cuenta--vacia { text-align: center; font-size: 13px; opacity: 0.7; border-style: dashed; }
+.adm-cfg__cuenta-quitar { position: absolute; top: 6px; right: 6px; background: transparent; border: 0; color: #e5484d; cursor: pointer; z-index: 1; }

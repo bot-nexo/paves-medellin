@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import {
   X,
@@ -237,7 +237,7 @@ const CheckoutModal = ({
       direccion: "",
       unidad: "",
       apto: "",
-      pago: prev.pago,
+      pago: "Efectivo",
       observaciones: "",
     }));
   };

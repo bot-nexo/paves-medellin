@@ -9,12 +9,19 @@ import {
   invalidateCatalog,
   getBadges,
 } from "../data/dataSource";
+import {
+  categories as localCategories,
+  products as localProducts,
+} from "../data/menu";
+
 
 /**
  * Conecta la tienda con la capa de datos (dataSource).
  *
- * Estado inicial = vacío. isLoading se maneja para evitar renders rotos 
- * mientras se hace fetch de Supabase.
+ * Estado inicial = datos locales (menú.js) → cero flash de carga y la tienda
+ * se ve idéntica a hoy. Luego hace swap transparente a Supabase si está
+ * configurado, y se re-suscribe a cambios en tiempo real (cuando el admin
+ * edita algo, la tienda se actualiza sola).
  */
 const useCatalog = () => {
   const [categories, setCategories] = useState(localCategories);

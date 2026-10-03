@@ -1,4 +1,4 @@
-// ── Fuente de datos (adapter): Supabase ────────────────────────────
+// ── Fuente de datos (adapter): Supabase ↔ Local ────────────────────────────
 // Punto único de acceso al catálogo para TODA la app (tienda + panel admin).
 //
 // Prioridad:
@@ -80,7 +80,7 @@ const normalizeCategory = (row) => ({
 });
 
 const resolveImage = (row) =>
-  (row.imagen_url || "").trim() || PLACEHOLDER_IMG;
+  (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || PLACEHOLDER_IMG;
 
 const normalizeProduct = (row) => {
   const { categories: _cat, product_additions: _pa, product_sauces: _ps, ...rest } = row;
@@ -391,6 +391,7 @@ const buildLocalSettings = () => ({
   offersPickup: true,
   offersLocal: true,
   forceClosed: false,
+  bankAccounts: [],
   isActive: true,
   canChangePassword: true,
   plan_adiciones: true,
@@ -458,11 +459,12 @@ export const invalidateCatalog = () => {
 
 // ── API pública: getters (siempre async, shape uniforme) ─────────────────────
 
+/** Categorías visibles y ordenadas (para el filtro del menú). */
 export async function getCategories() {
   if (cache.categories) return cache.categories;
 
   if (!isSupabaseConfigured) {
-    cache.categories = [];
+    cache.categories = buildLocalCategories();
     return cache.categories;
   }
 
@@ -476,18 +478,19 @@ export async function getCategories() {
     // Resultado vacío VÁLIDO (todo oculto) se respeta; solo errores caen a local
     cache.categories = data.map(normalizeCategory);
   } catch (e) {
-    console.warn("[dataSource] error obteniendo categorías:", e.message);
-    cache.categories = [];
+    console.warn("[dataSource] categorías → fallback local:", e.message);
+    cache.categories = buildLocalCategories();
   }
   return cache.categories;
 }
 
+/** Productos con categoría e imagen resuelta (orden del menú). */
 export async function getProducts() {
   if (cache.products) return cache.products;
   initRealtime();
 
   if (!isSupabaseConfigured) {
-    cache.products = [];
+    cache.products = buildLocalProducts();
     return cache.products;
   }
 
@@ -506,12 +509,13 @@ export async function getProducts() {
     // Resultado vacío VÁLIDO (catálogo vaciado por el admin) se respeta
     cache.products = data.map(normalizeProduct);
   } catch (e) {
-    console.warn("[dataSource] error obteniendo productos:", e.message);
-    cache.products = [];
+    console.warn("[dataSource] productos → fallback local:", e.message);
+    cache.products = buildLocalProducts();
   }
   return cache.products;
 }
 
+/** Configuración del negocio (info de contacto + costos de domicilio). */
 export async function getSettings() {
   if (cache.settings) {
     const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
@@ -543,8 +547,8 @@ export async function getSettings() {
     // const dias= formatearDias(cache.settings.day1);
     // cache.settings.day1=dias;
   } catch (e) {
-    console.warn("[dataSource] error obteniendo settings:", e.message);
-    cache.settings = {};
+    console.warn("[dataSource] settings → fallback local:", e.message);
+    cache.settings = buildLocalSettings();
   }
 
   const actualRazonSocial = cache.settings?.razonSocial || cache.settings?.name || cache.settings?.razon_social;

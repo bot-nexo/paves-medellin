@@ -32,7 +32,7 @@ const CartModal = ({
 }) => {
   if (!isOpen) return null;
 
-  const { subtotal: totalPlatos, discount, esGratis, totalNeto, faltanteGratis, totalItems } =
+  const { subtotal: totalPlatos, esGratis, totalNeto, faltanteGratis } =
     calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, true);
 
   //******************************************* */
@@ -223,13 +223,8 @@ const CartModal = ({
             <div className="cart-footer">
 
               <div className="cart-breakdown">
-                <div className="breakdown-row">
-                  <span>Subtotal:</span>
-                  <span>{formatCOP(totalPlatos)}</span>
-                </div>
-                <div className="divider"></div>
                 <div className="breakdown-row total">
-                  <span>Total Neto:</span>
+                  <span>Subtotal carrito:</span>
                   <span>{formatCOP(totalPlatos)}</span>
                 </div>
               </div>

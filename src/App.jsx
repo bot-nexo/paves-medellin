@@ -202,8 +202,8 @@ const App = () => {
   };
 
 
-  // WhatsApp y costos ahora vienen de settings (panel admin).
-  const whatsappNumber = settings.phone || "";
+  // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
+  const whatsappNumber = settings.phone || info.phone;
 
   // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
   const estadoNegocio = estaAbiertoSegunHorario(settings);
@@ -288,18 +288,13 @@ const App = () => {
     message += "\n";
 
     // Fuera de horario o cierre de emergencia: el pedido queda AGENDADO y se
-    // prepara al abrir/reanudar, en orden de llegada (el cliente lo debe saber)
+    // prepara al abrir, en orden de llegada (el cliente lo debe saber)
     if (!estadoNegocio.abierto) {
-      if (estadoNegocio.fuerzaCierre) {
-        message += "⚠️ *PEDIDO AGENDADO* (Cerrado temporalmente por eventualidad)\n";
-        message += "Servicio pausado temporalmente. Se preparará con prioridad tan pronto reanudemos la atención.\n\n";
-      } else {
-        message += "⚠️ *PEDIDO AGENDADO* (Fuera de horario de atención)\n";
-        if (estadoNegocio.horarioTexto) {
-          message += "Horario habitual: " + estadoNegocio.horarioTexto + "\n";
-        }
-        message += "Se preparará al abrir, en orden de llegada.\n\n";
+      message += "⚠️ *PEDIDO AGENDADO* (negocio cerrado ahora)\n";
+      if (estadoNegocio.horarioTexto) {
+        message += "Horario: " + estadoNegocio.horarioTexto + "\n";
       }
+      message += "Se preparará al abrir, en orden de llegada.\n\n";
     }
     if (deliveryData.tipoEntrega === "recogida") {
       message += "🏪 *MODALIDAD: RECOGER EN TIENDA*\n\n";
@@ -393,7 +388,7 @@ const App = () => {
       (esDomicilio && deliveryData.deliveryMeta ? " (" + deliveryData.deliveryMeta.distanceKm + " km)" : "") +
       "\n";
     message += "--------------------------------\n";
-    message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
+    message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";
     message += "\n_Pedido generado desde la web_";
 
     window.open(
@@ -436,16 +431,6 @@ const App = () => {
   };
 
   //***************************** */
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#1e1008", color: "#f5c842", flexDirection: "column", gap: "1rem" }}>
-        <div className="spinner" style={{ width: "40px", height: "40px", border: "4px solid rgba(245,200,66,0.3)", borderTopColor: "#f5c842", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        <p style={{ fontWeight: "700", letterSpacing: "0.05em" }}>Cargando nuestro menú...</p>
-      </div>
-    );
-  }
-
   return (
     <Routes>
       {/* Punto de venta de colaboradores (privado) */}
