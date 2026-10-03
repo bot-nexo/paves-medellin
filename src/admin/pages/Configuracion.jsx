@@ -1,4 +1,4 @@
-import { Loader2, MapPin, Navigation, Power, Save, Star, Truck } from "lucide-react";
+import { CreditCard, Loader2, MapPin, Navigation, Plus, Power, Save, Star, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import LoadingOverlay from "../../components/common/LoadingOverlay";
@@ -25,6 +25,7 @@ const Configuracion = () => {
           offersPickup: s.offersPickup !== false,
           offersLocal: s.offersLocal !== false,
           forceClosed: s.forceClosed === true,
+          bankAccounts: Array.isArray(s.bankAccounts) ? s.bankAccounts : [],
           // Domicilio Dinámico
           dynamicDeliveryEnabled: s.dynamicDeliveryEnabled === true,
           storeLat: s.storeLat ?? "",
@@ -103,6 +104,9 @@ const Configuracion = () => {
           baseDeliveryFee: Number(form.baseDeliveryFee) || 3000,
           pricePerKm: Number(form.pricePerKm) || 1500,
           maxDeliveryRadiusKm: Number(form.maxDeliveryRadiusKm) || 15,
+          bankAccounts: form.bankAccounts
+            .map((acc) => ({ bankName: acc.bankName.trim(), accountNumber: acc.accountNumber.trim() }))
+            .filter((acc) => acc.bankName || acc.accountNumber),
         }),
         esperar(timeOut),
       ]);
@@ -127,6 +131,18 @@ const Configuracion = () => {
       setGuardando(false);
     }
   };
+
+  const addBankAccount = () =>
+    setForm((f) => ({ ...f, bankAccounts: [...f.bankAccounts, { bankName: "", accountNumber: "" }] }));
+
+  const updateBankAccount = (index, field, value) =>
+    setForm((f) => ({
+      ...f,
+      bankAccounts: f.bankAccounts.map((acc, i) => (i === index ? { ...acc, [field]: value } : acc)),
+    }));
+
+  const removeBankAccount = (index) =>
+    setForm((f) => ({ ...f, bankAccounts: f.bankAccounts.filter((_, i) => i !== index) }));
 
   // 1. Carga inicial (Pantalla Completa mientras cargando sea true o form sea null)
   if (cargando || !form) {
@@ -228,7 +244,58 @@ const Configuracion = () => {
             </span>
           </div>
 
+          {/* Datos para pagos por transferencia */}
+          <div className="adm-cfg__seccion">
+            <div className="adm-cfg__seccion-titulo adm-cfg__seccion-titulo--acciones">
+              <span><CreditCard size={15} /> Datos para pagos por transferencia</span>
+              <button type="button" onClick={addBankAccount} className="admin-btn-primary admin-btn-primary--compacto">
+                <Plus size={14} /> Añadir cuenta
+              </button>
+            </div>
 
+            {form.bankAccounts.map((acc, index) => (
+              <div key={index} className="adm-cfg__grid adm-cfg__cuenta">
+                <button
+                  type="button"
+                  className="adm-cfg__cuenta-quitar"
+                  onClick={() => removeBankAccount(index)}
+                  title="Eliminar cuenta"
+                >
+                  <Trash2 size={16} />
+                </button>
+                <label className="admin-field">
+                  <span className="admin-field__label">Banco {index + 1} (Ej: Bancolombia / Nequi)</span>
+                  <div className="admin-field__input">
+                    <input
+                      type="text"
+                      value={acc.bankName}
+                      onChange={(e) => updateBankAccount(index, "bankName", e.target.value)}
+                    />
+                  </div>
+                </label>
+                <label className="admin-field">
+                  <span className="admin-field__label">Número de cuenta</span>
+                  <div className="admin-field__input">
+                    <input
+                      type="text"
+                      value={acc.accountNumber}
+                      onChange={(e) => updateBankAccount(index, "accountNumber", e.target.value)}
+                    />
+                  </div>
+                </label>
+              </div>
+            ))}
+
+            {form.bankAccounts.length === 0 && (
+              <div className="adm-cfg__cuenta adm-cfg__cuenta--vacia">
+                No hay cuentas configuradas. Usa "Añadir cuenta" para agregar una.
+              </div>
+            )}
+
+            <span className="adm-modal__precio-hint">
+              Si configuras estas cuentas, se mostrarán en el checkout indicando a dónde transferir.
+            </span>
+          </div>
 
         {/* Cierre de emergencia */}
           <div className={"adm-cfg__seccion " + (form.forceClosed ? "adm-cfg__seccion--alerta" : "")}>

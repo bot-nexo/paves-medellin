@@ -1,4 +1,4 @@
-// ── Fuente de datos (adapter): Supabase ↔ Local ────────────────────────────
+// ── Fuente de datos (adapter): Supabase ────────────────────────────
 // Punto único de acceso al catálogo para TODA la app (tienda + panel admin).
 //
 // Prioridad:
@@ -80,7 +80,7 @@ const normalizeCategory = (row) => ({
 });
 
 const resolveImage = (row) =>
-  (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || PLACEHOLDER_IMG;
+  (row.imagen_url || "").trim() || PLACEHOLDER_IMG;
 
 const normalizeProduct = (row) => {
   const { categories: _cat, product_additions: _pa, product_sauces: _ps, ...rest } = row;
@@ -129,6 +129,7 @@ const normalizeSettings = (row) => {
     offersPickup,
     offersLocal,
     forceClosed: row.force_closed === true,
+    bankAccounts: Array.isArray(row.bank_accounts) ? row.bank_accounts : [],
     isActive: row.is_active !== false,
     canChangePassword: row.can_change_password !== false,
     plan_adiciones: row.plan_adiciones !== false,
@@ -457,12 +458,11 @@ export const invalidateCatalog = () => {
 
 // ── API pública: getters (siempre async, shape uniforme) ─────────────────────
 
-/** Categorías visibles y ordenadas (para el filtro del menú). */
 export async function getCategories() {
   if (cache.categories) return cache.categories;
 
   if (!isSupabaseConfigured) {
-    cache.categories = buildLocalCategories();
+    cache.categories = [];
     return cache.categories;
   }
 
@@ -476,19 +476,18 @@ export async function getCategories() {
     // Resultado vacío VÁLIDO (todo oculto) se respeta; solo errores caen a local
     cache.categories = data.map(normalizeCategory);
   } catch (e) {
-    console.warn("[dataSource] categorías → fallback local:", e.message);
-    cache.categories = buildLocalCategories();
+    console.warn("[dataSource] error obteniendo categorías:", e.message);
+    cache.categories = [];
   }
   return cache.categories;
 }
 
-/** Productos con categoría e imagen resuelta (orden del menú). */
 export async function getProducts() {
   if (cache.products) return cache.products;
   initRealtime();
 
   if (!isSupabaseConfigured) {
-    cache.products = buildLocalProducts();
+    cache.products = [];
     return cache.products;
   }
 
@@ -507,13 +506,12 @@ export async function getProducts() {
     // Resultado vacío VÁLIDO (catálogo vaciado por el admin) se respeta
     cache.products = data.map(normalizeProduct);
   } catch (e) {
-    console.warn("[dataSource] productos → fallback local:", e.message);
-    cache.products = buildLocalProducts();
+    console.warn("[dataSource] error obteniendo productos:", e.message);
+    cache.products = [];
   }
   return cache.products;
 }
 
-/** Configuración del negocio (info de contacto + costos de domicilio). */
 export async function getSettings() {
   if (cache.settings) {
     const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
@@ -545,8 +543,8 @@ export async function getSettings() {
     // const dias= formatearDias(cache.settings.day1);
     // cache.settings.day1=dias;
   } catch (e) {
-    console.warn("[dataSource] settings → fallback local:", e.message);
-    cache.settings = buildLocalSettings();
+    console.warn("[dataSource] error obteniendo settings:", e.message);
+    cache.settings = {};
   }
 
   const actualRazonSocial = cache.settings?.razonSocial || cache.settings?.name || cache.settings?.razon_social;
@@ -967,6 +965,7 @@ const COLUMNAS_SETTINGS = {
   offersPickup: "offers_pickup",
   offersLocal: "offersLocal",
   forceClosed: "force_closed",
+  bankAccounts: "bank_accounts",
   isActive: "is_active",
   canChangePassword: "can_change_password",
   razonSocial: "razon_social",

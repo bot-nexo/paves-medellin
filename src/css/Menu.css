@@ -471,9 +471,7 @@
 /* ── Scrollbars & Utilidades de Desplazamiento Horizontal ──────────────── */
 .scrollbar-none {
   scrollbar-width: none;
-  /* Firefox */
   -ms-overflow-style: none;
-  /* IE/Edge */
 }
 
 .scrollbar-none::-webkit-scrollbar {

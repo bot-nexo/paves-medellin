@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import {
   X,
@@ -237,7 +237,7 @@ const CheckoutModal = ({
       direccion: "",
       unidad: "",
       apto: "",
-      pago: "Efectivo",
+      pago: prev.pago,
       observaciones: "",
     }));
   };
@@ -530,6 +530,26 @@ const CheckoutModal = ({
                     <span className="detail-label"><CreditCard size={14} /> MEDIO DE PAGO</span>
                     <span className="payment-badge">{formData.pago}</span>
                   </div>
+
+                  {/transferencia/i.test(formData.pago) && settings.bankAccounts?.length > 0 && (
+                    <div className="checkout-aviso-transferencia">
+                      <div className="checkout-aviso-transferencia-header">
+                        <CreditCard size={15} />
+                        <span>Cuentas para transferir:</span>
+                      </div>
+                      <ul className="checkout-aviso-transferencia-list">
+                        {settings.bankAccounts.map((acc, i) => (
+                          <li key={i}>
+                            <span className="checkout-aviso-transferencia-banco">{acc.bankName}</span>
+                            <span className="checkout-aviso-transferencia-cuenta">{acc.accountNumber}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="checkout-aviso-transferencia-nota">
+                        Envía el comprobante por WhatsApp para hacer efectivo tu pedido.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="modify-section">

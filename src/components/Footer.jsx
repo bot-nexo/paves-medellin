@@ -1,5 +1,4 @@
 import logoImg from "../assets/images/logo.png";
-import { info } from "../data/menu";
 import { MapPin, Clock, ExternalLink } from "lucide-react";
 import { FaInstagram, FaFacebook, FaTiktok } from "react-icons/fa";
 import { DEFAULT_CATALOG_DESIGN } from "../data/dataSource";
