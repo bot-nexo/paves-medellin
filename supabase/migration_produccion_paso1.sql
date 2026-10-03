@@ -55,12 +55,18 @@ GRANT EXECUTE ON FUNCTION public.get_my_role() TO authenticated;
 CREATE OR REPLACE FUNCTION public.protect_superadmin_settings()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
-  IF NOT public.is_superadmin()
-     AND (
-       TG_OP = 'INSERT'
-       OR NEW.is_active IS DISTINCT FROM OLD.is_active
-       OR NEW.can_change_password IS DISTINCT FROM OLD.can_change_password
-     ) THEN
+  IF public.is_superadmin() THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    -- Un upsert dispara BEFORE INSERT aunque la fila ya exista (acaba en UPDATE,
+    -- que se valida abajo). Solo se bloquea la creación real de la fila.
+    IF NOT EXISTS (SELECT 1 FROM public.settings WHERE id = NEW.id) THEN
+      RAISE EXCEPTION 'Solo el superadministrador puede cambiar controles globales';
+    END IF;
+  ELSIF NEW.is_active IS DISTINCT FROM OLD.is_active
+     OR NEW.can_change_password IS DISTINCT FROM OLD.can_change_password THEN
     RAISE EXCEPTION 'Solo el superadministrador puede cambiar controles globales';
   END IF;
   RETURN NEW;
