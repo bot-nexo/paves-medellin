@@ -210,6 +210,23 @@ const CheckoutModal = ({
   };
 
   const handleSubmit = () => {
+    if (/transferencia/i.test(formData.pago)) {
+      Swal.fire({
+        title: "¡Información Importante!",
+        html: `<div style="text-align:left"><h4 style="margin-bottom:5px;font-weight:800">💳 Sobre tu Pago</h4><p style="margin:0;font-size:0.95rem;line-height:1.4">Recuerda transferir a nuestras cuentas y enviarnos el comprobante por WhatsApp para hacer efectivo tu pedido.</p></div>`,
+        icon: "info",
+        confirmButtonText: "Entendido, enviar pedido",
+        confirmButtonColor: "#3D2314",
+        allowOutsideClick: false,
+      }).then((result) => {
+        if (result.isConfirmed) enviarPedido();
+      });
+      return;
+    }
+    enviarPedido();
+  };
+
+  const enviarPedido = () => {
     // Incluir metadatos de delivery dinámico en el formData
     const deliveryMeta = (esDomicilio && isDynamicDelivery && deliveryResult?.withinCoverage)
       ? {
@@ -474,6 +491,12 @@ const CheckoutModal = ({
                     </div>
                   )}
                 </div>
+
+                {/transferencia/i.test(formData.pago) && settings.bankAccounts?.length > 0 && (
+                  <span style={{ display: "block", fontSize: "0.78rem", color: "#d92b38", marginTop: "0.5rem", fontStyle: "italic" }}>
+                    * Las cuentas bancarias se mostrarán en el siguiente paso.
+                  </span>
+                )}
 
                 <div className="checkout-footer form-actions">
                   <button type="button" className="btn-volver" onClick={onClose}>
