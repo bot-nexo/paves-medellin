@@ -4,10 +4,33 @@ import { useNavigate } from "react-router-dom";
 import { getOrders, subscribeToOrders } from "../../data/dataSource";
 import "./NotificationBell.css";
 
+// Fecha (AAAA-MM-DD) de entrega programada, tomada del pedido o de sus ítems
+const fechaAgendada = (pedido) => {
+  const re = /AGENDADO PARA:\s*(\d{4}-\d{2}-\d{2})/;
+  const textos = [pedido.observaciones, ...(pedido.items || []).map((i) => i.observaciones)];
+  for (const texto of textos) {
+    const m = texto && String(texto).match(re);
+    if (m) return m[1];
+  }
+  return null;
+};
+
+const hoyISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const esAgendadoPendiente = (pedido, hoy) => {
+  if (pedido.estado === "entregado" || pedido.estado === "cancelado") return false;
+  const fecha = fechaAgendada(pedido);
+  return !!fecha && fecha >= hoy;
+};
+
 const NotificationBell = () => {
   const navigate = useNavigate();
   const [pedidos, setPedidos] = useState([]);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [hoy, setHoy] = useState(hoyISO);
 
   const cargarPedidos = async () => {
     try {
@@ -23,52 +46,27 @@ const NotificationBell = () => {
     const unsubscribe = subscribeToOrders((evento, pedido) => {
       if (evento === "insert") {
         setPedidos((prev) => (prev ? [pedido, ...prev] : [pedido]));
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const year = tomorrow.getFullYear();
-        const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
-        const day = String(tomorrow.getDate()).padStart(2, "0");
-        const searchString = `AGENDADO PARA: ${year}-${month}-${day}`;
-
-        let isAgendadoManana = pedido.observaciones && pedido.observaciones.includes(searchString);
-        if (!isAgendadoManana && pedido.items) {
-          isAgendadoManana = pedido.items.some(
-            (item) => item.observaciones && item.observaciones.includes(searchString)
-          );
-        }
-        if (isAgendadoManana) {
-          setHasAnimated(false); // Trigger animation & sound only on NEW scheduled orders for tomorrow
-        }
+        if (esAgendadoPendiente(pedido, hoyISO())) setHasAnimated(false);
       }
       if (evento === "update") {
         setPedidos((prev) => prev?.map((p) => (p.id === pedido.id ? pedido : p)));
       }
     });
-    return unsubscribe;
+    // Refresca el día de referencia y los datos sin recargar la página
+    const timer = setInterval(() => {
+      setHoy(hoyISO());
+      cargarPedidos();
+    }, 60000);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
   }, []);
 
-  const pendientesAgendados = useMemo(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const year = tomorrow.getFullYear();
-    const month = String(tomorrow.getMonth() + 1).padStart(2, "0");
-    const day = String(tomorrow.getDate()).padStart(2, "0");
-    const searchString = `AGENDADO PARA: ${year}-${month}-${day}`;
-
-    return pedidos.filter((p) => {
-      // Ignorar entregados y cancelados
-      if (p.estado === "entregado" || p.estado === "cancelado") return false;
-      
-      let isAgendadoManana = p.observaciones && p.observaciones.includes(searchString);
-      if (!isAgendadoManana && p.items) {
-        isAgendadoManana = p.items.some(
-          (item) => item.observaciones && item.observaciones.includes(searchString)
-        );
-      }
-      return isAgendadoManana;
-    });
-  }, [pedidos]);
-
+  const pendientesAgendados = useMemo(
+    () => pedidos.filter((p) => esAgendadoPendiente(p, hoy)),
+    [pedidos, hoy],
+  );
   const hasPending = pendientesAgendados.length > 0;
 
   useEffect(() => {
@@ -106,7 +104,7 @@ const NotificationBell = () => {
       type="button"
       className={`admin-topbar__bell ${hasPending ? "ringing" : ""}`}
       onClick={() => navigate("/admin/pedidos")}
-      title={hasPending ? `${pendientesAgendados.length} tortas agendadas pendientes` : "Sin tortas pendientes"}
+      title={hasPending ? `${pendientesAgendados.length} pedidos agendados pendientes` : "Sin pedidos agendados pendientes"}
     >
       <div className="bell-icon-wrapper">
         <Bell size={20} />

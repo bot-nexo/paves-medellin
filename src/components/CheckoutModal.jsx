@@ -211,6 +211,7 @@ const CheckoutModal = ({
 
   const handleSubmit = () => {
     if (/transferencia/i.test(formData.pago)) {
+      onClose();
       Swal.fire({
         title: "¡Información Importante!",
         html: `<div style="text-align:left"><h4 style="margin-bottom:5px;font-weight:800">💳 Sobre tu Pago</h4><p style="margin:0;font-size:0.95rem;line-height:1.4">Recuerda transferir a nuestras cuentas y enviarnos el comprobante por WhatsApp para hacer efectivo tu pedido.</p></div>`,

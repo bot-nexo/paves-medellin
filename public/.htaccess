@@ -7,6 +7,9 @@
   RewriteCond %{HTTPS} !=on
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+  # Los bundles faltantes deben responder 404, nunca el index.html de la SPA.
+  RewriteRule ^assets/ - [L]
+
   # Cualquier ruta que no sea un archivo real (/admin, /pos, /?mesa=1) carga la app
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
