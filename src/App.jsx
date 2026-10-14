@@ -77,6 +77,10 @@ const App = () => {
 
     // 1) Persistir el pedido en la BD (no bloquea: si falla, seguimos a WhatsApp)
     const esDomicilio = deliveryData.tipoEntrega === "domicilio";
+    const isDynamicDelivery = Boolean(
+      settings?.dynamicDeliveryEnabled && settings?.storeLat && settings?.storeLng
+    );
+    const domicilioEsAparte = esDomicilio && !isDynamicDelivery;
     const summary = calculateOrderSummary(cart, settings.deliveryFee ?? 0, settings.freeDeliveryThreshold ?? 0, esDomicilio);
     const deliveryFee = (!esDomicilio || summary.esGratis)
       ? 0
@@ -112,7 +116,11 @@ const App = () => {
     } else if (deliveryData.tipoEntrega === "local") {
       message += "🍽️ *MODALIDAD: COMER EN EL LOCAL*\n\n";
     } else {
-      message += "🛵 *MODALIDAD: DOMICILIO*\n\n";
+      message += "🛵 *MODALIDAD: DOMICILIO*\n";
+      if (domicilioEsAparte) {
+        message += "⚠️ _(El domicilio NO está incluido en este monto, se cotiza y paga por separado)_\n";
+      }
+      message += "\n";
     }
     message += "--------------------------------\n\n";
     message += "*DATOS DEL CLIENTE*\n";
@@ -178,13 +186,23 @@ const App = () => {
     const totalPagar = summary.subtotal - summary.discount;
 
     message += "--------------------------------\n";
-    message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
-    message +=
-      "   Domicilio: " +
-      (!esDomicilio ? "No aplica" : "Por cotizar") +
-      "\n";
+    message += "   Subtotal productos: $" + (total / 1000).toLocaleString() + " K\n";
+    if (esDomicilio) {
+      if (domicilioEsAparte) {
+        message += "   Domicilio: PENDIENTE POR COTIZAR (Se paga aparte)\n";
+      } else {
+        message += "   Domicilio: Por cotizar\n";
+      }
+    } else {
+      message += "   Domicilio: No aplica\n";
+    }
     message += "--------------------------------\n";
-    message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K* " + (esDomicilio ? "(Sin incluir domicilio)" : "") + "\n";
+    if (domicilioEsAparte) {
+      message += "*TOTAL PRODUCTOS: $" + (total / 1000).toLocaleString() + " K*\n";
+      message += "⚠️ *(El costo del domicilio NO está incluido y se abona por separado)*\n";
+    } else {
+      message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K*\n";
+    }
     message += "\n_Pedido generado desde la web_";
 
     window.open(

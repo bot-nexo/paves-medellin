@@ -54,15 +54,27 @@ const CheckoutModal = ({
   const esLocal = formData.tipoEntrega === "local";
   const textoModalidad = esDomicilio ? 'Domicilio' : esLocal ? 'Local' : 'Recoger en tienda';
 
+  // Si Mapbox NO está activo/configurado, el domicilio se cotiza y paga por aparte (no en la app)
+  const isDynamicDelivery = Boolean(
+    settings?.dynamicDeliveryEnabled && settings?.storeLat && settings?.storeLng
+  );
+  const domicilioEsAparte = esDomicilio && !isDynamicDelivery;
+  const [aceptoDomicilioSeparado, setAceptoDomicilioSeparado] = useState(false);
+
   //**************************************** */
   useEffect(() => {
     if (isOpen) {
       setStep(1);
+      setAceptoDomicilioSeparado(false);
       setTimeout(() => {
         if (bodyRef.current) bodyRef.current.scrollTop = 0;
       }, 50);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    setAceptoDomicilioSeparado(false);
+  }, [formData.tipoEntrega]);
 
   useEffect(() => {
     if (bodyRef.current) {
@@ -105,6 +117,16 @@ const CheckoutModal = ({
   };
 
   const handleSubmit = () => {
+    if (domicilioEsAparte && !aceptoDomicilioSeparado) {
+      Swal.fire({
+        title: "Confirmación requerida",
+        text: "Por favor marca la casilla indicando que aceptas que el valor del domicilio se cotiza y se paga por separado.",
+        icon: "warning",
+        confirmButtonColor: "#3D2314",
+      });
+      return;
+    }
+
     let alertHtml = "";
 
     if (estadoNegocio && !estadoNegocio.abierto) {
@@ -129,7 +151,16 @@ const CheckoutModal = ({
       }
     }
 
-    if (esDomicilio) {
+    if (domicilioEsAparte) {
+      alertHtml += `<div style="text-align: left; margin-bottom: 15px; background: #fffbeb; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #fde68a;">
+        <h4 style="color: #b45309; margin-bottom: 5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          🛵 Domicilio NO incluido (Se paga aparte)
+        </h4>
+        <p style="margin: 0; font-size: 0.92rem; color: #78350f; line-height: 1.45;">
+          El total mostrado corresponde <strong>únicamente a tus productos</strong>. El valor del domicilio <strong>NO es gratis</strong>; se cotizará según tu ubicación y deberás pagarlo por aparte.
+        </p>
+      </div>`;
+    } else if (esDomicilio) {
       alertHtml += `<div style="text-align: left; margin-bottom: 15px;">
         <h4 style="color: #3d2314; margin-bottom: 5px; font-weight: 800;">🛵 Sobre tu Domicilio</h4>
         <p style="margin: 0; font-size: 0.95rem; color: #555; line-height: 1.4;">El valor del domicilio te lo cotizaremos y te lo haremos saber lo más pronto posible por WhatsApp.</p>
@@ -244,7 +275,7 @@ const CheckoutModal = ({
                       >
                         <FaMotorcycle size={18} />
                         <span>Domicilio</span>
-                        <small>El valor se cotizará por interno</small>
+                        <small>{domicilioEsAparte ? "Se cotiza y paga aparte" : "El valor se cotizará por interno"}</small>
                       </button>
                     )}
                     {settings.offersPickup !== false && (
@@ -296,14 +327,26 @@ const CheckoutModal = ({
               </div>
               {esDomicilio && (
                 <>
-                  <div className="form-group full-width" style={{ backgroundColor: "#fff9e6", padding: "0.6rem 0.8rem", borderRadius: "8px", border: "1px solid #ffd54f" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#d97706", fontWeight: "700", fontSize: "0.85rem", marginBottom: "0.2rem" }}>
-                      <FaMotorcycle size={14} /> Cotización de Domicilio
+                  {domicilioEsAparte ? (
+                    <div className="form-group full-width checkout-alerta-domicilio-separado">
+                      <div className="checkout-alerta-domicilio-header">
+                        <FaMotorcycle size={16} />
+                        <span>⚠️ El domicilio NO está incluido ni es gratis</span>
+                      </div>
+                      <p>
+                        El valor del domicilio <strong>se cotiza según tu dirección y se paga por separado</strong>. El total que calcula la app corresponde únicamente a los productos.
+                      </p>
                     </div>
-                    <p style={{ margin: 0, fontSize: "0.78rem", color: "#92400e", lineHeight: "1.3" }}>
-                      Te cotizaremos el valor de tu domicilio por WhatsApp. <strong style={{ fontStyle: "italic" }}>El total que ves aquí no lo incluye.</strong>
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="form-group full-width" style={{ backgroundColor: "#fff9e6", padding: "0.6rem 0.8rem", borderRadius: "8px", border: "1px solid #ffd54f" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#d97706", fontWeight: "700", fontSize: "0.85rem", marginBottom: "0.2rem" }}>
+                        <FaMotorcycle size={14} /> Cotización de Domicilio
+                      </div>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "#92400e", lineHeight: "1.3" }}>
+                        Te cotizaremos el valor de tu domicilio por WhatsApp. <strong style={{ fontStyle: "italic" }}>El total que ves aquí no lo incluye.</strong>
+                      </p>
+                    </div>
+                  )}
                   <div className="form-group full-width">
                     <label><MapPin size={15} /> Dirección Exacta *</label>
                     <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Carrera, Barrio..." required />
@@ -423,13 +466,41 @@ const CheckoutModal = ({
                 <div className="total-row"><span>Subtotal productos:</span><span>{formatCOP(totalProductos)}</span></div>
                 {!esDomicilio ? (
                   <div className="total-row"><span>Domicilio:</span><span className="text-free">No aplica</span></div>
+                ) : domicilioEsAparte ? (
+                  <div className="total-row total-row-domicilio-aparte">
+                    <span>Domicilio:</span>
+                    <span className="badge-domicilio-aparte">Se cotiza y paga aparte (NO incluido)</span>
+                  </div>
                 ) : (
                   <div className="total-row"><span>Domicilio:</span><span className="text-free" style={{ color: "#d92b38" }}>Por cotizar</span></div>
                 )}
                 <div className="divider" />
-                <div className="total-row grand-total"><span>Total a Pagar:</span><span>{formatCOP(totalNetoAPagar)}</span></div>
+                <div className="total-row grand-total">
+                  <span>{domicilioEsAparte ? "Total Productos (Sin Domicilio):" : "Total a Pagar:"}</span>
+                  <span>{formatCOP(totalNetoAPagar)}</span>
+                </div>
+                {domicilioEsAparte && (
+                  <p className="checkout-nota-subtotal-domi">
+                    * El valor del envío NO está incluido. Se cotiza según tu dirección y se cancela por separado.
+                  </p>
+                )}
               </div>
             </div>
+
+            {domicilioEsAparte && (
+              <div className="checkout-checkbox-domicilio-card">
+                <label className="checkout-checkbox-domicilio-label">
+                  <input
+                    type="checkbox"
+                    checked={aceptoDomicilioSeparado}
+                    onChange={(e) => setAceptoDomicilioSeparado(e.target.checked)}
+                  />
+                  <span>
+                    <strong>He leído y acepto:</strong> El valor del domicilio <u>NO está incluido</u> en este cobro, <u>NO es gratis</u> y se cotiza/paga por separado según mi dirección.
+                  </span>
+                </label>
+              </div>
+            )}
 
             <div className="checkout-footer">
               <button type="button" className="btn-secondary" onClick={() => setStep(1)}><ArrowLeft size={16} /> Modificar Datos</button>

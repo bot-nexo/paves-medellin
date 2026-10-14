@@ -34,6 +34,10 @@ const CartModal = ({
   const { subtotal: totalPlatos, discount, esGratis, totalNeto, faltanteGratis, totalItems } =
     calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, true);
 
+  const isDynamicDelivery = Boolean(
+    settings?.dynamicDeliveryEnabled && settings?.storeLat && settings?.storeLng
+  );
+
   //******************************************* */
   return (
     <div className="cart-modal-overlay" onClick={onClose}>
@@ -243,6 +247,11 @@ const CartModal = ({
                   <span>Total Neto:</span>
                   <span>{formatCOP(totalPlatos)}</span>
                 </div>
+                {!isDynamicDelivery && (
+                  <span style={{ fontSize: "0.74rem", color: "#8c6b58", display: "block", textAlign: "right", marginTop: "2px", fontStyle: "italic" }}>
+                    * Si eliges domicilio, el valor del envío se cotiza por separado.
+                  </span>
+                )}
               </div>
 
               <div className="cart-actions">
