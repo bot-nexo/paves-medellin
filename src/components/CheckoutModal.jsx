@@ -83,10 +83,15 @@ const CheckoutModal = ({
   const esLocal = formData.tipoEntrega === "local";
   const textoModalidad = esDomicilio ? 'Domicilio' : esLocal ? 'Local' : 'Recoger en tienda';
 
+  const hasCalculatedFee = isDynamicDelivery && deliveryResult?.withinCoverage;
+  const domicilioEsAparte = esDomicilio && !hasCalculatedFee;
+  const [aceptoDomicilioSeparado, setAceptoDomicilioSeparado] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setDeliveryResult(null);
+      setAceptoDomicilioSeparado(false);
       try {
         const savedCust = sessionStorage.getItem("paves_customer_info") || localStorage.getItem("paves_customer_info");
         if (savedCust) {
@@ -109,7 +114,8 @@ const CheckoutModal = ({
     if (!esDomicilio) {
       setDeliveryResult(null);
     }
-  }, [esDomicilio]);
+    setAceptoDomicilioSeparado(false);
+  }, [formData.tipoEntrega, esDomicilio]);
 
   if (!isOpen) return null;
 
@@ -210,20 +216,76 @@ const CheckoutModal = ({
   };
 
   const handleSubmit = () => {
-    if (/transferencia/i.test(formData.pago)) {
-      onClose();
+    if (domicilioEsAparte && !aceptoDomicilioSeparado) {
+      Swal.fire({
+        title: "Confirmación requerida",
+        text: "Por favor marca la casilla indicando que aceptas que el valor del domicilio se cotiza y se paga por separado.",
+        icon: "warning",
+        confirmButtonColor: "#3D2314",
+      });
+      return;
+    }
+
+    let alertHtml = "";
+
+    if (estadoNegocio && !estadoNegocio.abierto) {
+      if (estadoNegocio.fuerzaCierre) {
+        alertHtml += `<div style="text-align: left; margin-bottom: 15px; background: #fffbeb; padding: 10px 12px; border-radius: 8px; border: 1px solid #fde68a;">
+          <h4 style="color: #b45309; margin-bottom: 4px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+            ⚠️ Cerrado temporalmente por eventualidad
+          </h4>
+          <p style="margin: 0; font-size: 0.9rem; color: #78350f; line-height: 1.4;">
+            El negocio se encuentra pausado temporalmente por una eventualidad. Tu pedido se enviará agendado y se preparará con prioridad tan pronto reanudemos el servicio.
+          </p>
+        </div>`;
+      } else {
+        alertHtml += `<div style="text-align: left; margin-bottom: 15px; background: #fff5f5; padding: 10px 12px; border-radius: 8px; border: 1px solid #fed7d7;">
+          <h4 style="color: #c53030; margin-bottom: 4px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+            ⏰ Fuera de horario de atención
+          </h4>
+          <p style="margin: 0; font-size: 0.9rem; color: #742a2a; line-height: 1.4;">
+            Nos encontramos fuera del horario habitual${estadoNegocio.horarioTexto ? ` (${estadoNegocio.horarioTexto})` : ""}. Tu pedido se enviará agendado y se preparará al abrir en orden de llegada.
+          </p>
+        </div>`;
+      }
+    }
+
+    if (domicilioEsAparte) {
+      alertHtml += `<div style="text-align: left; margin-bottom: 15px; background: #fffbeb; padding: 11px 13px; border-radius: 8px; border: 1.5px solid #fde68a;">
+        <h4 style="color: #b45309; margin-bottom: 5px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+          🛵 Domicilio NO incluido (Se paga aparte)
+        </h4>
+        <p style="margin: 0; font-size: 0.92rem; color: #78350f; line-height: 1.45;">
+          El total mostrado corresponde <strong>únicamente a tus productos</strong>. El valor del domicilio <strong>NO es gratis</strong>; se cotizará según tu ubicación y deberás pagarlo por aparte.
+        </p>
+      </div>`;
+    }
+
+    if (formData.pago && formData.pago.includes("Transferencia")) {
+      alertHtml += `<div style="text-align: left;">
+        <h4 style="color: #3d2314; margin-bottom: 5px; font-weight: 800;">💳 Sobre tu Pago</h4>
+        <p style="margin: 0; font-size: 0.95rem; color: #555; line-height: 1.4;">Recuerda que debes transferir a nuestras cuentas y enviarnos el comprobante por WhatsApp para hacer efectivo tu pedido.</p>
+      </div>`;
+    }
+
+    if (alertHtml !== "") {
       Swal.fire({
         title: "¡Información Importante!",
-        html: `<div style="text-align:left"><h4 style="margin-bottom:5px;font-weight:800">💳 Sobre tu Pago</h4><p style="margin:0;font-size:0.95rem;line-height:1.4">Recuerda transferir a nuestras cuentas y enviarnos el comprobante por WhatsApp para hacer efectivo tu pedido.</p></div>`,
+        html: alertHtml,
         icon: "info",
         confirmButtonText: "Entendido, enviar pedido",
         confirmButtonColor: "#3D2314",
         allowOutsideClick: false,
       }).then((result) => {
-        if (result.isConfirmed) enviarPedido();
+        if (result.isConfirmed) {
+          onClose();
+          enviarPedido();
+        }
       });
       return;
     }
+
+    onClose();
     enviarPedido();
   };
 
@@ -274,6 +336,10 @@ const CheckoutModal = ({
   const renderDeliveryFeeText = () => {
     if (!esDomicilio) return <span className="totals-value free">No aplica</span>;
     
+    if (domicilioEsAparte) {
+      return <span className="badge-domicilio-aparte">Se cotiza y paga aparte (NO incluido)</span>;
+    }
+
     if (esGratis && (!isDynamicDelivery || deliveryResult?.withinCoverage)) {
       return <span className="totals-value free">🎁 GRATIS ({currentBadge?.name})</span>;
     }
@@ -369,6 +435,7 @@ const CheckoutModal = ({
                           >
                             <FaMotorcycle size={18} />
                             <span>Domicilio</span>
+                            <small>{domicilioEsAparte ? "Se cotiza y paga aparte" : isDynamicDelivery && deliveryResult?.withinCoverage ? "Calculado por km" : "Por cotizar"}</small>
                           </button>
                         )}
                         {settings.offersPickup !== false && (
@@ -379,6 +446,7 @@ const CheckoutModal = ({
                           >
                             <Store size={18} />
                             <span>Recoger</span>
+                            <small>En tienda</small>
                           </button>
                         )}
                         {settings.offersLocal !== false && (
@@ -389,6 +457,7 @@ const CheckoutModal = ({
                           >
                             <User size={18} />
                             <span>Local</span>
+                            <small>Mesa / Salón</small>
                           </button>
                         )}
                       </div>
@@ -422,6 +491,18 @@ const CheckoutModal = ({
 
                   {esDomicilio && (
                     <>
+                      {domicilioEsAparte && (
+                        <div className="form-group full-width checkout-alerta-domicilio-separado">
+                          <div className="checkout-alerta-domicilio-header">
+                            <FaMotorcycle size={16} />
+                            <span>⚠️ El domicilio NO está incluido ni es gratis</span>
+                          </div>
+                          <p>
+                            El valor del domicilio <strong>se cotiza según tu dirección y se paga por separado</strong>. El total que calcula la app corresponde únicamente a los productos.
+                          </p>
+                        </div>
+                      )}
+
                       <div className="form-group full-width">
                         <label>Dirección Principal *</label>
                         {isDynamicDelivery ? (
@@ -576,6 +657,21 @@ const CheckoutModal = ({
                   )}
                 </div>
 
+                {domicilioEsAparte && (
+                  <div className="checkout-checkbox-domicilio-card" style={{ margin: "1rem 0" }}>
+                    <label className="checkout-checkbox-domicilio-label">
+                      <input
+                        type="checkbox"
+                        checked={aceptoDomicilioSeparado}
+                        onChange={(e) => setAceptoDomicilioSeparado(e.target.checked)}
+                      />
+                      <span>
+                        <strong>He leído y acepto:</strong> El valor del domicilio <u>NO está incluido</u> en este cobro, <u>NO es gratis</u> y se cotiza/paga por separado según mi dirección.
+                      </span>
+                    </label>
+                  </div>
+                )}
+
                 <div className="modify-section">
                   <span className="modify-text">¿Deseas cambiar algo en la entrega o el medio de pago?</span>
                   <button type="button" className="btn-modify" onClick={() => setStep(1)}>
@@ -687,9 +783,15 @@ const CheckoutModal = ({
               )}
 
               <div className="totals-row grand-total">
-                <span className="totals-label">Total a Pagar:</span>
+                <span className="totals-label">{domicilioEsAparte ? "Total Productos (Sin Domicilio):" : "Total a Pagar:"}</span>
                 <span className="totals-value highlighted">{formatCOP(totalNetoAPagar)}</span>
               </div>
+
+              {domicilioEsAparte && (
+                <p className="checkout-nota-subtotal-domi">
+                  * El valor del envío NO está incluido. Se cotiza según tu dirección y se cancela por separado.
+                </p>
+              )}
             </div>
 
             <div className="resumen-guarantees">

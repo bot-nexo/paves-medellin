@@ -780,3 +780,92 @@
 .checkout-aviso-transferencia-banco { font-weight: 700; }
 .checkout-aviso-transferencia-cuenta { font-family: monospace; font-weight: 700; }
 .checkout-aviso-transferencia-nota { margin: 0.7rem 0 0; font-size: 0.8rem; opacity: 0.8; }
+
+/* Alerta Domicilio Separado en Paso 1 */
+.checkout-alerta-domicilio-separado {
+    background-color: #fffbeb !important;
+    border: 1.5px solid #f59e0b !important;
+    border-radius: 12px;
+    padding: 0.85rem 1rem !important;
+    box-sizing: border-box;
+}
+
+.checkout-alerta-domicilio-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b45309;
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+}
+
+.checkout-alerta-domicilio-separado p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #78350f;
+    line-height: 1.4;
+}
+
+/* Fila y Badge de Domicilio Aparte en Paso 2 */
+.total-row-domicilio-aparte {
+    align-items: center;
+}
+
+.badge-domicilio-aparte {
+    color: #b91c1c !important;
+    font-weight: 800 !important;
+    font-size: 0.8rem;
+    background-color: #fee2e2;
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    border: 1px solid #fca5a5;
+    text-align: right;
+    display: inline-block;
+}
+
+.checkout-nota-subtotal-domi {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.78rem;
+    color: #b45309;
+    text-align: right;
+    font-style: italic;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* Checkbox Obligatorio de Domicilio en Paso 2 */
+.checkout-checkbox-domicilio-card {
+    background-color: #fffbeb;
+    border: 1.5px solid #f59e0b;
+    border-radius: 14px;
+    padding: 0.9rem 1.1rem;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.1);
+}
+
+.checkout-checkbox-domicilio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkout-checkbox-domicilio-label input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    margin-top: 0.15rem;
+    accent-color: #d92b38;
+    cursor: pointer;
+}
+
+.checkout-checkbox-domicilio-label span {
+    font-size: 0.84rem;
+    color: #78350f;
+    line-height: 1.4;
+}
+
+.checkout-checkbox-domicilio-label span strong {
+    color: #9a3412;
+}

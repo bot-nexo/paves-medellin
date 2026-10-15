@@ -223,6 +223,12 @@ const App = () => {
 
     // 1) Persistir el pedido en la BD (no bloquea: si falla, seguimos a WhatsApp)
     const esDomicilio = deliveryData.tipoEntrega === "domicilio";
+    const isDynamicDelivery = Boolean(
+      settings?.dynamicDeliveryEnabled && settings?.storeLat && settings?.storeLng
+    );
+    const hasCalculatedDelivery = Boolean(deliveryData.deliveryMeta?.calculatedFee != null);
+    const domicilioEsAparte = esDomicilio && (!isDynamicDelivery || !hasCalculatedDelivery);
+
     const feeBase = settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT;
     const freeThreshold = settings.freeDeliveryThreshold ?? MINIMO_ENVIO_GRATIS_DEFAULT;
 
@@ -301,7 +307,11 @@ const App = () => {
     } else if (deliveryData.tipoEntrega === "local") {
       message += "🍽️ *MODALIDAD: COMER EN EL LOCAL*\n\n";
     } else {
-      message += "🛵 *MODALIDAD: DOMICILIO*\n\n";
+      message += "🛵 *MODALIDAD: DOMICILIO*\n";
+      if (domicilioEsAparte) {
+        message += "⚠️ _(El domicilio NO está incluido en este monto, se cotiza y paga por separado)_\n";
+      }
+      message += "\n";
     }
     message += "--------------------------------\n\n";
     message += "*DATOS DEL CLIENTE*\n";
@@ -375,20 +385,31 @@ const App = () => {
     const totalFinal = summary.totalNeto;
 
     message += "--------------------------------\n";
-    message += "   Subtotal platos: $" + (total / 1000).toLocaleString() + " K\n";
+    message += "   Subtotal productos: $" + (total / 1000).toLocaleString() + " K\n";
     if (summary.descuento2x1 > 0) {
       message += "   🎉 2x1 (" + currentBadge.name + "): -$" + (summary.descuento2x1 / 1000).toLocaleString() + " K\n";
     }
     if (summary.descuentoBadge > 0) {
       message += "   Descuento " + summary.porcentaje + "% (" + currentBadge.name + "): -$" + (summary.descuentoBadge / 1000).toLocaleString() + " K\n";
     }
-    message +=
-      "   Domicilio: " +
-      (!esDomicilio ? "No aplica" : esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
-      (esDomicilio && deliveryData.deliveryMeta ? " (" + deliveryData.deliveryMeta.distanceKm + " km)" : "") +
-      "\n";
+    if (!esDomicilio) {
+      message += "   Domicilio: No aplica\n";
+    } else if (domicilioEsAparte) {
+      message += "   Domicilio: PENDIENTE POR COTIZAR (Se paga aparte)\n";
+    } else {
+      message +=
+        "   Domicilio: " +
+        (esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
+        (deliveryData.deliveryMeta ? " (" + deliveryData.deliveryMeta.distanceKm + " km)" : "") +
+        "\n";
+    }
     message += "--------------------------------\n";
-    message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";
+    if (domicilioEsAparte) {
+      message += "*TOTAL PRODUCTOS: $" + (totalFinal / 1000).toLocaleString() + " K*\n";
+      message += "⚠️ *(El costo del domicilio NO está incluido y se abona por separado)*\n";
+    } else {
+      message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";
+    }
     message += "\n_Pedido generado desde la web_";
 
     window.open(
