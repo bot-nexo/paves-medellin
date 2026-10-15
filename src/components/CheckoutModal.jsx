@@ -269,6 +269,7 @@ const CheckoutModal = ({
     }
 
     if (alertHtml !== "") {
+      onClose();
       Swal.fire({
         title: "¡Información Importante!",
         html: alertHtml,
@@ -276,9 +277,9 @@ const CheckoutModal = ({
         confirmButtonText: "Entendido, enviar pedido",
         confirmButtonColor: "#3D2314",
         allowOutsideClick: false,
+        allowEscapeKey: false,
       }).then((result) => {
         if (result.isConfirmed) {
-          onClose();
           enviarPedido();
         }
       });
