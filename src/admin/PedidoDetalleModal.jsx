@@ -1,5 +1,7 @@
-import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote } from "lucide-react";
+import { X, MapPin, Phone, CreditCard, Package, MessageCircle, StickyNote, Printer } from "lucide-react";
 import { formatCOP } from "../utils/price";
+import { printTicket } from "../utils/printTicket";
+import { esPedidoLocal, etiquetaEntrega } from "../utils/entrega";
 import "./admin.css";
 
 const labelEstado = (estado) =>
@@ -12,7 +14,7 @@ const labelEstado = (estado) =>
 }[estado] || estado);
 
 //--------------------------
-const PedidoDetalleModal = ({ pedido, onClose }) => {
+const PedidoDetalleModal = ({ pedido, onClose, onCancel }) => {
   const items = pedido.items || [];
   const fecha = new Date(pedido.created_at).toLocaleString("es-CO", {
     dateStyle: "long",
@@ -25,9 +27,13 @@ const PedidoDetalleModal = ({ pedido, onClose }) => {
     const tel = pedido.telefono.replace(/\D/g, "");
     const conIndicativo = tel.startsWith("57") ? tel : `57${tel}`;
     const msg = encodeURIComponent(
-      `Hola ${pedido.nombre}! 🍨 Te contactamos de Pavés Medellín sobre tu pedido #${pedido.numero}.`,
+      `Hola ${pedido.nombre}! 🍨 Te contactamos sobre tu pedido #${pedido.numero}.`,
     );
     window.open(`https://wa.me/${conIndicativo}?text=${msg}`, "_blank");
+  };
+
+  const imprimirComanda = () => {
+    printTicket(pedido);
   };
 
   //************************************ */
@@ -58,19 +64,27 @@ const PedidoDetalleModal = ({ pedido, onClose }) => {
               <p>
                 <strong>{pedido.nombre}</strong>
               </p>
-              <p>
-                <Phone size={13} /> {pedido.telefono}
-              </p>
-              <p>
-                <MapPin size={13} /> {pedido.direccion}
-                {pedido.unidad ? `, ${pedido.unidad}` : ""}
-                {pedido.apto ? `, ${pedido.apto}` : ""}
-              </p>
+              {pedido.telefono && (
+                <p>
+                  <Phone size={13} /> {pedido.telefono}
+                </p>
+              )}
+              {pedido.direccion && (
+                <p>
+                  <MapPin size={13} /> {pedido.direccion}
+                  {pedido.unidad ? `, ${pedido.unidad}` : ""}
+                  {pedido.apto ? `, ${pedido.apto}` : ""}
+                </p>
+              )}
               <p>
                 <CreditCard size={13} /> {pedido.pago || "—"}
               </p>
               <p>
-                {pedido.tipo_entrega === "recogida" ? "🏪 Recoge en tienda (sin domicilio)" : "🛵 Entrega a domicilio"}
+                {pedido.tipo_entrega === "recogida"
+                  ? "🏪 Recoge en tienda (sin domicilio)"
+                  : esPedidoLocal(pedido)
+                    ? `🍽️ ${etiquetaEntrega(pedido)}`
+                    : "🛵 Entrega a domicilio"}
               </p>
               {pedido.observaciones && (
                 <p className="adm-det__nota">
@@ -109,7 +123,7 @@ const PedidoDetalleModal = ({ pedido, onClose }) => {
                 <span>Subtotal:</span>
                 <span>{formatCOP(pedido.subtotal)}</span>
               </div>
-              {pedido.tipo_entrega !== "recogida" && (
+              {pedido.tipo_entrega !== "recogida" && !esPedidoLocal(pedido) && (
                 <div>
                   <span>Domicilio:</span>
                   <span>
@@ -125,10 +139,28 @@ const PedidoDetalleModal = ({ pedido, onClose }) => {
           </section>
         </div>
 
-        <footer className="adm-det__pie">
-          <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
-            <MessageCircle size={15} /> WhatsApp al cliente
+        <footer className="adm-det__pie" style={{ flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+          <button type="button" className="admin-btn-primary admin-btn-primary--compacto" onClick={imprimirComanda}>
+            <Printer size={15} /> Imprimir Comanda
           </button>
+
+          {pedido.telefono && (
+          <button type="button" className="admin-btn-ghost" onClick={abrirWhatsApp}>
+            <MessageCircle size={15} /> WhatsApp
+          </button>
+          )}
+
+          {pedido.estado !== "cancelado" && pedido.estado !== "entregado" && onCancel && (
+            <button
+              type="button"
+              className="admin-btn-ghost"
+              style={{ color: "#ef4444", backgroundColor: "#373737ff", borderColor: "transparent" }}
+              onClick={() => onCancel(pedido)}
+            >
+              Cancelar Pedido
+            </button>
+          )}
+
           <button type="button" className="admin-btn-ghost" onClick={onClose}>
             Cerrar
           </button>

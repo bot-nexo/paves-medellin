@@ -48,46 +48,115 @@ const formatMinutosAHora = (minutosTotales, format24 = true) => {
 };
 
 /**
+ * Parsea el día/array de días en un texto legible
+ */
+export const formatearDias = (days) => {
+  if (!days) return "";
+  
+  let parsedDays = days;
+  if (typeof days === "string") {
+    try {
+      if (days.trim().startsWith("[")) {
+        parsedDays = JSON.parse(days);
+      } else {
+        // Fallback a Lun-Sáb para textos legacy, tal como hace el panel admin
+        parsedDays = [1, 2, 3, 4, 5, 6];
+      }
+    } catch (e) {
+      parsedDays = [1, 2, 3, 4, 5, 6];
+    }
+  }
+
+  if (Array.isArray(parsedDays)) {
+    const arr = [...parsedDays].map(Number);
+    if (arr.length === 7) return "Todos los días";
+    
+    const includesDom = arr.includes(0);
+    const includesSab = arr.includes(6);
+    
+    if (arr.length === 5 && !includesDom && !includesSab) return "Lun - Vie";
+    if (arr.length === 6 && !includesDom) return "Lun - Sáb";
+    
+    const map = { 1: "Lun", 2: "Mar", 3: "Mié", 4: "Jue", 5: "Vie", 6: "Sáb", 0: "Dom" };
+    // Ordenar de Lunes a Domingo
+    const displayOrder = [1, 2, 3, 4, 5, 6, 0];
+    const ordered = displayOrder.filter(d => arr.includes(d));
+    
+    return ordered.map((d) => map[d] || d).join(", ");
+  }
+  return String(days);
+};
+
+/**
  * Estado del negocio para la tienda y el checkout.
  * @returns {{abierto:boolean, fuerzaCierre:boolean, dentroHorario:boolean, horarioTexto:string, siempreAbierto:boolean}}
  */
 export const estaAbiertoSegunHorario = (settings = {}) => {
   const fuerzaCierre = settings.forceClosed === true;
-  const horarioTexto = [settings.day1, settings.hours1].filter(Boolean).join(" · ");
+  const daysText = formatearDias(settings.day1);
+  const horarioTexto = [daysText, settings.hours1].filter(Boolean).join(" · ");
   const p = parseHorario(settings.hours1);
 
+  const ahora = new Date();
+  const todayDay = ahora.getDay(); // 0 is Sunday, 1 is Monday, etc.
+
+  let esDiaAbierto = true;
+  if (settings.day1) {
+    let parsedDays = settings.day1;
+    if (typeof parsedDays === "string") {
+      try {
+        if (parsedDays.trim().startsWith("[")) {
+          parsedDays = JSON.parse(parsedDays);
+        } else {
+          parsedDays = [1, 2, 3, 4, 5, 6];
+        }
+      } catch (e) {
+        parsedDays = [1, 2, 3, 4, 5, 6];
+      }
+    }
+    if (Array.isArray(parsedDays)) {
+      esDiaAbierto = parsedDays.map(Number).includes(todayDay);
+    }
+  }
+
   if (!p.ok) {
-    // Sin horario legible → se asume abierto salvo cierre manual (no bloquear ventas)
-    return { abierto: !fuerzaCierre, fuerzaCierre, dentroHorario: true, horarioTexto, siempreAbierto: false, openHour: "", closeHour: "" };
+    // Sin horario legible → se asume abierto en ese día, salvo cierre manual
+    const abierto = esDiaAbierto && !fuerzaCierre;
+    return { abierto, fuerzaCierre, dentroHorario: esDiaAbierto, horarioTexto, siempreAbierto: false, openHour: "", closeHour: "", esDiaAbierto };
   }
   if (p.siempreAbierto) {
+    const abierto = esDiaAbierto && !fuerzaCierre;
     return {
-      abierto: !fuerzaCierre,
+      abierto,
       fuerzaCierre,
-      dentroHorario: true,
+      dentroHorario: esDiaAbierto,
       horarioTexto: horarioTexto || "24 horas",
       siempreAbierto: true,
       openHour: "8:00 AM",
       closeHour: "10:00 PM",
+      esDiaAbierto
     };
   }
 
-  const ahora = new Date();
   const mins = ahora.getHours() * 60 + ahora.getMinutes();
   const dentro = p.cruzaMedianoche
-    ? mins >= p.apertura || mins < p.cierre
-    : mins >= p.apertura && mins < p.cierre;
+    ? (mins >= p.apertura || mins < p.cierre)
+    : (mins >= p.apertura && mins < p.cierre);
+    
+  const abiertoReal = esDiaAbierto && dentro && !fuerzaCierre;
+
   // Uso con tu objeto:
   const openHourStr = formatMinutosAHora(p.apertura, true);   // Output: "2:00 PM"
   const closeHourStr = formatMinutosAHora(p.cierre, true); // Output: "8:00 PM"
   
   return {
-    abierto: dentro && !fuerzaCierre,
+    abierto: abiertoReal,
     fuerzaCierre,
-    dentroHorario: dentro,
+    dentroHorario: esDiaAbierto && dentro,
     horarioTexto,
     openHour: openHourStr,
     closeHour: closeHourStr,
     siempreAbierto: false,
+    esDiaAbierto
   };
 };

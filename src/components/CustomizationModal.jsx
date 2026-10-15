@@ -4,13 +4,12 @@ import { X, Check } from "lucide-react";
 import "../css/CustomizationModal.css";
 import { formatCOP } from "../utils/price";
 
-const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
+const CustomizationModal = ({ product, isOpen, onClose, onConfirm, settings }) => {
   const [selectedOptions, setSelectedOptions]     = useState({});
   const [selectedToppings, setSelectedToppings]   = useState([]);
   const [selectedAdiciones, setSelectedAdiciones] = useState({}); // { [id]: item }
   const [selectedSalsas, setSelectedSalsas]       = useState({}); // { [id]: item }
   const [observaciones, setObservaciones]         = useState("");
-
   useEffect(() => {
     if (isOpen && product) {
       if (product.customizations) {
@@ -167,7 +166,7 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
             );
           })}
 
-          {productToppings.length > 0 && (
+          {settings?.plan_adiciones !== false && productToppings.length > 0 && (
             <div className="custom-section">
               <h4>Toppings & Adiciones Extra</h4>
               <div className="options-grid">
@@ -193,7 +192,7 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
           )}
 
           {/* ── Adiciones del producto (desde BD) ────────────────────────── */}
-          {(product.adiciones || []).length > 0 && (
+          {settings?.plan_adiciones !== false && (product.adiciones || []).length > 0 && (
             <div className="custom-section">
               <h4>
                 ✨ Adiciones
@@ -233,7 +232,7 @@ const CustomizationModal = ({ product, isOpen, onClose, onConfirm }) => {
           )}
 
           {/* ── Salsas del producto (desde BD) ───────────────────────────── */}
-          {(product.salsas || []).length > 0 && (
+          {settings?.plan_adiciones !== false && (product.salsas || []).length > 0 && (
             <div className="custom-section">
               <h4>
                 🔥 Salsas

@@ -1,16 +1,27 @@
-// ── Fuente de datos (adapter): Supabase ────────────────────────────
+// ── Fuente de datos (adapter): Supabase ↔ Local ────────────────────────────
 // Punto único de acceso al catálogo para TODA la app (tienda + panel admin).
 //
 // Prioridad:
-//   1. Supabase (BD real de producción)
-//   2. Fallback local: Eliminado. El estado inicial ahora está manejado
-//      con variables isLoading para evitar renders erróneos.
-import { supabase, isSupabaseConfigured } from "../services/supabaseClient";
+//   1. Supabase (si VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY están definidas)
+//   2. Fallback local (src/data/menu.js) si Supabase no está configurado,
+//      falla la red o devuelve vacío → la tienda NUNCA se rompe.
+//
+// El shape de los datos es idéntico al que ya consume la tienda
+// (ver src/data/menu.js), así no hay que tocar MenuCard/Menu/etc.
 import { deleteProductImage } from "../services/storage";
+import { isSupabaseConfigured, supabase } from "../services/supabaseClient";
 import { calculateItemUnitPrice } from "../utils/price";
+import {
+    categories as localCategories,
+    localImagesByNombre,
+    info as localInfo,
+    products as localProducts,
+    MINIMO_ENVIO_GRATIS_DEFAULT,
+    VALOR_DOMICILIO_DEFAULT,
+} from "./menu";
 
 // ── Cache en memoria + suscripción a cambios (realtime) ─────────────────────
-const cache = { categories: null, products: null, settings: null };
+const cache = { categories: null, products: null, settings: null, design: null, badges: null };
 const listeners = new Set();
 
 const notify = () => listeners.forEach((fn) => { try { fn(); } catch { /* noop */ } });
@@ -24,10 +35,39 @@ export const subscribeToCatalog = (fn) => {
 /** ¿La app está leyendo de Supabase? (útil para badges de estado en el panel) */
 export const isUsingSupabase = () => isSupabaseConfigured;
 
+export async function getPaymentMethods() {
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase.from("payment_methods").select("*").eq("activo", true);
+    if (error) throw error;
+    return data || [];
+  } catch (e) {
+    console.error("Error fetching payment methods:", e);
+    return [];
+  }
+}
+
 // Placeholder SVG (data URI) para productos sin foto (creados desde el panel
 // antes de subir imagen) — evita <img> rotos en tienda y panel.
 const PLACEHOLDER_IMG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23241a15'/%3E%3Ctext x='50%25' y='50%25' font-size='120' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%8D%A8%3C/text%3E%3C/svg%3E";
+
+// ── Calificaciones ─────────────────────────────────────────────────────────────
+export async function saveRating(telefono, rating, comment) {
+  if (!isSupabaseConfigured) return;
+  try {
+    const cleanPhone = telefono ? String(telefono).replace(/\D/g, "") : null;
+    const { error } = await supabase.from("store_ratings").insert([{ telefono: cleanPhone, rating, comment }]);
+    if (error) {
+      console.error("Supabase error:", error);
+      alert("Error guardando en BD: " + JSON.stringify(error));
+      throw error;
+    }
+  } catch (e) {
+    console.error("Error saving rating:", e);
+    alert("Catch error: " + e.message);
+  }
+}
 
 // ── Normalizadores: fila BD → shape de la tienda ────────────────────────────
 const normalizeCategory = (row) => ({
@@ -40,7 +80,7 @@ const normalizeCategory = (row) => ({
 });
 
 const resolveImage = (row) =>
-  (row.imagen_url || "").trim() || PLACEHOLDER_IMG;
+  (row.imagen_url || "").trim() || localImagesByNombre[row.nombre] || PLACEHOLDER_IMG;
 
 const normalizeProduct = (row) => {
   const { categories: _cat, product_additions: _pa, product_sauces: _ps, ...rest } = row;
@@ -70,20 +110,21 @@ const normalizeSettings = (row) => {
   }
 
   return {
-    name: row.razon_social || "Pavés Medellín",
-    razon_social: row.razon_social || "Pavés Medellín",
+    name: row.razon_social || "",
+    razonSocial:row.razon_social,
+    slogan:row.slogan,
     phone: row.phone || "",
     address: row.address || "",
     mapsGoogle: row.maps_url || "",
     instagram: row.instagram || "",
     facebook: row.facebook || "",
     tiktok: row.tiktok || "",
-    closed: "",
-    day1: row.day1 || "",
-    hours1: row.hours1 || "",
+    closed: localInfo.closed || "",
+    day1: (() => { try { return row.day1 ? JSON.parse(row.day1) : (Array.isArray(localInfo.day1) ? localInfo.day1 : []); } catch { return Array.isArray(localInfo.day1) ? localInfo.day1 : []; } })(),
+    hours1: row.hours1 || localInfo.hours1,
     logo_url: row.logo_url || "",
-    deliveryFee: row.delivery_fee ?? 0,
-    freeDeliveryThreshold: row.free_delivery_threshold ?? 0,
+    deliveryFee: row.delivery_fee ?? VALOR_DOMICILIO_DEFAULT,
+    freeDeliveryThreshold: row.free_delivery_threshold ?? MINIMO_ENVIO_GRATIS_DEFAULT,
     offersDelivery,
     offersPickup,
     offersLocal,
@@ -91,10 +132,284 @@ const normalizeSettings = (row) => {
     bankAccounts: Array.isArray(row.bank_accounts) ? row.bank_accounts : [],
     isActive: row.is_active !== false,
     canChangePassword: row.can_change_password !== false,
+    plan_adiciones: row.plan_adiciones !== false,
+    plan_promociones: row.plan_promociones !== false,
+    plan_reportes: row.plan_reportes !== false,
+    plan_diseno: row.plan_diseno !== false,
+    // ── Domicilio Dinámico (Mapbox) ──
+    storeLat: row.store_lat ?? null,
+    storeLng: row.store_lng ?? null,
+    baseDeliveryFee: row.base_delivery_fee ?? 3000,
+    pricePerKm: row.price_per_km ?? 1500,
+    maxDeliveryRadiusKm: row.max_delivery_radius_km ?? 15,
+    dynamicDeliveryEnabled: row.dynamic_delivery_enabled === true,
+    useCustomerBadges: row.useCustomerBadges !== false,
+    plan_fidelizacion: row.plan_fidelizacion !== false,
+    plan_configuracion: row.plan_configuracion !== false,
+    plan_domicilio_dinamico: row.plan_domicilio_dinamico !== false,
+    plan_emails: row.plan_emails !== false,
+    // Módulos opcionales: apagados salvo que el superadmin los habilite
+    plan_colaboradores: row.plan_colaboradores === true,
+    plan_mesas: row.plan_mesas === true,
   };
 };
 
+// ── Promociones y Combos Iniciales por Defecto ─────────────────────────────
+export const DEFAULT_PROMOTIONS_ITEMS = [
+  {
+    id: "promo-1",
+    titulo: "2x1 en Pavés Seleccionados",
+    tag: "Viernes & Sábados",
+    descripcion: "Lleva dos deliciosos Pavés de 8oz al precio de uno en sabores tradicionales.",
+    descuento: "2x1",
+    imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "promo-2",
+    titulo: "Envío Gratis en Compras > $45.000",
+    tag: "Toda la semana",
+    descripcion: "Disfruta de tus postres favoritos en casa sin costo adicional de domicilio.",
+    descuento: "ENVÍO GRATIS",
+    imagen: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=500&auto=format&fit=crop&q=80",
+  },
+];
 
+export const DEFAULT_COMBOS_ITEMS = [
+  {
+    id: "combo-1",
+    nombre: "Combo Dúo Pavé + Torta",
+    precio: 32000,
+    precioOriginal: 38000,
+    badge: "Ahorra $6.000",
+    descripcion: "1 Pavé 8oz tradicional de Leche Klim + 1 Porción de Torta húmeda de chocolate con toppings.",
+    incluye: ["1x Pavé 8oz (Leche Klim)", "1x Torta húmeda de chocolate"],
+    imagen: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "combo-2",
+    nombre: "Pack Familiar 4 Pavés",
+    precio: 62000,
+    precioOriginal: 72000,
+    badge: "Más Popular 🔥",
+    descripcion: "4 Pavés de 8oz a elección, perfecto para compartir en familia o con amigos.",
+    incluye: ["4x Pavés 8oz a elección", "Cucharas y servilletas"],
+    imagen: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=500&auto=format&fit=crop&q=80",
+  },
+];
+
+// ── Diseño del Menú / Catálogo por Defecto (Fallback idéntico al actual) ────
+export const DEFAULT_CATALOG_DESIGN = {
+  // Global
+  appBg: "#0d0805",
+  fontFamily: "Montserrat",
+
+  // Hero
+  heroBg: "linear-gradient(180deg, #0d0805 0%, #140c08 100%)",
+  heroHeaderBg: "rgba(13, 8, 5, 0.85)",
+  heroCtaBg: "#ffcc00",
+  heroCtaText: "#120a06",
+  heroBadgeBg: "rgba(255, 204, 0, 0.15)",
+  heroBadgeText: "#ffcc00",
+  heroFloatCartBg: "#ffcc00",
+  heroFloatCartText: "#120a06",
+
+  // Promociones
+  showPromotions: true,
+  promotionsTitle: "Promociones & Especiales",
+  promotionsSubtitle: "Aprovecha nuestras ofertas por tiempo limitado en tus postres favoritos",
+  promotionsBg: "#120a06",
+  promotionsCardBg: "#180e09",
+  promotionsAccent: "#ffcc00",
+  promotionsItems: DEFAULT_PROMOTIONS_ITEMS,
+
+  // Combos
+  showCombos: true,
+  combosTitle: "Combos & Packs para Compartir",
+  combosSubtitle: "Las combinaciones perfectas al mejor precio para tus momentos dulces",
+  combosBg: "#0f0906",
+  combosCardBg: "#180e09",
+  combosAccent: "#d92b38",
+  combosItems: DEFAULT_COMBOS_ITEMS,
+
+  // Menú
+  bgColor: "#0d0805",
+  cardBg: "#160e0a",
+  headerBadgeBg: "rgba(255, 204, 0, 0.12)",
+  headerBadgeText: "#ffcc00",
+  textPrimary: "#fdfbf7",
+  textMuted: "#bda899",
+  borderColor: "rgba(255, 255, 255, 0.08)",
+  cardRadius: "22px",
+  cardShadow: "md",
+  btnPrimaryBg: "#ffcc00",
+  btnPrimaryText: "#120a06",
+  btnDetailsBg: "rgba(255, 255, 255, 0.05)",
+  btnDetailsText: "#e2d5cc",
+  btnDetailsBorder: "rgba(255, 255, 255, 0.12)",
+  priceTagBg: "#ffcc00",
+  priceTagText: "#120a06",
+  badgePopularBg: "#ffcc00",
+  badgePopularText: "#120a06",
+  categoryBarBg: "rgba(20, 12, 8, 0.9)",
+  categoryActiveBg: "#ffcc00",
+  categoryActiveText: "#120a06",
+  categoryInactiveBg: "transparent",
+  categoryInactiveText: "#bda899",
+  columnsDesktop: "auto",
+  columnsMobile: "1",
+  cardLayout: "vertical",
+  imageAspectRatio: "16/11",
+
+  // Footer
+  footerBg: "linear-gradient(180deg, #0d0805 0%, #060402 100%)",
+  footerText: "rgba(253, 251, 247, 0.7)",
+  footerAccent: "#ffcc00",
+};
+
+const isLegacyLightColor = (color) => {
+  if (!color) return true;
+  const c = color.trim().toLowerCase();
+  return (
+    c === "#fdfbf7" ||
+    c === "#fecdcd" ||
+    c === "#fff5f5" ||
+    c === "#fff8f8" ||
+    c === "#fbf8f3" ||
+    c === "#ffffff" ||
+    c === "#fdf1f1" ||
+    c.includes("255, 255, 255") ||
+    c.includes("fdf1f1") ||
+    c.includes("fecdcd")
+  );
+};
+
+const normalizeCatalogDesign = (row) => ({
+  // Global
+  appBg: !isLegacyLightColor(row.app_bg) ? row.app_bg : DEFAULT_CATALOG_DESIGN.appBg,
+  fontFamily: row.font_family || DEFAULT_CATALOG_DESIGN.fontFamily,
+
+  // Hero
+  heroBg: !isLegacyLightColor(row.hero_bg) ? row.hero_bg : DEFAULT_CATALOG_DESIGN.heroBg,
+  heroHeaderBg: !isLegacyLightColor(row.hero_header_bg) ? row.hero_header_bg : DEFAULT_CATALOG_DESIGN.heroHeaderBg,
+  heroCtaBg: row.hero_cta_bg || DEFAULT_CATALOG_DESIGN.heroCtaBg,
+  heroCtaText: row.hero_cta_text || DEFAULT_CATALOG_DESIGN.heroCtaText,
+  heroBadgeBg: row.hero_badge_bg || DEFAULT_CATALOG_DESIGN.heroBadgeBg,
+  heroBadgeText: row.hero_badge_text || DEFAULT_CATALOG_DESIGN.heroBadgeText,
+  heroFloatCartBg: row.hero_float_cart_bg || DEFAULT_CATALOG_DESIGN.heroFloatCartBg,
+  heroFloatCartText: row.hero_float_cart_text || DEFAULT_CATALOG_DESIGN.heroFloatCartText,
+
+  // Promociones
+  showPromotions: row.show_promotions !== false,
+  promotionsTitle: row.promotions_title || DEFAULT_CATALOG_DESIGN.promotionsTitle,
+  promotionsSubtitle: row.promotions_subtitle || DEFAULT_CATALOG_DESIGN.promotionsSubtitle,
+  promotionsBg: !isLegacyLightColor(row.promotions_bg) ? row.promotions_bg : DEFAULT_CATALOG_DESIGN.promotionsBg,
+  promotionsCardBg: !isLegacyLightColor(row.promotions_card_bg) ? row.promotions_card_bg : DEFAULT_CATALOG_DESIGN.promotionsCardBg,
+  promotionsAccent: row.promotions_accent || DEFAULT_CATALOG_DESIGN.promotionsAccent,
+  promotionsItems: Array.isArray(row.promotions_items)
+    ? row.promotions_items
+    : DEFAULT_PROMOTIONS_ITEMS,
+
+  // Combos
+  showCombos: row.show_combos !== false,
+  combosTitle: row.combos_title || DEFAULT_CATALOG_DESIGN.combosTitle,
+  combosSubtitle: row.combos_subtitle || DEFAULT_CATALOG_DESIGN.combosSubtitle,
+  combosBg: !isLegacyLightColor(row.combos_bg) ? row.combos_bg : DEFAULT_CATALOG_DESIGN.combosBg,
+  combosCardBg: !isLegacyLightColor(row.combos_card_bg) ? row.combos_card_bg : DEFAULT_CATALOG_DESIGN.combosCardBg,
+  combosAccent: row.combos_accent || DEFAULT_CATALOG_DESIGN.combosAccent,
+  combosItems: Array.isArray(row.combos_items)
+    ? row.combos_items
+    : DEFAULT_COMBOS_ITEMS,
+
+  // Menú
+  bgColor: !isLegacyLightColor(row.bg_color) ? row.bg_color : DEFAULT_CATALOG_DESIGN.bgColor,
+  cardBg: !isLegacyLightColor(row.card_bg) ? row.card_bg : DEFAULT_CATALOG_DESIGN.cardBg,
+  specialEvent: (function() {
+    try {
+      return row.header_badge_text ? JSON.parse(row.header_badge_text) : { active: false };
+    } catch (e) {
+      return { active: false, texto: row.header_badge_text || "", bgColor: row.header_badge_bg || "#d92b38", textColor: "#ffffff" };
+    }
+  })(),
+  textPrimary: row.text_primary && row.text_primary !== "#3d2314" ? row.text_primary : DEFAULT_CATALOG_DESIGN.textPrimary,
+  textMuted: row.text_muted && row.text_muted !== "#7a6353" ? row.text_muted : DEFAULT_CATALOG_DESIGN.textMuted,
+  borderColor: row.border_color || DEFAULT_CATALOG_DESIGN.borderColor,
+  cardRadius: row.card_radius || DEFAULT_CATALOG_DESIGN.cardRadius,
+  cardShadow: row.card_shadow || DEFAULT_CATALOG_DESIGN.cardShadow,
+  btnPrimaryBg: row.btn_primary_bg || DEFAULT_CATALOG_DESIGN.btnPrimaryBg,
+  btnPrimaryText: row.btn_primary_text || DEFAULT_CATALOG_DESIGN.btnPrimaryText,
+  btnDetailsBg: row.btn_details_bg || DEFAULT_CATALOG_DESIGN.btnDetailsBg,
+  btnDetailsText: row.btn_details_text || DEFAULT_CATALOG_DESIGN.btnDetailsText,
+  btnDetailsBorder: row.btn_details_border || DEFAULT_CATALOG_DESIGN.btnDetailsBorder,
+  priceTagBg: row.price_tag_bg && row.price_tag_bg !== "#3d2314" ? row.price_tag_bg : DEFAULT_CATALOG_DESIGN.priceTagBg,
+  priceTagText: row.price_tag_text || DEFAULT_CATALOG_DESIGN.priceTagText,
+  badgePopularBg: row.badge_popular_bg || DEFAULT_CATALOG_DESIGN.badgePopularBg,
+  badgePopularText: row.badge_popular_text || DEFAULT_CATALOG_DESIGN.badgePopularText,
+  categoryBarBg: row.category_bar_bg || DEFAULT_CATALOG_DESIGN.categoryBarBg,
+  categoryActiveBg: row.category_active_bg || DEFAULT_CATALOG_DESIGN.categoryActiveBg,
+  categoryActiveText: row.category_active_text || DEFAULT_CATALOG_DESIGN.categoryActiveText,
+  categoryInactiveBg: row.category_inactive_bg || DEFAULT_CATALOG_DESIGN.categoryInactiveBg,
+  categoryInactiveText: row.category_inactive_text || DEFAULT_CATALOG_DESIGN.categoryInactiveText,
+  columnsDesktop: row.columns_desktop || DEFAULT_CATALOG_DESIGN.columnsDesktop,
+  columnsMobile: row.columns_mobile || DEFAULT_CATALOG_DESIGN.columnsMobile,
+  cardLayout: row.card_layout || DEFAULT_CATALOG_DESIGN.cardLayout,
+  imageAspectRatio: row.image_aspect_ratio || DEFAULT_CATALOG_DESIGN.imageAspectRatio,
+
+  // Footer
+  footerBg: row.footer_bg || DEFAULT_CATALOG_DESIGN.footerBg,
+  footerText: row.footer_text || DEFAULT_CATALOG_DESIGN.footerText,
+  footerAccent: row.footer_accent || DEFAULT_CATALOG_DESIGN.footerAccent,
+});
+
+// ── Fallbacks locales (datos actuales del catálogo) ──────────────────────────
+const buildLocalCategories = () =>
+  localCategories
+    .filter((c) => c.id !== "Todo")
+    .map((c, i) => ({
+      id: c.id,
+      nombre: c.id,
+      emoji: "",
+      label: c.label,
+      orden: i + 1,
+      visible: true,
+    }));
+
+const buildLocalProducts = () =>
+  localProducts.map((p, i) => ({
+    ...p,
+    category_id: null,
+    category: p.category,
+    orden: i + 1,
+    disponible: p.disponible !== false,
+    nota: p.nota || "",
+  }));
+
+const buildLocalSettings = () => ({
+  ...localInfo,
+  deliveryFee: VALOR_DOMICILIO_DEFAULT,
+  freeDeliveryThreshold: MINIMO_ENVIO_GRATIS_DEFAULT,
+  offersDelivery: true,
+  offersPickup: true,
+  offersLocal: true,
+  forceClosed: false,
+  bankAccounts: [],
+  isActive: true,
+  canChangePassword: true,
+  plan_adiciones: true,
+  plan_promociones: true,
+  plan_reportes: true,
+  plan_diseno: true,
+  // ── Domicilio Dinámico (desactivado por defecto en local) ──
+  storeLat: null,
+  storeLng: null,
+  baseDeliveryFee: 3000,
+  pricePerKm: 1500,
+  maxDeliveryRadiusKm: 15,
+  dynamicDeliveryEnabled: false,
+  useCustomerBadges: true,
+  plan_fidelizacion: true,
+  plan_configuracion: true,
+  plan_domicilio_dinamico: true,
+});
 
 // ── Realtime: refresca el cache cuando el admin cambia algo ──────────────────
 let realtimeInitialized = false;
@@ -123,6 +438,10 @@ const initRealtime = () => {
       () => invalidate("products", getProducts))
     .on("postgres_changes", { event: "*", schema: "public", table: "product_sauces" },
       () => invalidate("products", getProducts))
+    .on("postgres_changes", { event: "*", schema: "public", table: "catalog_design" },
+      () => invalidate("design", getCatalogDesign))
+    .on("postgres_changes", { event: "*", schema: "public", table: "badges" },
+      () => invalidate("badges", getBadges))
     .subscribe((status) => {
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         realtimeInitialized = false; // permite reintento en la próxima lectura
@@ -135,15 +454,17 @@ export const invalidateCatalog = () => {
   cache.categories = null;
   cache.products = null;
   cache.settings = null;
+  cache.design = null; cache.badges = null;
 };
 
 // ── API pública: getters (siempre async, shape uniforme) ─────────────────────
 
+/** Categorías visibles y ordenadas (para el filtro del menú). */
 export async function getCategories() {
   if (cache.categories) return cache.categories;
 
   if (!isSupabaseConfigured) {
-    cache.categories = [];
+    cache.categories = buildLocalCategories();
     return cache.categories;
   }
 
@@ -157,18 +478,19 @@ export async function getCategories() {
     // Resultado vacío VÁLIDO (todo oculto) se respeta; solo errores caen a local
     cache.categories = data.map(normalizeCategory);
   } catch (e) {
-    console.warn("[dataSource] error obteniendo categorías:", e.message);
-    cache.categories = [];
+    console.warn("[dataSource] categorías → fallback local:", e.message);
+    cache.categories = buildLocalCategories();
   }
   return cache.categories;
 }
 
+/** Productos con categoría e imagen resuelta (orden del menú). */
 export async function getProducts() {
   if (cache.products) return cache.products;
   initRealtime();
 
   if (!isSupabaseConfigured) {
-    cache.products = [];
+    cache.products = buildLocalProducts();
     return cache.products;
   }
 
@@ -187,17 +509,30 @@ export async function getProducts() {
     // Resultado vacío VÁLIDO (catálogo vaciado por el admin) se respeta
     cache.products = data.map(normalizeProduct);
   } catch (e) {
-    console.warn("[dataSource] error obteniendo productos:", e.message);
-    cache.products = [];
+    console.warn("[dataSource] productos → fallback local:", e.message);
+    cache.products = buildLocalProducts();
   }
   return cache.products;
 }
 
+/** Configuración del negocio (info de contacto + costos de domicilio). */
 export async function getSettings() {
-  if (cache.settings) return cache.settings;
+  if (cache.settings) {
+    const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
+    if (actualRazonSocial) {
+      localStorage.setItem("store_razon_social", actualRazonSocial);
+      document.title = actualRazonSocial;
+    }
+    return cache.settings;
+  }
 
   if (!isSupabaseConfigured) {
-    cache.settings = {};
+    cache.settings = buildLocalSettings();
+    const actualRazonSocial = cache.settings.razonSocial || cache.settings.name || cache.settings.razon_social;
+    if (actualRazonSocial) {
+      localStorage.setItem("store_razon_social", actualRazonSocial);
+      document.title = actualRazonSocial;
+    }
     return cache.settings;
   }
 
@@ -208,12 +543,45 @@ export async function getSettings() {
       .eq("id", 1)
       .maybeSingle();
     if (error) throw error;
-    cache.settings = data ? normalizeSettings(data) : {};
+    cache.settings = data ? normalizeSettings(data) : buildLocalSettings();
+    // const dias= formatearDias(cache.settings.day1);
+    // cache.settings.day1=dias;
   } catch (e) {
-    console.warn("[dataSource] error obteniendo settings:", e.message);
-    cache.settings = {};
+    console.warn("[dataSource] settings → fallback local:", e.message);
+    cache.settings = buildLocalSettings();
   }
+
+  const actualRazonSocial = cache.settings?.razonSocial || cache.settings?.name || cache.settings?.razon_social;
+  if (actualRazonSocial) {
+    localStorage.setItem("store_razon_social", actualRazonSocial);
+    document.title = actualRazonSocial;
+  }
+
   return cache.settings;
+}
+
+/** Configuración de diseño y aspecto visual del catálogo. */
+export async function getCatalogDesign() {
+  if (cache.design) return cache.design;
+
+  if (!isSupabaseConfigured) {
+    cache.design = { ...DEFAULT_CATALOG_DESIGN };
+    return cache.design;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("catalog_design")
+      .select("*")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) throw error;
+    cache.design = data ? normalizeCatalogDesign(data) : { ...DEFAULT_CATALOG_DESIGN };
+  } catch (e) {
+    console.warn("[dataSource] design → fallback local:", e.message);
+    cache.design = { ...DEFAULT_CATALOG_DESIGN };
+  }
+  return cache.design;
 }
 
 /** Obtiene el rol del usuario desde user_roles. Si falla o no existe, asume 'admin' por defecto. */
@@ -227,7 +595,7 @@ export async function getUserRole(userId) {
       .maybeSingle();
     if (error) throw error;
     const resolvedRole = data?.role || "admin";
-    console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
+    //console.log(`[dataSource] Rol obtenido para ${userId}:`, resolvedRole, data ? "" : "(no existía fila en user_roles, usando 'admin')");
     return resolvedRole;
   } catch (err) {
     console.error("[dataSource] Error obteniendo rol:", err.message);
@@ -255,7 +623,7 @@ export const buildOrderItems = (cart) =>
     salsas: Object.values(item.customizations?.salsas || {}).map(
       (s) => s.nombre || ""
     ),
-    observaciones: item.customizations?.observaciones || "",
+    observaciones: (item.customizations?.deliveryDate ? `AGENDADO PARA: ${item.customizations.deliveryDate} - ${item.customizations.deliveryTime} | ` : '') + (item.customizations?.observaciones || ""),
   }));
 
 /**
@@ -288,12 +656,23 @@ export async function createOrder(deliveryData, cart, totals) {
       p_tipo_entrega: deliveryData.tipoEntrega || "domicilio",
     });
     if (error) throw error;
+
+    // Guardar metadatos de distancia (update no-bloqueante: si falla, no pasa nada)
+    if (numero && totals.deliveryMeta) {
+      supabase.from("orders").update({
+        delivery_lat: totals.deliveryMeta.lat,
+        delivery_lng: totals.deliveryMeta.lng,
+        delivery_distance_km: totals.deliveryMeta.distanceKm,
+        delivery_address_full: totals.deliveryMeta.fullAddress || "",
+      }).eq("numero", numero).then(() => {}).catch(() => {});
+    }
+
     return { ok: true, persisted: true, numero: numero ?? null };
   } catch (eRpc) {
     // 2º intento: insert directo (por si la RPC aún no fue aplicada en la BD).
     // El nº no se conoce aquí, pero el pedido queda registrado igual.
     try {
-      const { error } = await supabase.from("orders").insert({
+      const insertPayload = {
         nombre: deliveryData.nombre,
         telefono: deliveryData.telefono,
         direccion: deliveryData.direccion || "",
@@ -306,7 +685,15 @@ export async function createOrder(deliveryData, cart, totals) {
         delivery_fee: totals.deliveryFee,
         total: totals.total,
         items,
-      });
+      };
+      // Agregar metadatos de distancia si están disponibles
+      if (totals.deliveryMeta) {
+        insertPayload.delivery_lat = totals.deliveryMeta.lat;
+        insertPayload.delivery_lng = totals.deliveryMeta.lng;
+        insertPayload.delivery_distance_km = totals.deliveryMeta.distanceKm;
+        insertPayload.delivery_address_full = totals.deliveryMeta.fullAddress || "";
+      }
+      const { error } = await supabase.from("orders").insert(insertPayload);
       if (error) throw error;
       return { ok: true, persisted: true, numero: null };
     } catch (e2) {
@@ -461,6 +848,62 @@ export async function deleteSauce(id) {
   invalidateCatalog();
 }
 
+// ── Bases (panel admin) ─────────────────────────────────────────────────────
+
+export async function getBases() {
+  const { data, error } = await supabase
+    .from("bases")
+    .select("*")
+    .order("orden", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createBase(data) {
+  const { data: row, error } = await supabase.from("bases").insert(data).select().single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateBase(id, cambios) {
+  const { error } = await supabase.from("bases").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteBase(id) {
+  const { error } = await supabase.from("bases").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ── Tamaños (panel admin) ───────────────────────────────────────────────────
+
+export async function getSizes() {
+  const { data, error } = await supabase
+    .from("sizes")
+    .select("*")
+    .order("orden", { ascending: true })
+    .order("nombre", { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function createSize(data) {
+  const { data: row, error } = await supabase.from("sizes").insert(data).select().single();
+  if (error) throw error;
+  return row;
+}
+
+export async function updateSize(id, cambios) {
+  const { error } = await supabase.from("sizes").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteSize(id) {
+  const { error } = await supabase.from("sizes").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ── Asociaciones Producto ↔ Adiciones / Salsas ──────────────────────────────
 
 /**
@@ -529,6 +972,20 @@ const COLUMNAS_SETTINGS = {
   bankAccounts: "bank_accounts",
   isActive: "is_active",
   canChangePassword: "can_change_password",
+  razonSocial: "razon_social",
+  slogan: "slogan",
+  // ── Domicilio Dinámico ──
+  storeLat: "store_lat",
+  storeLng: "store_lng",
+  baseDeliveryFee: "base_delivery_fee",
+  pricePerKm: "price_per_km",
+  maxDeliveryRadiusKm: "max_delivery_radius_km",
+  dynamicDeliveryEnabled: "dynamic_delivery_enabled",
+  useCustomerBadges: "useCustomerBadges",
+  plan_fidelizacion: "plan_fidelizacion",
+  plan_configuracion: "plan_configuracion",
+  plan_domicilio_dinamico: "plan_domicilio_dinamico",
+  plan_emails: "plan_emails",
 };
 
 /** Actualiza la fila única de settings (upsert: crea la fila si no existe). */
@@ -539,7 +996,99 @@ export async function updateSettings(cambios) {
   });
   const { error } = await supabase.from("settings").upsert({ id: 1, ...fila });
   if (error) throw error;
+
+  const updatedRazonSocial = cambios.razonSocial || cambios.razon_social || fila.razon_social;
+  if (updatedRazonSocial) {
+    localStorage.setItem("store_razon_social", updatedRazonSocial);
+  }
+
   invalidateCatalog(); // la tienda refresca WhatsApp/domicilios en segundos
+}
+
+const COLUMNAS_DESIGN = {
+  // Global
+  appBg: "app_bg",
+  fontFamily: "font_family",
+
+  // Hero
+  heroBg: "hero_bg",
+  heroHeaderBg: "hero_header_bg",
+  heroCtaBg: "hero_cta_bg",
+  heroCtaText: "hero_cta_text",
+  heroBadgeBg: "hero_badge_bg",
+  heroBadgeText: "hero_badge_text",
+  heroFloatCartBg: "hero_float_cart_bg",
+  heroFloatCartText: "hero_float_cart_text",
+
+  // Promociones
+  showPromotions: "show_promotions",
+  promotionsTitle: "promotions_title",
+  promotionsSubtitle: "promotions_subtitle",
+  promotionsBg: "promotions_bg",
+  promotionsCardBg: "promotions_card_bg",
+  promotionsAccent: "promotions_accent",
+  promotionsItems: "promotions_items",
+
+  // Combos
+  showCombos: "show_combos",
+  combosTitle: "combos_title",
+  combosSubtitle: "combos_subtitle",
+  combosBg: "combos_bg",
+  combosCardBg: "combos_card_bg",
+  combosAccent: "combos_accent",
+  combosItems: "combos_items",
+
+  // Menú
+  bgColor: "bg_color",
+  cardBg: "card_bg",
+  headerBadgeBg: "header_badge_bg",
+  specialEvent: "header_badge_text",
+  textPrimary: "text_primary",
+  textMuted: "text_muted",
+  borderColor: "border_color",
+  cardRadius: "card_radius",
+  cardShadow: "card_shadow",
+  btnPrimaryBg: "btn_primary_bg",
+  btnPrimaryText: "btn_primary_text",
+  btnDetailsBg: "btn_details_bg",
+  btnDetailsText: "btn_details_text",
+  btnDetailsBorder: "btn_details_border",
+  priceTagBg: "price_tag_bg",
+  priceTagText: "price_tag_text",
+  badgePopularBg: "badge_popular_bg",
+  badgePopularText: "badge_popular_text",
+  categoryBarBg: "category_bar_bg",
+  categoryActiveBg: "category_active_bg",
+  categoryActiveText: "category_active_text",
+  categoryInactiveBg: "category_inactive_bg",
+  categoryInactiveText: "category_inactive_text",
+  columnsDesktop: "columns_desktop",
+  columnsMobile: "columns_mobile",
+  cardLayout: "card_layout",
+  imageAspectRatio: "image_aspect_ratio",
+
+  // Footer
+  footerBg: "footer_bg",
+  footerText: "footer_text",
+  footerAccent: "footer_accent",
+};
+
+/** Actualiza la configuración de diseño del catálogo. */
+export async function updateCatalogDesign(cambios) {
+  const fila = {};
+  Object.entries(cambios).forEach(([clave, valor]) => {
+    if (clave === "specialEvent") {
+      fila["header_badge_text"] = typeof valor === "object" ? JSON.stringify(valor) : valor;
+    } else if (COLUMNAS_DESIGN[clave]) {
+      fila[COLUMNAS_DESIGN[clave]] = valor;
+    }
+  });
+
+  if (Object.keys(fila).length === 0) return;
+
+  const { error } = await supabase.from("catalog_design").upsert({ id: 1, ...fila });
+  if (error) throw error;
+  invalidateCatalog();
 }
 
 const normalizeOrder = (row) => ({
@@ -558,20 +1107,82 @@ export async function getOrders(limite = 200) {
   return data.map(normalizeOrder);
 }
 
+/**
+ * Todos los pedidos entre dos fechas locales YYYY-MM-DD (inclusive), paginando
+ * para no quedar limitado por el máximo de filas por consulta de Supabase.
+ * Fechas vacías = sin límite en ese extremo.
+ */
+export async function getOrdersByRange(desde, hasta) {
+  const PAGINA = 1000;
+  const todos = [];
+
+  for (let offset = 0; ; offset += PAGINA) {
+    let query = supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(offset, offset + PAGINA - 1);
+
+    if (desde) query = query.gte("created_at", new Date(`${desde}T00:00:00`).toISOString());
+    if (hasta) {
+      const finExclusivo = new Date(`${hasta}T00:00:00`);
+      finExclusivo.setDate(finExclusivo.getDate() + 1);
+      query = query.lt("created_at", finExclusivo.toISOString());
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    todos.push(...data);
+    if (data.length < PAGINA) break;
+  }
+
+  return todos.map(normalizeOrder);
+}
+
 /** Cambia el estado de un pedido (flujo del negocio). */
 export async function updateOrderStatus(id, estado) {
   const { error } = await supabase.from("orders").update({ estado }).eq("id", id);
   if (error) throw error;
 }
 
+// ── Calificaciones del Negocio ──────────────────────────────────────────────
+
+export async function getStoreRatingStats() {
+  const { data, error } = await supabase
+    .from("store_ratings")
+    .select("rating");
+
+  if (error) return { average: 5, total: 0 };
+
+  if (!data || data.length === 0) return { average: 5, total: 0 };
+
+  const total = data.length;
+  const sum = data.reduce((acc, curr) => acc + curr.rating, 0);
+  const average = Number((sum / total).toFixed(1));
+
+  return { average, total };
+}
+
+export async function submitStoreRating(telefono, rating, comment = "") {
+  const { error } = await supabase
+    .from("store_ratings")
+    .insert([{ telefono, rating, comment }]);
+
+  if (error) throw error;
+  return true;
+}
+
 /**
  * Realtime de pedidos para el panel: notifica INSERT (pedido nuevo 🛎️) y
  * UPDATE (cambio de estado desde otro dispositivo). Devuelve unsubscribe.
  */
+let orderSubIdCounter = 0;
 export function subscribeToOrders(fn) {
   if (!isSupabaseConfigured) return () => { };
+  const channelName = `pedidos-changes-${orderSubIdCounter++}`;
   const channel = supabase
-    .channel("pedidos-changes")
+    .channel(channelName)
     .on(
       "postgres_changes",
       { event: "INSERT", schema: "public", table: "orders" },
@@ -584,4 +1195,330 @@ export function subscribeToOrders(fn) {
     )
     .subscribe();
   return () => supabase.removeChannel(channel);
+}
+
+/**
+ * Busca un cliente en la tabla 'clientes' de Supabase por número de celular/WhatsApp.
+ */
+export async function findCustomerByPhone(telefono) {
+  if (!telefono || !isSupabaseConfigured) return null;
+  const cleanPhone = String(telefono).replace(/\D/g, "");
+  if (!cleanPhone || cleanPhone.length < 7) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("telefono", cleanPhone)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("[dataSource] findCustomerByPhone error:", error.message);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.warn("[dataSource] findCustomerByPhone catch error:", err);
+    return null;
+  }
+}
+
+/**
+ * Valida o registra un cliente por su número de WhatsApp (único) en Supabase DB.
+ * Si el cliente ya existe: NO se crea de nuevo (idempotente).
+ * Si no existe: lo crea en la BD.
+ */
+export async function getOrCreateCustomer(nombre, telefono, fechaCumple = null, email = null) {
+  if (!telefono) return null;
+  const cleanPhone = String(telefono).replace(/\D/g, "");
+  const cleanNombre = (nombre || "").trim();
+  const cleanCumple = fechaCumple ? String(fechaCumple).trim() : null;
+  const cleanEmail = (email || "").trim() || null;
+
+  if (!cleanPhone) return null;
+
+  if (!isSupabaseConfigured) {
+    return { nombre: cleanNombre || "Cliente", telefono: cleanPhone, email: cleanEmail, pedidos_count: 0, fecha_cumple: cleanCumple };
+  }
+
+  try {
+    // 1. Buscar si el cliente ya existe en 'clientes'
+    const { data: custData, error: selectErr } = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("telefono", cleanPhone)
+      .maybeSingle();
+
+    if (!selectErr && custData) {
+     // console.log("[dataSource] Cliente ya existe en Supabase DB:", custData);
+      const updates = {};
+      if (cleanCumple && !custData.fecha_cumple) updates.fecha_cumple = cleanCumple;
+      if (cleanNombre && (!custData.nombre || custData.nombre === "Cliente")) updates.nombre = cleanNombre;
+      if (cleanEmail && custData.email !== cleanEmail) updates.email = cleanEmail;
+
+      if (Object.keys(updates).length > 0) {
+        const { data: updatedCust } = await supabase
+          .from("clientes")
+          .update(updates)
+          .eq("telefono", cleanPhone)
+          .select()
+          .maybeSingle();
+        if (updatedCust) return updatedCust;
+      }
+
+      return {
+        ...custData,
+        pedidos_count: custData.pedidos_count ?? custData.cant_pedidos_concretados ?? 0,
+      };
+    }
+
+    // 2. Si no existe, intentar la función RPC 'registrar_cliente_si_no_existe'
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("registrar_cliente_si_no_existe", {
+      p_telefono: cleanPhone,
+      p_nombre: cleanNombre || "Cliente",
+      p_fecha_cumple: cleanCumple || null,
+      p_email: cleanEmail || null,
+    });
+
+    if (!rpcErr && rpcRes) {
+     // console.log("[dataSource] ✅ Cliente registrado via RPC:", rpcRes);
+      return {
+        ...rpcRes,
+        pedidos_count: rpcRes.pedidos_count ?? rpcRes.cant_pedidos_concretados ?? 0,
+      };
+    }
+
+    // 3. Fallback: Inserción directa / Upsert en la tabla 'clientes'
+    const payload = {
+      nombre: cleanNombre || "Cliente",
+      telefono: cleanPhone,
+      email: cleanEmail || null,
+      pedidos_count: 0,
+      cant_pedidos_concretados: 0,
+      fecha_cumple: cleanCumple || null,
+    };
+
+    //console.log("[dataSource] Insertando nuevo cliente en Supabase DB...", payload);
+
+    const { data: newCust, error: insertErr } = await supabase
+      .from("clientes")
+      .insert([payload])
+      .select()
+      .maybeSingle();
+
+    if (insertErr) {
+      console.warn("[dataSource] Insert directo falló, intentando upsert:", insertErr.message);
+      const { data: upsertedCust, error: upsertErr } = await supabase
+        .from("clientes")
+        .upsert([payload], { onConflict: "telefono" })
+        .select()
+        .maybeSingle();
+
+      if (upsertErr) {
+        console.error("[dataSource] ❌ Error final registrando cliente en BD Supabase:", upsertErr.message);
+      } else if (upsertedCust) {
+        //console.log("[dataSource] ✅ Cliente guardado via upsert en BD:", upsertedCust);
+        return upsertedCust;
+      }
+    } else if (newCust) {
+     // console.log("[dataSource] ✅ Cliente registrado con éxito en BD:", newCust);
+      return {
+        ...newCust,
+        pedidos_count: newCust.pedidos_count ?? newCust.cant_pedidos_concretados ?? 0,
+      };
+    }
+
+    return {
+      nombre: cleanNombre || "Cliente",
+      telefono: cleanPhone,
+      pedidos_count: 0,
+      fecha_cumple: cleanCumple || null,
+    };
+  } catch (err) {
+    console.error("Excepción en getOrCreateCustomer:", err);
+  }
+
+  return { nombre: cleanNombre || "Cliente", telefono: cleanPhone, pedidos_count: 0, fecha_cumple: cleanCumple };
+}
+
+/**
+ * Incrementa el contador de pedidos concretados en la tabla 'clientes' de Supabase DB al realizar una compra.
+ */
+export async function incrementCustomerOrderCount(telefono, nombre = "") {
+  if (!telefono || !isSupabaseConfigured) return null;
+  const cleanPhone = String(telefono).replace(/\D/g, "");
+
+  try {
+    const cust = await getOrCreateCustomer(nombre, cleanPhone);
+    const newCount = (cust?.pedidos_count ?? 0) + 1;
+
+    const { error } = await supabase
+      .from("clientes")
+      .update({
+        pedidos_count: newCount,
+        cant_pedidos_concretados: newCount,
+      })
+      .eq("telefono", cleanPhone);
+    if (error) throw error;
+    return newCount;
+  } catch (err) {
+    console.warn("Error incrementando compras en Supabase DB:", err);
+    return null;
+  }
+}
+
+// ── Insignias (Badges) ────────────────────────────────────────────────────────
+export async function getBadges() {
+  if (cache.badges) return cache.badges;
+  if (!isSupabaseConfigured) return [];
+  try {
+    const { data, error } = await supabase
+      .from("badges")
+      .select("*")
+      .order("required_orders", { ascending: true });
+    if (error) throw error;
+    cache.badges = data;
+    return data;
+  } catch (e) {
+    console.warn("[dataSource] badges → fallback local:", e.message);
+    return [];
+  }
+}
+
+export async function upsertBadge(badge) {
+  const { error } = await supabase.from("badges").upsert(badge);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+export async function deleteBadge(id) {
+  const { error } = await supabase.from("badges").delete().eq("id", id);
+  if (error) throw error;
+  invalidateCatalog();
+}
+
+
+// ── Pedidos en local: colaboradores (punto de venta) y mesas con QR ─────────
+
+// Los colaboradores inician sesión con un "usuario"; Supabase Auth exige un correo,
+// así que internamente es usuario@dominio. Debe coincidir con la Edge Function.
+export const COLAB_EMAIL_DOMAIN = "colaboradores.paves.app";
+
+/** Acepta un correo (admin) o un usuario simple (colaborador) y devuelve el correo de login. */
+export const loginEmailFromIdentifier = (value) => {
+  const v = String(value || "").trim();
+  return v.includes("@") ? v : `${v.toLowerCase()}@${COLAB_EMAIL_DOMAIN}`;
+};
+
+async function errorFromFunction(error) {
+  let detail = "";
+  if (error?.context instanceof Response) {
+    try {
+      const body = await error.context.clone().json();
+      detail = typeof body?.error === "string" ? body.error : body?.error?.message || "";
+    } catch {
+      detail = "";
+    }
+  }
+  return new Error(detail || error?.message || "Error inesperado");
+}
+
+/** Crea, edita, activa/desactiva, cambia contraseña o elimina colaboradores (Edge Function). */
+export async function manageCollaborator(action, payload = {}) {
+  const { data, error } = await supabase.functions.invoke("manage-collaborators", {
+    body: { action, ...payload },
+  });
+  if (error) throw await errorFromFunction(error);
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
+export async function getColaboradores() {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .select("id, nombre, usuario, activo, solicitud_password_at, created_at")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Perfil del colaborador con sesión activa (null si no existe). */
+export async function getMyColaborador(userId) {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .select("id, nombre, usuario, activo")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/** El colaborador pide al admin que le cambie la contraseña (no requiere sesión). */
+export async function solicitarCambioPassword(usuario) {
+  const { error } = await supabase.rpc("solicitar_cambio_password", { p_usuario: usuario });
+  if (error) throw error;
+}
+
+export async function getMesas() {
+  const { data, error } = await supabase
+    .from("mesas")
+    .select("id, numero, activa")
+    .order("numero", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+/** Crea las mesas indicadas (números enteros); ignora las que ya existen. */
+export async function createMesas(numeros) {
+  const filas = numeros.map((numero) => ({ numero }));
+  const { error } = await supabase.from("mesas").upsert(filas, { onConflict: "numero", ignoreDuplicates: true });
+  if (error) throw error;
+}
+
+export async function updateMesa(id, cambios) {
+  const { error } = await supabase.from("mesas").update(cambios).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteMesa(id) {
+  const { error } = await supabase.from("mesas").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** Valida desde la tienda (anon) que la mesa del QR existe y está activa. */
+export async function getMesaActiva(numero) {
+  if (!isSupabaseConfigured || !Number.isInteger(numero) || numero <= 0) return null;
+  const { data, error } = await supabase
+    .from("mesas")
+    .select("numero, activa")
+    .eq("numero", numero)
+    .eq("activa", true)
+    .maybeSingle();
+  if (error) {
+    console.warn("[dataSource] mesa:", error.message);
+    return null;
+  }
+  return data;
+}
+
+/**
+ * Registra un pedido en el local (tipo_entrega = "local") sin dirección ni teléfono.
+ * origen "colaborador": lo toma un colaborador; "mesa": lo pide el cliente desde el QR.
+ * Lanza error si no se pudo guardar (aquí no hay WhatsApp de respaldo).
+ * @returns {Promise<number>} número de pedido
+ */
+export async function createLocalOrder({ origen, mesa = null, nombre = "", pago = "", observaciones = "" }, cart) {
+  const subtotal = Math.round(cart.reduce((t, i) => t + calculateItemUnitPrice(i) * i.quantity, 0));
+  const { data, error } = await supabase.rpc("crear_pedido_local", {
+    p_origen: origen,
+    p_mesa: mesa,
+    p_nombre: nombre,
+    p_observaciones: observaciones,
+    p_pago: pago,
+    p_subtotal: subtotal,
+    p_total: subtotal,
+    p_items: buildOrderItems(cart),
+  });
+  if (error) throw new Error(error.message);
+  return data;
 }

@@ -1,29 +1,39 @@
-import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
-  Dessert,
-  Tags,
-  Receipt,
-  Store,
-  Settings,
-  LogOut,
-  ExternalLink,
+  AlertOctagon,
+  Award,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
+  Dessert,
+  ExternalLink,
+  LayoutDashboard,
+  Lock,
+  LogOut,
+  MapPin,
   Menu,
-  X,
-  User,
-  Sparkles,
+  Palette,
+  QrCode,
+  Receipt,
+  Settings,
   ShieldCheck,
-  AlertOctagon,
+  Sparkles,
+  Store,
+  Tag,
+  Tags,
+  User,
+  Users,
+  X,
 } from "lucide-react";
-import { logoutAdmin } from "./sessionStore";
-import { useAdminSession } from "./useAdminSession";
+import { useState } from "react";
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import logoImg from "../assets/images/logo.png";
 import useCatalog from "../hooks/useCatalog";
 import PasswordModal from "./PasswordModal";
-import logoImg from "../assets/images/logo.png";
 import "./admin.css";
+import NotificationBell from "./components/NotificationBell";
+import { logoutAdmin } from "./sessionStore";
+import { useAdminSession } from "./useAdminSession";
 
 const NAV_ITEMS = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -31,17 +41,25 @@ const NAV_ITEMS = [
   { to: "/admin/categorias", label: "Categorías", icon: Tags },
   { to: "/admin/adiciones", label: "Adiciones & Salsas", icon: Sparkles },
   { to: "/admin/pedidos", label: "Pedidos", icon: Receipt },
+  { to: "/admin/mesas", label: "Mesas & QR", icon: QrCode },
+  { to: "/admin/colaboradores", label: "Colaboradores", icon: Users },
+  { to: "/admin/reportes", label: "Reportes e Informes", icon: BarChart3 },
+  { to: "/admin/domicilios", label: "Domicilios", icon: MapPin },
+  { to: "/admin/fidelizacion", label: "Fidelización", icon: Award },
+  { to: "/admin/promociones", label: "Promos & Combos", icon: Tag },
+  { to: "/admin/diseno", label: "Diseño Menú", icon: Palette },
   { to: "/admin/empresa", label: "Empresa", icon: Store },
   { to: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
 const AdminLayout = () => {
+  const rz = localStorage.getItem("store_razon_social");
   const { session, role } = useAdminSession();
   const { settings } = useCatalog();
+  const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [name, setName] = useState("Dashboard");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -53,28 +71,119 @@ const AdminLayout = () => {
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   const email = session?.user?.email || "";
-  
+
   // Lógica de bloqueo por falta de pago
-  const isSuspended = settings && !settings.isActive;
-  
+  // useCatalog arranca con settings por defecto sin isActive: esperar a los reales
+  if (settings?.isActive === undefined) {
+    return <div className="admin-suspended" />;
+  }
+
+  // Los colaboradores solo usan el punto de venta
+  if (role === "colaborador") {
+    return <Navigate to="/pos" replace />;
+  }
+
+  const isSuspended = settings.isActive === false;
+
   if (isSuspended && role !== "superadmin") {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", backgroundColor: "#fdf8f5", textAlign: "center", padding: "2rem" }}>
-        <AlertOctagon size={64} color="#d32f2f" style={{ marginBottom: "1rem" }} />
-        <h1 style={{ color: "#3D2314", fontSize: "2rem", marginBottom: "1rem" }}>Servicio Suspendido</h1>
-        <p style={{ color: "#666", fontSize: "1.1rem", maxWidth: "400px", marginBottom: "2rem" }}>
-          Tu acceso al panel de administración ha sido bloqueado temporalmente. Por favor, contacta con el administrador del sistema para regularizar el estado de tu cuenta.
-        </p>
-        <button onClick={handleLogout} className="admin-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
-          <LogOut size={18} /> Cerrar Sesión
-        </button>
+      <div className="admin-suspended">
+        <div className="admin-suspended__card">
+          <div className="admin-suspended__brand">
+            <img src={settings?.logo_url || logoImg} alt="Logo" />
+            <span>{rz || "Paves Medellin"}</span>
+          </div>
+
+          <div className="admin-suspended__icon">
+            <Lock size={28} />
+          </div>
+
+          <span className="admin-suspended__badge">
+            <AlertOctagon size={12} /> Cuenta suspendida
+          </span>
+
+          <h1 className="admin-suspended__title">Acceso temporalmente restringido</h1>
+          <p className="admin-suspended__text">
+            El panel de administración se encuentra inactivo por un pago pendiente del plan.
+            Tu información y la de tus clientes está segura y no se ha perdido.
+          </p>
+
+          <ul className="admin-suspended__list">
+            <li>
+              <ShieldCheck size={16} />
+              <span>Tus productos, pedidos y configuración se conservan intactos.</span>
+            </li>
+            <li>
+              <CreditCard size={16} />
+              <span>Regulariza el pago con el proveedor del sistema para reactivar el servicio.</span>
+            </li>
+          </ul>
+
+          <button type="button" onClick={handleLogout} className="admin-btn-primary admin-btn-primary--full">
+            <LogOut size={16} /> Cerrar sesión
+          </button>
+
+          {email && <p className="admin-suspended__email">Sesión iniciada como {email}</p>}
+        </div>
       </div>
     );
   }
 
-  const navItemsToShow = [...NAV_ITEMS];
+  const navItemsToShow = NAV_ITEMS.filter((item) => {
+    // Restricciones basadas en los permisos (por defecto activo si no existe)
+    if (item.to === "/admin/adiciones" && settings?.plan_adiciones === false) return false;
+    if (item.to === "/admin/promociones" && settings?.plan_promociones === false) return false;
+    if (item.to === "/admin/reportes" && settings?.plan_reportes === false) return false;
+    if (item.to === "/admin/domicilios" && settings?.plan_domicilio_dinamico === false) return false;
+    if (item.to === "/admin/fidelizacion" && settings?.plan_fidelizacion === false) return false;
+    if (item.to === "/admin/configuracion" && settings?.plan_configuracion === false) return false;
+    if (item.to === "/admin/diseno" && settings?.plan_diseno === false) return false;
+    if (item.to === "/admin/colaboradores" && settings?.plan_colaboradores !== true) return false;
+    if (item.to === "/admin/mesas" && settings?.plan_mesas !== true) return false;
+    return true;
+  });
+
   if (role === "superadmin") {
     navItemsToShow.push({ to: "/admin/super", label: "Superadmin", icon: ShieldCheck });
+  } else {
+    console.log("No es superadmin", role);
+  }
+
+  const activeNavItem = navItemsToShow.find(({ to, end }) =>
+    end
+      ? location.pathname === to
+      : location.pathname === to || location.pathname.startsWith(`${to}/`)
+  );
+
+  // Protección de rutas: si intentan entrar por URL a una ruta restringida, enviarlos al dashboard
+  const currentPath = location.pathname;
+  if (currentPath === "/admin/adiciones" && settings?.plan_adiciones === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/promociones" && settings?.plan_promociones === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/reportes" && settings?.plan_reportes === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/domicilios" && settings?.plan_domicilio_dinamico === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/fidelizacion" && settings?.plan_fidelizacion === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/configuracion" && settings?.plan_configuracion === false) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/diseno" && settings?.plan_diseno === false) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (currentPath === "/admin/colaboradores" && settings?.plan_colaboradores !== true) {
+    return <Navigate to="/admin" replace />;
+  }
+  if (currentPath === "/admin/mesas" && settings?.plan_mesas !== true) {
+    return <Navigate to="/admin" replace />;
   }
 
   //********************* */
@@ -94,9 +203,7 @@ const AdminLayout = () => {
           </div>
           {!collapsed && (
             <div className="admin-sidebar__brand-text">
-              <span className="admin-sidebar__titulo">
-                {settings?.razon_social || "Panel Admin"}
-              </span>
+              <span className="admin-sidebar__titulo" title={rz || "Paves Medellin"}>{rz || "Paves Medellin"}</span>
               <span className="admin-sidebar__subtitulo">Panel Admin</span>
             </div>
           )}
@@ -119,7 +226,6 @@ const AdminLayout = () => {
               end={end}
               onClick={() => {
                 setMobileMenuOpen(false);
-                setName(label);
               }}
               className={({ isActive }) =>
                 "admin-nav__item" + (isActive ? " admin-nav__item--active" : "")
@@ -144,13 +250,6 @@ const AdminLayout = () => {
             <ExternalLink size={20} className="admin-nav__icon" />
             {!collapsed && <span className="admin-nav__label">Ver tienda</span>}
           </a>
-
-          {email && !collapsed && (
-            <div className="admin-sidebar__user" title={email}>
-              <User size={16} className="admin-sidebar__user-icon" />
-              <span className="admin-sidebar__email">{email}</span>
-            </div>
-          )}
 
           <button
             type="button"
@@ -178,14 +277,15 @@ const AdminLayout = () => {
           </button>
 
           <div className="admin-topbar__title">
-            <span>Panel {name}</span>
+            <span>Panel {activeNavItem?.label || "Administración"}</span>
           </div>
 
           <div className="admin-topbar__actions">
+            <NotificationBell />
             {email && (
-              <button 
-                type="button" 
-                className="admin-topbar__user-badge" 
+              <button
+                type="button"
+                className="admin-topbar__user-badge"
                 onClick={() => setIsPasswordModalOpen(true)}
                 title="Cambiar contraseña"
                 style={{ background: "none", border: "none", outline: "none", cursor: "pointer", fontFamily: "inherit" }}
@@ -203,10 +303,10 @@ const AdminLayout = () => {
         </main>
       </div>
 
-      <PasswordModal 
-        isOpen={isPasswordModalOpen} 
-        onClose={() => setIsPasswordModalOpen(false)} 
-        email={email} 
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        email={email}
         canChange={settings?.canChangePassword !== false}
       />
     </div>

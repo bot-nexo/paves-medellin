@@ -13,6 +13,9 @@ const useCart = () => {
   const [productToCustomize, setProductToCustomize] = useState(null);
   const [editingItemKey, setEditingItemKey] = useState(null);
 
+  const [isArmaModalOpen, setIsArmaModalOpen] = useState(false);
+  const [armaEditItem, setArmaEditItem] = useState(null);
+
   // ── Open / close helpers ──────────────────────────────────────────────
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
@@ -31,6 +34,12 @@ const useCart = () => {
   };
 
   const editCartItem = (item) => {
+    if (item.isCustom) {
+      setArmaEditItem(item);
+      setIsArmaModalOpen(true);
+      setIsCartOpen(false);
+      return;
+    }
     setProductToCustomize(item);
     setEditingItemKey(item.customizationKey);
     setIsCustomizing(true);
@@ -115,6 +124,30 @@ const useCart = () => {
     setIsCartOpen(false);
   }, []);
 
+  // Agrega o edita una creación de "Arma tu Pavé" (compartido por tienda y punto de venta)
+  const addArmaToCart = (customProduct, isEdit, oldKey) => {
+    if (isEdit) {
+      setCart((prev) => prev.filter((c) => c.customizationKey !== oldKey));
+    }
+    const adicionesIds = Object.keys(customProduct.customizations.adiciones || {}).sort();
+    const salsasIds = Object.keys(customProduct.customizations.salsas || {}).sort();
+    const newKey = JSON.stringify({
+      productId: customProduct.id,
+      baseId: customProduct.customizations.base.id,
+      adiciones: adicionesIds,
+      salsas: salsasIds,
+    });
+    customProduct.customizationKey = newKey;
+    const qty = isEdit ? armaEditItem.quantity : 1;
+    setCart((prev) => {
+      const existing = prev.find((c) => c.customizationKey === newKey);
+      if (existing) {
+        return prev.map((c) => (c.customizationKey === newKey ? { ...c, quantity: c.quantity + qty } : c));
+      }
+      return [...prev, { ...customProduct, quantity: qty }];
+    });
+  };
+
   // ── Cart mutations ───────────────────────────────────────────────────
   const removeItemByStoreKey = (storeKey) => {
     setCart((prevCart) =>
@@ -155,6 +188,14 @@ const useCart = () => {
     editCartItem,
     addOneMore,
     confirmCustomization,
+    
+    // Arma Tu Pave
+    isArmaModalOpen,
+    setIsArmaModalOpen,
+    armaEditItem,
+    setArmaEditItem,
+    addArmaToCart,
+
     removeItemByStoreKey,
     updateQuantity,
     setCart,

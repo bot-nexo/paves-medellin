@@ -28,10 +28,11 @@ const CartModal = ({
   onAddOneMore,
   onCheckout,
   settings,
+  checkoutLabel = "Datos de entrega",
 }) => {
   if (!isOpen) return null;
 
-  const { subtotal: totalPlatos, discount, esGratis, totalNeto, faltanteGratis, totalItems } =
+  const { subtotal: totalPlatos, esGratis, totalNeto, faltanteGratis } =
     calculateOrderSummary(cart, settings?.deliveryFee, settings?.freeDeliveryThreshold, true);
 
   const isDynamicDelivery = Boolean(
@@ -80,7 +81,7 @@ const CartModal = ({
             </button>
           </div>
         ) : (
-          <>
+          <div className="cart-with-footer">
             {/* Product List */}
             <div className="cart-items">
               {cart.map((item, index) => {
@@ -224,27 +225,10 @@ const CartModal = ({
 
             {/* Footer with Summary */}
             <div className="cart-footer">
-              {/* settings.offersDelivery !== false && (
-                <div
-                  className={`delivery-badge ${esGratis ? "free" : "pending"}`}
-                >
-                  <FaMotorcycle size={18} />
-                  <span>
-                    {esGratis
-                      ? "¡Si pides a domicilio, el envío es GRATIS! 🎉"
-                      : `Si pides a domicilio, agrega ${formatCOP(faltanteGratis)} más para envío GRATIS`}
-                  </span>
-                </div>
-              ) */}
 
               <div className="cart-breakdown">
-                <div className="breakdown-row">
-                  <span>Subtotal:</span>
-                  <span>{formatCOP(totalPlatos)}</span>
-                </div>
-                <div className="divider"></div>
                 <div className="breakdown-row total">
-                  <span>Total Neto:</span>
+                  <span>Subtotal carrito:</span>
                   <span>{formatCOP(totalPlatos)}</span>
                 </div>
                 {!isDynamicDelivery && (
@@ -255,25 +239,25 @@ const CartModal = ({
               </div>
 
               <div className="cart-actions">
-                <button className="btn-back" onClick={onClose} type="button">
-                  <ArrowLeft size={16} /> Seguir pidiendo
+                <button className="cart-btn-secondary" onClick={onClose} type="button">
+                  Seguir pidiendo
                 </button>
                 {settings.isActive === false ? (
-                  <button className="btn-checkout" type="button" disabled style={{ backgroundColor: "#999", cursor: "not-allowed" }}>
+                  <button className="cart-btn-primary" type="button" disabled style={{ backgroundColor: "#999", cursor: "not-allowed" }}>
                     En Mantenimiento <ArrowRight size={16} />
                   </button>
                 ) : (
                   <button
-                    className="btn-checkout"
+                    className="cart-btn-primary"
                     onClick={onCheckout}
                     type="button"
                   >
-                    Datos de entrega <ArrowRight size={16} />
+                    {checkoutLabel} <ArrowRight size={18} />
                   </button>
                 )}
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

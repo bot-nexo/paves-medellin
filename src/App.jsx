@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import AOS from "aos";
 import Swal from "sweetalert2";
@@ -8,23 +8,56 @@ import "./css/estadoNegocio.css";
 import Hero from "./components/Hero";
 import Menu from "./components/Menu";
 import Footer from "./components/Footer";
+import BottomNavigation from "./components/BottomNavigation";
 import CartModal from "./components/CartModal";
 import CustomizationModal from "./components/CustomizationModal";
+import CakeScheduleModal from "./components/CakeScheduleModal";
 import CheckoutModal from "./components/CheckoutModal";
+import LocalCheckoutModal from "./components/LocalCheckoutModal";
+import CustomerIdentifyModal from "./components/CustomerIdentifyModal";
+import ArmaTuPaveModal from "./components/ArmaTuPaveModal";
+import RatingModal from "./components/RatingModal";
+import ScrollToTopButton from "./components/ScrollToTopButton";
 import { AdminRoutes } from "./admin/AppRoutes";
+import { info, VALOR_DOMICILIO_DEFAULT, MINIMO_ENVIO_GRATIS_DEFAULT } from "./data/menu";
 
 import useCart from "./hooks/useCart";
 import useCatalog from "./hooks/useCatalog";
-import { createOrder } from "./data/dataSource";
+
+import { createLocalOrder, createOrder, getMesaActiva, getOrCreateCustomer, incrementCustomerOrderCount } from "./data/dataSource";
+import { resolveCustomerBadge } from "./utils/badges";
 import { estaAbiertoSegunHorario } from "./utils/horario";
 import {
   calculateItemUnitPrice,
   calculateOrderSummary
 } from "./utils/price";
 
+const PosPage = lazy(() => import("./pos/PosPage"));
+
+// Modo mesa: el QR abre la tienda con ?mesa=N; se recuerda durante la sesión del navegador
+const leerMesaInicial = () => {
+  try {
+    const param = new URLSearchParams(window.location.search).get("mesa");
+    if (param !== null) {
+      const n = Number(param);
+      if (Number.isInteger(n) && n > 0) {
+        sessionStorage.setItem("paves_mesa", String(n));
+        return n;
+      }
+      sessionStorage.removeItem("paves_mesa");
+      return null;
+    }
+    const guardada = Number(sessionStorage.getItem("paves_mesa"));
+    return Number.isInteger(guardada) && guardada > 0 ? guardada : null;
+  } catch {
+    return null;
+  }
+};
+
 const App = () => {
-  // Catálogo dinámico (Supabase ↔ local): productos, categorías y settings
-  const { categories, products, settings, isLoading } = useCatalog();
+  // Catálogo dinámico (Supabase ↔ local): productos, categorías, settings y diseño
+  const { categories, products, settings, design, badges } = useCatalog();
+
   const {
     cart,
     cartCount,
@@ -45,25 +78,138 @@ const App = () => {
     updateQuantity,
     setCart,
     setIsCheckoutOpen,
+    isArmaModalOpen,
+    setIsArmaModalOpen,
+    armaEditItem,
+    setArmaEditItem,
+    addArmaToCart,
   } = useCart();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Estado del cliente (identificación por nombre y teléfono cel)
+  const [customer, setCustomer] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("paves_customer_info") || localStorage.getItem("paves_customer_info");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
+
+  const [mesa, setMesa] = useState(leerMesaInicial);
+  const [mesaOk, setMesaOk] = useState(null); // null = validando
+  const [enviandoMesa, setEnviandoMesa] = useState(false);
+  const mesaMode = mesa !== null && mesaOk === true;
+
+  // Valida la mesa del QR: módulo habilitado por el superadmin y mesa activa
+  useEffect(() => {
+    if (mesa === null || settings.isActive === undefined) return;
+    let cancelado = false;
+    const invalidar = () => {
+      sessionStorage.removeItem("paves_mesa");
+      setMesa(null);
+      setMesaOk(null);
+      Swal.fire({
+        icon: "info",
+        title: "Mesa no disponible",
+        text: "Este código QR no está activo. Puedes hacer tu pedido normalmente.",
+        confirmButtonColor: "#3D2314",
+      });
+      setIsCustomerModalOpen(true);
+    };
+    if (settings.plan_mesas !== true) {
+      invalidar();
+      return;
+    }
+    getMesaActiva(mesa).then((m) => {
+      if (cancelado) return;
+      if (m) setMesaOk(true);
+      else invalidar();
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, [mesa, settings.plan_mesas, settings.isActive]);
 
 
-  // WhatsApp y costos ahora vienen de settings (panel admin).
-  const whatsappNumber = settings.phone || "";
+  // Al cerrar o salir de la página del menú, eliminar la info del cliente de storage para garantizar la seguridad de los datos
+  useEffect(() => {
+    const handleClearCustomerStorage = () => {
+      try {
+        localStorage.removeItem("paves_customer_info");
+        sessionStorage.removeItem("paves_customer_info");
+      } catch {
+        /* noop */
+      }
+    };
+    window.addEventListener("beforeunload", handleClearCustomerStorage);
+    window.addEventListener("pagehide", handleClearCustomerStorage);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleClearCustomerStorage);
+      window.removeEventListener("pagehide", handleClearCustomerStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOpenRating = () => {
+      if (!customer || !customer.telefono) {
+        setIsCustomerModalOpen(true);
+      } else {
+        setIsRatingOpen(true);
+      }
+    };
+    window.addEventListener("open-rating", handleOpenRating);
+    return () => window.removeEventListener("open-rating", handleOpenRating);
+  }, [customer]);
+
+  useEffect(() => {
+    // Si al ingresar a la tienda el cliente aún no se ha identificado, abrir el modal automáticamente
+    if (mesa === null && (!customer || !customer.telefono)) {
+      setIsCustomerModalOpen(true);
+    }
+  }, []);
+
+  const handleSaveCustomer = async (customerData) => {
+    try {
+      // Validar o registrar cliente en la BD de Supabase real
+      const dbCust = await getOrCreateCustomer(
+        customerData.nombre,
+        customerData.telefono,
+        customerData.fecha_cumple,
+        customerData.email
+      );
+
+      const mergedCustomer = {
+        ...customerData,
+        pedidos_count: dbCust?.pedidos_count ?? 0,
+        fecha_cumple: dbCust?.fecha_cumple || customerData.fecha_cumple || null
+      };
+
+      // Guardar en sessionStorage para que sea volátil (se borra al cerrar la pestaña) y limpiar localStorage
+      sessionStorage.setItem("paves_customer_info", JSON.stringify(mergedCustomer));
+      localStorage.removeItem("paves_customer_info");
+
+      setCustomer(mergedCustomer);
+      setIsCustomerModalOpen(false);
+    } catch (e) {
+      console.warn("Error al guardar cliente en BD real:", e);
+    }
+  };
+
+
+  // WhatsApp y costos ahora vienen de settings (panel admin). Fallback a info local.
+  const whatsappNumber = settings.phone || info.phone;
 
   // Estado del negocio: abierto/cerrado según horario + cierre de emergencia
   const estadoNegocio = estaAbiertoSegunHorario(settings);
 
-  // Actualiza el <title> del documento con la razón social de la BD
   useEffect(() => {
-    if (settings?.razon_social) {
-      document.title = `${settings.razon_social} | Menú`;
-    }
-  }, [settings?.razon_social]);
-
-  useEffect(() => {
+    window.scrollTo(0, 0);
     AOS.init({ duration: 1600, once: true, offset: 100 });
   }, []);
 
@@ -80,17 +226,67 @@ const App = () => {
     const isDynamicDelivery = Boolean(
       settings?.dynamicDeliveryEnabled && settings?.storeLat && settings?.storeLng
     );
-    const domicilioEsAparte = esDomicilio && !isDynamicDelivery;
-    const summary = calculateOrderSummary(cart, settings.deliveryFee ?? 0, settings.freeDeliveryThreshold ?? 0, esDomicilio);
-    const deliveryFee = (!esDomicilio || summary.esGratis)
-      ? 0
-      : (settings.deliveryFee ?? 0);
+    const hasCalculatedDelivery = Boolean(deliveryData.deliveryMeta?.calculatedFee != null);
+    const domicilioEsAparte = esDomicilio && (!isDynamicDelivery || !hasCalculatedDelivery);
 
-    const saved = await createOrder(deliveryData, cart, {
+    const feeBase = settings.deliveryFee ?? VALOR_DOMICILIO_DEFAULT;
+    const freeThreshold = settings.freeDeliveryThreshold ?? MINIMO_ENVIO_GRATIS_DEFAULT;
+
+    // Si hay delivery dinámico (Mapbox), usar el fee calculado
+    const dynamicFee = (esDomicilio && deliveryData.deliveryMeta?.calculatedFee != null)
+      ? deliveryData.deliveryMeta.calculatedFee
+      : null;
+
+    const currentBadge = resolveCustomerBadge(settings, customer, badges);
+    const summary = calculateOrderSummary(cart, feeBase, freeThreshold, esDomicilio, dynamicFee, currentBadge);
+    const deliveryFee = summary.deliveryFee;
+
+    const beneficios = [];
+    if (summary.descuento2x1 > 0) beneficios.push("2x1 -$" + summary.descuento2x1);
+    if (summary.descuentoBadge > 0) beneficios.push(summary.porcentaje + "% -$" + summary.descuentoBadge);
+    if (esDomicilio && summary.esGratis) beneficios.push("envio gratis");
+    const notaBeneficios = beneficios.length
+      ? "INSIGNIA " + currentBadge.name + ": " + beneficios.join(", ")
+      : "";
+    const orderData = notaBeneficios
+      ? {
+          ...deliveryData,
+          observaciones: [deliveryData.observaciones, notaBeneficios].filter(Boolean).join(" | "),
+        }
+      : deliveryData;
+
+    if (deliveryData.telefono) {
+      await getOrCreateCustomer(
+        deliveryData.nombre,
+        deliveryData.telefono,
+        null,
+        deliveryData.email,
+      );
+    }
+
+    const saved = await createOrder(orderData, cart, {
       subtotal: summary.subtotal,
       deliveryFee,
       total: summary.totalNeto,
+      deliveryMeta: deliveryData.deliveryMeta || null,
     });
+
+    // Incrementa el contador de compras concretadas del cliente en la BD real de Supabase
+    if (deliveryData.telefono) {
+      incrementCustomerOrderCount(deliveryData.telefono, deliveryData.nombre).then((nuevoConteo) => {
+        if (nuevoConteo == null) return;
+        setCustomer((prev) => {
+          if (!prev) return prev;
+          const actualizado = { ...prev, pedidos_count: nuevoConteo };
+          try {
+            sessionStorage.setItem("paves_customer_info", JSON.stringify(actualizado));
+          } catch {
+            /* noop */
+          }
+          return actualizado;
+        });
+      });
+    }
 
     // 2) Armar el mensaje de WhatsApp (idéntico al actual + nº de pedido si existe)
     let message = "*NUEVO PEDIDO *";
@@ -98,18 +294,13 @@ const App = () => {
     message += "\n";
 
     // Fuera de horario o cierre de emergencia: el pedido queda AGENDADO y se
-    // prepara al abrir/reanudar, en orden de llegada (el cliente lo debe saber)
+    // prepara al abrir, en orden de llegada (el cliente lo debe saber)
     if (!estadoNegocio.abierto) {
-      if (estadoNegocio.fuerzaCierre) {
-        message += "⚠️ *PEDIDO AGENDADO* (Cerrado temporalmente por eventualidad)\n";
-        message += "Servicio pausado temporalmente. Se preparará con prioridad tan pronto reanudemos la atención.\n\n";
-      } else {
-        message += "⚠️ *PEDIDO AGENDADO* (Fuera de horario de atención)\n";
-        if (estadoNegocio.horarioTexto) {
-          message += "Horario habitual: " + estadoNegocio.horarioTexto + "\n";
-        }
-        message += "Se preparará al abrir, en orden de llegada.\n\n";
+      message += "⚠️ *PEDIDO AGENDADO* (negocio cerrado ahora)\n";
+      if (estadoNegocio.horarioTexto) {
+        message += "Horario: " + estadoNegocio.horarioTexto + "\n";
       }
+      message += "Se preparará al abrir, en orden de llegada.\n\n";
     }
     if (deliveryData.tipoEntrega === "recogida") {
       message += "🏪 *MODALIDAD: RECOGER EN TIENDA*\n\n";
@@ -126,16 +317,21 @@ const App = () => {
     message += "*DATOS DEL CLIENTE*\n";
     message += "• *Nombre:* " + deliveryData.nombre + "\n";
     message += "• *Telefono:* " + deliveryData.telefono + "\n";
-    
+
     if (esDomicilio) {
       message += "• *Direccion:* " + deliveryData.direccion + "\n";
       if (deliveryData.unidad) message += "• *Unidad:* " + deliveryData.unidad + "\n";
       if (deliveryData.apto) message += "• *Apto/Piso:* " + deliveryData.apto + "\n";
+      // Agregar info de distancia si hay delivery dinámico
+      if (deliveryData.deliveryMeta) {
+        message += "• *Distancia:* " + deliveryData.deliveryMeta.distanceKm + " km\n";
+        message += "• *Tiempo est.:* ~" + deliveryData.deliveryMeta.durationMin + " min\n";
+      }
     }
-    
+
     message += "• *Pago:* " + deliveryData.pago + "\n";
-    if (deliveryData.pago.includes("Transferencia") && settings.bankAccounts && settings.bankAccounts.length > 0) {
-      settings.bankAccounts.forEach(acc => {
+    if (/transferencia/i.test(deliveryData.pago) && settings.bankAccounts?.length > 0) {
+      settings.bankAccounts.forEach((acc) => {
         message += "   _Bco: " + acc.bankName + " N° " + acc.accountNumber + "_\n";
       });
       message += "   _👉 *POR FAVOR ENVÍA EL COMPROBANTE AQUÍ*_ \n";
@@ -175,6 +371,9 @@ const App = () => {
         if (item.customizations.observaciones) {
           message += "   _Nota: " + item.customizations.observaciones + "_\n";
         }
+        if (item.customizations.deliveryDate && item.customizations.deliveryTime) {
+          message += "   *📅 AGENDADO PARA: " + item.customizations.deliveryDate + " - " + item.customizations.deliveryTime + "*\n";
+        }
       }
 
       const subtotal = itemPrice * item.quantity;
@@ -183,31 +382,40 @@ const App = () => {
     });
 
     const esGratis = !esDomicilio || summary.esGratis;
-    const totalPagar = summary.subtotal - summary.discount;
+    const totalFinal = summary.totalNeto;
 
     message += "--------------------------------\n";
     message += "   Subtotal productos: $" + (total / 1000).toLocaleString() + " K\n";
-    if (esDomicilio) {
-      if (domicilioEsAparte) {
-        message += "   Domicilio: PENDIENTE POR COTIZAR (Se paga aparte)\n";
-      } else {
-        message += "   Domicilio: Por cotizar\n";
-      }
-    } else {
+    if (summary.descuento2x1 > 0) {
+      message += "   🎉 2x1 (" + currentBadge.name + "): -$" + (summary.descuento2x1 / 1000).toLocaleString() + " K\n";
+    }
+    if (summary.descuentoBadge > 0) {
+      message += "   Descuento " + summary.porcentaje + "% (" + currentBadge.name + "): -$" + (summary.descuentoBadge / 1000).toLocaleString() + " K\n";
+    }
+    if (!esDomicilio) {
       message += "   Domicilio: No aplica\n";
+    } else if (domicilioEsAparte) {
+      message += "   Domicilio: PENDIENTE POR COTIZAR (Se paga aparte)\n";
+    } else {
+      message +=
+        "   Domicilio: " +
+        (esGratis ? "GRATIS" : "$" + (deliveryFee / 1000).toLocaleString() + " K") +
+        (deliveryData.deliveryMeta ? " (" + deliveryData.deliveryMeta.distanceKm + " km)" : "") +
+        "\n";
     }
     message += "--------------------------------\n";
     if (domicilioEsAparte) {
-      message += "*TOTAL PRODUCTOS: $" + (total / 1000).toLocaleString() + " K*\n";
+      message += "*TOTAL PRODUCTOS: $" + (totalFinal / 1000).toLocaleString() + " K*\n";
       message += "⚠️ *(El costo del domicilio NO está incluido y se abona por separado)*\n";
     } else {
-      message += "*TOTAL A PAGAR: $" + (total / 1000).toLocaleString() + " K*\n";
+      message += "*TOTAL A PAGAR: $" + (totalFinal / 1000).toLocaleString() + " K* \n";
     }
     message += "\n_Pedido generado desde la web_";
 
     window.open(
       "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(message),
       "_blank",
+      "noopener,noreferrer"
     );
 
     Swal.fire({
@@ -222,19 +430,35 @@ const App = () => {
     closeCart();
   };
 
-  //***************************** */
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", backgroundColor: "#1e1008", color: "#f5c842", flexDirection: "column", gap: "1rem" }}>
-        <div className="spinner" style={{ width: "40px", height: "40px", border: "4px solid rgba(245,200,66,0.3)", borderTopColor: "#f5c842", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        <p style={{ fontWeight: "700", letterSpacing: "0.05em" }}>Cargando nuestro menú...</p>
-      </div>
-    );
-  }
+  // Pedido desde la mesa: va directo a la BD (sin WhatsApp) y se despacha desde Pedidos
+  const sendMesaOrder = async ({ pago, nombre, observaciones }) => {
+    setEnviandoMesa(true);
+    try {
+      const numero = await createLocalOrder({ origen: "mesa", mesa, nombre, pago, observaciones }, cart);
+      setCart([]);
+      setIsCheckoutOpen(false);
+      closeCart();
+      Swal.fire({
+        icon: "success",
+        title: "¡Pedido recibido!",
+        html: `<div>Tu número de pedido</div><div style="font-size:3.5rem;font-weight:800;line-height:1.1">${Number(numero)}</div><div>Mesa ${mesa}. En breve te lo llevamos.</div>`,
+        confirmButtonColor: "#3D2314",
+      });
+    } catch (e) {
+      Swal.fire({ icon: "error", title: "No se pudo enviar el pedido", text: e.message, confirmButtonColor: "#3D2314" });
+    } finally {
+      setEnviandoMesa(false);
+    }
+  };
 
+  //***************************** */
   return (
     <Routes>
+      {/* Punto de venta de colaboradores (privado) */}
+      {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
+        <Route path="/pos/*" element={<Suspense fallback={null}><PosPage /></Suspense>} />
+      )}
+
       {/* Panel de administración (privado) */}
       {import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && (
         <Route path="/admin/*" element={<AdminRoutes />} />
@@ -244,13 +468,32 @@ const App = () => {
       <Route
         path="/*"
         element={
-          <div className="app-wrapper">
+          <div
+            className="app-wrapper has-bottom-nav"
+            style={{
+              backgroundColor: design?.appBg && !design.appBg.includes("fff") && !design.appBg.includes("fdf") ? design.appBg : "#0d0805",
+              fontFamily: design?.fontFamily || "inherit",
+            }}
+          >
             {settings.isActive === false && (
               <div style={{ backgroundColor: "#d32f2f", color: "white", textAlign: "center", padding: "10px", fontWeight: "bold", fontSize: "0.9rem", zIndex: 1000, position: "relative" }}>
                 Estamos en mantenimiento o actualización. Pronto volveremos a recibir pedidos.
               </div>
             )}
-            <Hero cartCount={cartCount} onOpenCart={openCart} estadoNegocio={estadoNegocio} />
+            <Hero
+              cartCount={cartCount}
+              onOpenCart={openCart}
+              estadoNegocio={estadoNegocio}
+              design={design}
+              products={products}
+              settings={settings}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onAddToCart={addToCart}
+              customer={customer}
+              onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
+              badgeLabel={mesaMode ? `Mesa ${mesa}` : ""}
+            />
 
             <Menu
               data={products}
@@ -258,9 +501,31 @@ const App = () => {
               selectedProduct={selectedProduct}
               setSelectedProduct={setSelectedProduct}
               addToCart={addToCart}
+              design={design}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onOpenArmaModal={() => { setArmaEditItem(null); setIsArmaModalOpen(true); }}
+              settings={settings}
+              customer={customer}
+              badges={badges}
+              onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
             />
 
-            <Footer settings={settings} />
+            <ScrollToTopButton />
+            <Footer settings={settings} design={design} />
+
+            <BottomNavigation
+              cartCount={cartCount}
+              onOpenCart={openCart}
+              whatsappNumber={whatsappNumber}
+              settings={settings}
+              customer={customer}
+              badges={badges}
+              onOpenCustomerModal={() => setIsCustomerModalOpen(true)}
+              mesaMode={mesaMode}
+            />
+
+
 
             <CartModal
               cart={cart}
@@ -272,22 +537,73 @@ const App = () => {
               onAddOneMore={addOneMore}
               onCheckout={openCheckout}
               settings={settings}
+              checkoutLabel={mesaMode ? "Confirmar pedido" : undefined}
             />
 
-            <CustomizationModal
-              product={productToCustomize}
-              isOpen={isCustomizing}
-              onClose={closeCustomizationModal}
-              onConfirm={confirmCustomization}
-            />
+            {productToCustomize && productToCustomize.tiempo_preparacion_horas > 0 ? (
+              <CakeScheduleModal
+                product={productToCustomize}
+                isOpen={isCustomizing}
+                onClose={closeCustomizationModal}
+                onConfirm={confirmCustomization}
+                settings={settings}
+              />
+            ) : (
+              <CustomizationModal
+                product={productToCustomize}
+                isOpen={isCustomizing}
+                onClose={closeCustomizationModal}
+                onConfirm={confirmCustomization}
+                settings={settings}
+              />
+            )}
 
-            <CheckoutModal
-              isOpen={isCheckoutOpen}
-              onClose={closeCheckout}
-              onConfirm={sendOrderToWhatsApp}
-              cart={cart}
+            <ArmaTuPaveModal
+              isOpen={isArmaModalOpen}
+              onClose={() => { setIsArmaModalOpen(false); setArmaEditItem(null); }}
               settings={settings}
-              estadoNegocio={estadoNegocio}
+              onAddToCart={addArmaToCart}
+              editItem={armaEditItem}
+            />
+
+
+            {mesaMode ? (
+              <LocalCheckoutModal
+                isOpen={isCheckoutOpen}
+                onClose={closeCheckout}
+                onConfirm={sendMesaOrder}
+                cart={cart}
+                title={`Pedido mesa ${mesa}`}
+                askName
+                submitting={enviandoMesa}
+              />
+            ) : (
+              <CheckoutModal
+                isOpen={isCheckoutOpen}
+                onClose={closeCheckout}
+                onConfirm={sendOrderToWhatsApp}
+                cart={cart}
+                settings={settings}
+                estadoNegocio={estadoNegocio}
+                badges={badges}
+                customer={customer}
+              />
+            )}
+
+            <CustomerIdentifyModal
+              isOpen={isCustomerModalOpen && !mesaMode}
+              onClose={() => setIsCustomerModalOpen(false)}
+              onSaveCustomer={handleSaveCustomer}
+              currentCustomer={customer}
+              settings={settings}
+              badges={badges}
+            />
+
+            <RatingModal
+              isOpen={isRatingOpen}
+              onClose={() => setIsRatingOpen(false)}
+              currentCustomer={customer}
+              settings={settings}
             />
           </div>
         }
